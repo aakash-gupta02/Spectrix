@@ -1,9 +1,36 @@
 import z from "zod";
 
+const baseUrlSchema = z
+  .string()
+  .trim()
+  .url("BaseUrl must be a valid URL")
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+
+      // Base URL only: protocol + host (+ optional port), optional trailing slash.
+      return (
+        (url.pathname === "/" || url.pathname === "") &&
+        url.search === "" &&
+        url.hash === "" &&
+        url.username === "" &&
+        url.password === ""
+      );
+    } catch {
+      return false;
+    }
+  }, "Only a base URL is allowed (no path, query, or hash)")
+  .transform((value) => {
+    const url = new URL(value);
+
+    // Store canonical base URL without trailing slash.
+    return `${url.protocol}//${url.host}`;
+  });
+
 export const createServiceSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
   description: z.string().max(100, "Description must be less than 100 characters").optional(),
-  BaseUrl: z.string().url("BaseUrl must be a valid URL"),
+  baseUrl: baseUrlSchema,
   environment: z.enum(["production", "staging", "development"]).default("development"),
   active: z.boolean().default(true),
 
@@ -13,7 +40,7 @@ export const createServiceSchema = z.object({
 export const updateServiceSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters").optional(),
   description: z.string().max(100, "Description must be less than 100 characters").optional(),
-  BaseUrl: z.string().url("BaseUrl must be a valid URL").optional(),
+  baseUrl: baseUrlSchema.optional(),
   environment: z.enum(["production", "staging", "development"]).default("development").optional(),
   active: z.boolean().default(true).optional(),
 });
