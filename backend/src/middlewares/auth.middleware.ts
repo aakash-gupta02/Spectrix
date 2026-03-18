@@ -5,14 +5,12 @@ import ApiError from "../utils/ApiError.js";
 import { verifyAccessToken } from "../utils/Token.js";
 
 export const authMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies.token || req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     next(new ApiError(StatusCodes.UNAUTHORIZED, "Authorization token missing"));
     return;
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const payload = verifyAccessToken(token);

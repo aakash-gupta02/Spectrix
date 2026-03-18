@@ -44,12 +44,12 @@ export const registerService = async (payload: RegisterInput) => {
 export const loginService = async (payload: LoginInput) => {
   const user = await User.findOne({ email: payload.email });
   if (!user) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid Email or password");
   }
 
   const isValid = await user.comparePassword(payload.password);
   if (!isValid) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid email or Password");
   }
 
   const token = createAccessToken({
