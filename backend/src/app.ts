@@ -10,6 +10,7 @@ import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { globalRateLimiter } from "./middlewares/rateLimiter.middleware.js";
 import { requestLogger } from "./middlewares/requestLogger.js";
 import apiRoutes from "./routes/index.route.js";
+import sendResponse from "./utils/ApiResponse.js";
 
 const app = express();
 
@@ -22,11 +23,7 @@ app.use(cookieParser());
 app.use(requestLogger);
 
 app.get("/", (_req: Request, res: Response) => {
-  res.status(StatusCodes.OK).json({
-    success: true,
-    message: "Spectrix is Watching",
-    env: env.NODE_ENV,
-  });
+  sendResponse(res, StatusCodes.OK, "Spectrix is Watching", { env: env.NODE_ENV });
 });
 
 app.use("/api/v1", apiRoutes);
