@@ -60,6 +60,6 @@ serviceSchema.index({ userId: 1, name: 1 }, { unique: true }); // Ensure unique 
 
 
 // Types
-type ServiceDocument = InferSchemaType<typeof serviceSchema>;
+export type ServiceDocument = InferSchemaType<typeof serviceSchema>;
 
 export const Service = mongoose.model<ServiceDocument>("Service", serviceSchema);

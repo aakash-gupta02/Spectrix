@@ -23,6 +23,32 @@ export const getServicesByIdSrvc = async (serviceId: string, userId: string) => 
     return service;
 };
 
+export const getServicesSrvc = async (params: { userId: string; role: string; page: number; limit: number; }) => {
+    const { userId, role, page, limit } = params;
+
+    const filter = role === "admin" ? {} : { userId: userId };
+    const skip = (page - 1) * limit;
+
+    const [services, total] = await Promise.all([
+        Service.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+        Service.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return {
+        services,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
+};
+
 // Update a service by ID srvc
 export const updateServiceSrvc = async (serviceId: string, payload: UpdateServiceInput, userId: string) => {
 

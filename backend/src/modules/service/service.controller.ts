@@ -3,8 +3,8 @@ import { StatusCodes } from "http-status-codes";
 
 import sendResponse from "../../utils/ApiResponse.js";
 import CatchAsync from "../../utils/CatchAsync.js";
-import { createServiceSrvc, deleteServiceSrvc, getServicesByIdSrvc, updateServiceSrvc } from "./service.service.js";
-import type { CreateServiceInput, ServiceIdParamsInput, UpdateServiceInput } from "./service.validation.js";
+import { createServiceSrvc, deleteServiceSrvc, getServicesByIdSrvc, getServicesSrvc, updateServiceSrvc } from "./service.service.js";
+import type { CreateServiceInput, ServiceIdParamsInput, ServiceListQueryInput, UpdateServiceInput } from "./service.validation.js";
 
 // Create a new service
 export const createService = CatchAsync(async (req: Request, res: Response) => {
@@ -19,8 +19,17 @@ export const createService = CatchAsync(async (req: Request, res: Response) => {
 });
 
 export const getServices = CatchAsync(async (req: Request, res: Response) => {
-    // Placeholder for fetching services logic
-    sendResponse(res, StatusCodes.OK, "Services fetched successfully", { /* services data */ });
+    const { userId, role } = req.user
+    const { limit, page } = req.query as unknown as ServiceListQueryInput;
+
+    const result = await getServicesSrvc({
+        userId,
+        role,
+        limit,
+        page,
+    });
+
+    sendResponse(res, StatusCodes.OK, "Services fetched successfully", { service: result });
 });
 
 // Get a service by ID

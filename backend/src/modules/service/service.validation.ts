@@ -49,6 +49,12 @@ export const updateServiceSchema = z.object({
   
 }).strict();
 
+export const serviceListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+}).strict();
+
 export type ServiceIdParamsInput = ObjectIdParams;
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;
 export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
+export type ServiceListQueryInput = z.infer<typeof serviceListQuerySchema>;
