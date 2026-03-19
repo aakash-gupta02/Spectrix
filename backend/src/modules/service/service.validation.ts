@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { type ObjectIdParams, objectIdParamsSchema } from "../../utils/validation.js";
+
 const baseUrlSchema = z
   .string()
   .trim()
@@ -27,6 +29,8 @@ const baseUrlSchema = z
     return `${url.protocol}//${url.host}`;
   });
 
+export const serviceIdParamsSchema = objectIdParamsSchema;
+
 export const createServiceSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
   description: z.string().max(100, "Description must be less than 100 characters").optional(),
@@ -34,8 +38,7 @@ export const createServiceSchema = z.object({
   environment: z.enum(["production", "staging", "development"]).default("development"),
   active: z.boolean().default(true),
 
-
-});
+}).strict();
 
 export const updateServiceSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters").optional(),
@@ -43,7 +46,9 @@ export const updateServiceSchema = z.object({
   baseUrl: baseUrlSchema.optional(),
   environment: z.enum(["production", "staging", "development"]).default("development").optional(),
   active: z.boolean().default(true).optional(),
-});
+  
+}).strict();
 
+export type ServiceIdParamsInput = ObjectIdParams;
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;
 export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
