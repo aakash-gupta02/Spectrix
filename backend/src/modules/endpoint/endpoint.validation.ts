@@ -18,7 +18,7 @@ export const createEndpointSchema = z.object({
     body: z.any().optional(),
 
     interval: z.number().min(10).default(300)
-});
+}).strict();
 
 // Update schema 
 export const updateEndpointSchema = z.object({
@@ -29,7 +29,7 @@ export const updateEndpointSchema = z.object({
     headers: z.record(z.string(), z.string()).optional(),
     body: z.any().optional(),
     interval: z.number().min(10).default(300).optional()
-});
+}).strict();
 
 // Params schema
 export const endpointIdParamsSchema = objectIdParamsSchema;
