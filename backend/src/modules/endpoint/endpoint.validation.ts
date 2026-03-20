@@ -31,6 +31,12 @@ export const updateEndpointSchema = z.object({
     interval: z.number().min(10).default(300).optional()
 }).strict();
 
+export const getEndpointsQuerySchema = z.object({
+    serviceId: objectIdSchema.optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(100).default(10),
+}).strict();
+
 // Params schema
 export const endpointIdParamsSchema = objectIdParamsSchema;
 
@@ -39,3 +45,4 @@ export const endpointIdParamsSchema = objectIdParamsSchema;
 export type CreateEndpointInput = z.infer<typeof createEndpointSchema>;
 export type UpdateEndpointInput = z.infer<typeof updateEndpointSchema>;
 export type EndpointIdParams = z.infer<typeof endpointIdParamsSchema>;
+export type GetEndpointsQueryInput = z.infer<typeof getEndpointsQuerySchema>;
