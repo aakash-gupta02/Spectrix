@@ -1,4 +1,3 @@
-import { log } from "console";
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
 const logSchema = new Schema({
@@ -55,4 +54,4 @@ logSchema.index({ checkedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }); //
 // Types
 export type LogDocument = InferSchemaType<typeof logSchema>;
 
-export const LogModel = mongoose.model<LogDocument>("Log", logSchema);
+export const Log = mongoose.model<LogDocument>("Log", logSchema);
