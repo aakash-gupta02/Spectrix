@@ -1,9 +1,16 @@
+import { log } from "console";
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
 const logSchema = new Schema({
     endpointId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Endpoint",
+        required: true
+    },
+
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         required: true
     },
 
@@ -39,6 +46,7 @@ const logSchema = new Schema({
 }, { timestamps: true });
 
 // Indexes
+logSchema.index({ userId: 1, checkedAt: -1 }); 
 logSchema.index({ endpointId: 1, checkedAt: -1 }); // for querying logs of an endpoint sorted by time
 
 // TTL index to automatically delete logs older than 30 days
