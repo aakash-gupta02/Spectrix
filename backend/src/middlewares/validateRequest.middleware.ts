@@ -7,7 +7,14 @@ const validatePart = (part: "body" | "params" | "query", schema: ZodTypeAny) => 
       const parsed = await schema.parseAsync(req[part]);
 
       if (part === "query") {
-        Object.assign(req.query, parsed as Request["query"]);
+        // Express may expose req.query via a computed getter; overriding at request level
+        // guarantees parsed defaults/coercions are what controllers read.
+        Object.defineProperty(req, "query", {
+          value: parsed,
+          configurable: true,
+          enumerable: true,
+          writable: true,
+        });
       } else if (part === "params") {
         req.params = parsed as Request["params"];
       } else {
