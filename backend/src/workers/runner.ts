@@ -71,7 +71,7 @@ export async function runCheck(endpoint: EndpointDocument) {
   const start = Date.now();
   const endpointId = (endpoint as any)?._id;
   const checkedAt = new Date();
-  let result: "success" | "failure" = "failure"; // Default to failure
+  let result: "success" | "failure" = "failure";
   let statusCode: number | null = null;
   let responseTime: number;
   let errorMessage: string | undefined;
@@ -95,17 +95,17 @@ export async function runCheck(endpoint: EndpointDocument) {
       params: toStringRecord(endpoint.query),
       headers: toStringRecord(endpoint.headers),
       data: endpoint.body,
-      timeout: endpoint.timeout
+      timeout: endpoint.timeout,
+      validateStatus: () => true // IMPORTANT: Don't throw on any status code
     });
 
     responseTime = Date.now() - start;
     statusCode = res.status;
-
-    const isSuccess = endpoint.expectedStatus
+    
+    // Fix: Check if expectedStatus exists and is an array
+    const isSuccess = endpoint.expectedStatus && Array.isArray(endpoint.expectedStatus) && endpoint.expectedStatus.length > 0
       ? endpoint.expectedStatus.includes(res.status)
       : res.status >= 200 && res.status < 300;
-
-    console.log(" endpoint expected data check ", endpoint.expectedStatus, res.status);
 
 
     result = isSuccess ? "success" : "failure";
@@ -128,6 +128,8 @@ export async function runCheck(endpoint: EndpointDocument) {
     );
 
   } catch (err: any) {
+    // This block only runs for network errors, timeouts, etc.
+    // NOT for HTTP status codes like 409
     responseTime = Date.now() - start;
     errorMessage = getErrorMessage(err);
     statusCode = err?.response?.status || null;
