@@ -13,33 +13,33 @@ async function runWorker() {
     try {
       const endpoints = await Endpoint.find({ active: true })
         .populate("serviceId", "baseUrl") // populate service's baseUrl
-        
 
-        // console.log("endpoints: ", endpoints);
-        
+
+      // console.log("endpoints: ", endpoints);
+
 
       // Run checks in parallel but still observe each failure.
-              logger.info(`[worker] Poll started with ${endpoints.length} active endpoints`);
+      logger.info(`[worker] Poll started with ${endpoints.length} active endpoints`);
       const results = await Promise.allSettled(
         endpoints.map((endpoint) => runCheck(endpoint))
       );
 
-              let failedCount = 0;
+      let failedCount = 0;
 
       results.forEach((result, index) => {
         if (result.status === "rejected") {
-                  failedCount += 1;
+          failedCount += 1;
           const endpointId = (endpoints[index] as any)?._id;
-                  logger.error(`runCheck failed for endpoint ${endpointId}: ${String(result.reason)}`);
+          logger.error(`runCheck failed for endpoint ${endpointId}: ${String(result.reason)}`);
         }
       });
 
-              logger.info(
-                `[worker] Poll completed: total=${results.length} rejected=${failedCount} fulfilled=${results.length - failedCount}`
-              );
+      logger.info(
+        `[worker] Poll completed: total=${results.length} rejected=${failedCount} fulfilled=${results.length - failedCount}`
+      );
 
     } catch (err) {
-              logger.error(`Worker error: ${String(err)}`);
+      logger.error(`Worker error: ${String(err)}`);
     }
   }, POLL_INTERVAL);
 }

@@ -2,6 +2,7 @@ import axios from "axios";
 import { Log } from "../modules/log/log.model.js";
 import { EndpointDocument } from "../modules/endpoint/endpoint.model.js";
 import { logger } from "../config/logger.js";
+import { handleIncidentService } from "../modules/incident/incident.service.js"; // Adjust path as needed
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -69,6 +70,11 @@ const toStringRecord = (value: unknown): Record<string, string> => {
 export async function runCheck(endpoint: EndpointDocument) {
   const start = Date.now();
   const endpointId = (endpoint as any)?._id;
+  const checkedAt = new Date();
+  let result: "success" | "failure" = "failure"; // Default to failure
+  let statusCode: number | null = null;
+  let responseTime: number;
+  let errorMessage: string | undefined;
 
   try {
     const baseUrl = (endpoint.serviceId as any)?.baseUrl;
@@ -92,32 +98,40 @@ export async function runCheck(endpoint: EndpointDocument) {
       timeout: endpoint.timeout
     });
 
-    const responseTime = Date.now() - start;
-    
-    const isSuccess = endpoint.expectedStatus?.length
+    responseTime = Date.now() - start;
+    statusCode = res.status;
+
+    const isSuccess = endpoint.expectedStatus
       ? endpoint.expectedStatus.includes(res.status)
       : res.status >= 200 && res.status < 300;
+
+    console.log(" endpoint expected data check ", endpoint.expectedStatus, res.status);
+
+
+    result = isSuccess ? "success" : "failure";
+
+    if (!isSuccess) {
+      errorMessage = `Unexpected status code: ${res.status}`;
+    }
 
     await Log.create({
       endpointId: (endpoint as any)._id,
       userId: endpoint.userId,
-      result: isSuccess ? "success" : "failure",
-      statusCode: res.status,
+      result,
+      statusCode,
       responseTime,
-      errorMessage: isSuccess
-        ? undefined
-        : `Unexpected status code: ${res.status}`
+      errorMessage
     });
 
     logger.info(
       `[worker] ${isSuccess ? "PASS" : "FAIL"} endpointId=${endpointId} ${endpoint.method} ${url} status=${res.status} responseTime=${responseTime}ms`
     );
 
-
   } catch (err: any) {
-    const responseTime = Date.now() - start;
-    const errorMessage = getErrorMessage(err);
-    const statusCode = err?.response?.status || null;
+    responseTime = Date.now() - start;
+    errorMessage = getErrorMessage(err);
+    statusCode = err?.response?.status || null;
+    result = "failure";
 
     await Log.create({
       endpointId,
@@ -131,7 +145,14 @@ export async function runCheck(endpoint: EndpointDocument) {
     logger.error(
       `[worker] FAIL endpointId=${endpointId} ${endpoint.method} ${endpoint.path} status=${statusCode ?? "N/A"} responseTime=${responseTime}ms error=${errorMessage}`
     );
-
+  } finally {
+    // Handle incident based on the result
+    try {
+      await handleIncidentService(endpoint, result, checkedAt);
+    } catch (incidentError) {
+      logger.error(
+        `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`
+      );
+    }
   }
-
 }

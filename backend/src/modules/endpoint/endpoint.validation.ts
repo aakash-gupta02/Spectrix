@@ -28,7 +28,8 @@ export const updateEndpointSchema = z.object({
     query: z.record(z.string(), z.string()).optional(),
     headers: z.record(z.string(), z.string()).optional(),
     body: z.any().optional(),
-    interval: z.number().min(10).default(300).optional()
+    interval: z.number().min(10).default(300).optional(),
+    expectedStatus: z.array(z.number().int().positive()).optional(),
 }).strict();
 
 export const getEndpointsQuerySchema = z.object({
