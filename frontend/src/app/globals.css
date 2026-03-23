@@ -60,3 +60,23 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: fit-content;
+  animation: marquee-scroll 36s linear infinite;
+}
+
+.group:hover .marquee-track {
+  animation-play-state: paused;
+}
