@@ -6,7 +6,7 @@
   }
 }
 
-:root {
+@theme inline {
   /* Brand */
   --color-primary: #c6f91f;
   --color-primary-strong: #b3eb11;
@@ -44,11 +44,19 @@
   --font-display: var(--font-inter);
   --font-body: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-
 }
 
 body {
   background: var(--color-page);
   color: var(--color-body);
   font-family: var(--font-body), sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
