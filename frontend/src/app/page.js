@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "@/components/landingPage/Navbar";
 import Hero from "@/components/landingPage/Hero";
 import Marquee from "@/components/landingPage/Marquee";
+import Features from "@/components/landingPage/Features";
 
 const page = () => {
   return (
@@ -9,6 +10,7 @@ const page = () => {
       <Navbar />
       <Hero />
       <Marquee />
+      <Features />
     </main>
   );
 };
