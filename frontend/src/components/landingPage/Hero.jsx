@@ -18,7 +18,7 @@ export default function Hero() {
           <div className="mb-6 flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-primary" />
             <p className="font-mono text-xs uppercase tracking-widest text-body">
-              API Observability v2.0
+              API Observability v1.0
             </p>
           </div>
 
@@ -63,10 +63,10 @@ export default function Hero() {
         }}
       >
         <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-page to-page opacity-40" />
-        <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="pointer-events-none absolute right-0 top-0 h-150 w-150 rounded-full bg-primary/5 blur-[120px]" />
 
         <div className="relative z-10 flex h-full items-center justify-center p-8 lg:p-16">
-          <div className="flex h-[600px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-white/10 bg-surface-2 shadow-2xl backdrop-blur-xl md:h-[500px] md:flex-row">
+          <div className="flex h-150 w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-white/10 bg-surface-2 shadow-2xl backdrop-blur-xl md:h-125 md:flex-row">
             <div className="flex w-full flex-col border-r border-white/5 bg-surface-1/60 p-4 md:w-64">
               <div className="mb-8 flex items-center gap-3 px-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-medium text-black">
