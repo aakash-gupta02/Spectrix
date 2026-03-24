@@ -5,6 +5,8 @@ import Marquee from "@/components/landingPage/Marquee";
 import Features from "@/components/landingPage/Features";
 import Capabilities from "@/components/landingPage/Capabilities";
 import Integration from "@/components/landingPage/Integration";
+import CTA from "@/components/landingPage/CTA";
+import Footer from "@/components/landingPage/Footer";
 
 const page = () => {
   return (
@@ -14,7 +16,9 @@ const page = () => {
       <Marquee />
       <Features />
       <Capabilities />
+      <CTA />
       {/* <Integration /> */}
+      <Footer />
     </main>
   );
 };
