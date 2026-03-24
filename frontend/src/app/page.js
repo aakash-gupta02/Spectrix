@@ -3,6 +3,8 @@ import Navbar from "@/components/landingPage/Navbar";
 import Hero from "@/components/landingPage/Hero";
 import Marquee from "@/components/landingPage/Marquee";
 import Features from "@/components/landingPage/Features";
+import Capabilities from "@/components/landingPage/Capabilities";
+import Integration from "@/components/landingPage/Integration";
 
 const page = () => {
   return (
@@ -11,6 +13,8 @@ const page = () => {
       <Hero />
       <Marquee />
       <Features />
+      <Capabilities />
+      {/* <Integration /> */}
     </main>
   );
 };

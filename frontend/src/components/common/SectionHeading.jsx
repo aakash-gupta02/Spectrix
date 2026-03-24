@@ -22,11 +22,14 @@ const SectionHeading = ({ eyebrow, title, description, buttonTxt }) => {
                     </p>
                 </div>
 
-                <div className="flex flex-col items-center gap-4 sm:flex-row">
-                    <button className="w-full bg-white px-6 py-3 text-center font-normal text-black transition-colors hover:bg-slate-200 sm:w-auto">
-                        {buttonTxt || "View Features"}
-                    </button>
-                </div>
+                {buttonTxt &&
+                    <div className="flex flex-col items-center gap-4 sm:flex-row">
+                        <button className="w-full bg-white px-6 py-3 text-center font-normal text-black transition-colors hover:bg-slate-200 sm:w-auto">
+                            {buttonTxt}
+                        </button>
+                    </div>
+                }
+
             </div>
 
             <div className="mt-12 h-px w-full bg-linear-to-r from-slate-800 via-slate-700 to-transparent" />
