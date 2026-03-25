@@ -22,8 +22,8 @@ export default function DashboardNavbar({ onMenuToggle }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-dashed border-border bg-black/90 backdrop-blur-md">
-      <div className="grid h-14 grid-cols-12 sm:h-16">
-        <div className="col-span-7 flex items-center border-r border-dashed border-border px-4 md:col-span-3 sm:px-6">
+      <div className="flex h-14 sm:h-16">
+        <div className="flex min-w-0 flex-1 items-center border-r border-dashed border-border px-4 md:w-64 md:flex-none sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-primary text-xs font-semibold text-black">
               S
@@ -32,7 +32,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
           </Link>
         </div>
 
-        <div className="hidden items-center border-r border-dashed border-border px-4 md:col-span-6 md:flex">
+        <div className="hidden flex-1 items-center border-r border-dashed border-border px-4 md:flex">
           <div className="flex items-center gap-2 text-xs text-body">
             <span className="text-[0.625rem] uppercase tracking-[0.18em] text-white/45">Dashboard</span>
             <span className="text-white/25">/</span>
@@ -40,12 +40,12 @@ export default function DashboardNavbar({ onMenuToggle }) {
           </div>
         </div>
 
-        <div className="col-span-5 flex items-center justify-end gap-2 px-3 md:col-span-3 sm:px-6">
+        <div className="flex shrink-0 items-center justify-end gap-2 px-3 sm:px-6">
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded border border-border px-3 py-1.5 text-[0.6875rem] text-body transition-colors hover:bg-white/5"
           >
-            <span className="hidden sm:inline">New Alert</span>
+            <span className="hidden lg:inline">New Alert</span>
             <Bell size={15} />
           </button>
 
@@ -68,7 +68,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
 
           <button
             type="button"
-            className="hidden items-center gap-2 rounded border border-border bg-white/5 px-2 py-1.5 transition-colors hover:bg-white/10 md:flex"
+            className="hidden items-center gap-2 rounded border border-border bg-white/5 px-2 py-1.5 transition-colors hover:bg-white/10 lg:flex"
           >
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-slate-600 to-slate-900 text-[0.625rem] text-heading">
               {userInitials || "DU"}
