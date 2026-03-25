@@ -93,7 +93,7 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
-            href="#"
+            href="/login"
             onClick={() => setIsOpen(false)}
             className="border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-muted hover:bg-white/5 hover:text-white"
           >
