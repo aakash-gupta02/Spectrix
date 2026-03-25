@@ -11,7 +11,7 @@ export const register = CatchAsync(async (req: Request, res: Response) => {
 
   setCookie(res, "token", token);
 
-  sendResponse(res, StatusCodes.CREATED, "User registered successfully", { token, user });
+  sendResponse(res, StatusCodes.CREATED, "User registered successfully", { user });
 });
 
 export const login = CatchAsync(async (req: Request, res: Response) => {
@@ -19,7 +19,7 @@ export const login = CatchAsync(async (req: Request, res: Response) => {
 
   setCookie(res, "token", token);
 
-  sendResponse(res, StatusCodes.OK, "Login successful", { token, user });
+  sendResponse(res, StatusCodes.OK, "Login successful", { user });
 });
 
 export const me = CatchAsync(async (req: Request, res: Response) => {

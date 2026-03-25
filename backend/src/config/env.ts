@@ -13,6 +13,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
+  CLIENT: z.string().min(1, "CLIENT is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -22,3 +23,13 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+const staticOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+export const allowedOrigins = [
+  env.CLIENT,
+  ...staticOrigins,
+];
