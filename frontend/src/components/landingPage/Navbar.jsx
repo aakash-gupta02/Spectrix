@@ -47,7 +47,7 @@ export default function Navbar() {
 
           {/* LOGIN */}
           <Link
-            href="#"
+            href="/login"
             className="hidden h-full items-center border-x border-dashed border-border px-8 text-xs font-medium uppercase tracking-wide text-muted transition-colors hover:text-white hover:bg-white/5 md:flex"
           >
             Login
@@ -55,7 +55,7 @@ export default function Navbar() {
 
           {/* DASHBOARD (FIXED) */}
           <Link
-            href="#"
+            href="/dashboard"
             className="group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
           >
             Dashboard
