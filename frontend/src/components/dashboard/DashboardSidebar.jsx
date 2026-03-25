@@ -7,12 +7,14 @@ import {
   CreditCard,
   Globe,
   LayoutGrid,
+  LogOut,
   Settings,
   TriangleAlert,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const sideNavGroups = [
   {
@@ -39,7 +41,15 @@ const sideNavGroups = [
 ];
 
 export default function DashboardSidebar({ isOpen, onClose }) {
+  const router = useRouter();
+  const { clearAuth } = useAuth();
   const pathname = usePathname();
+
+  const handleLogout = () => {
+    clearAuth();
+    onClose();
+    router.replace("/login");
+  };
 
   return (
     <>
@@ -101,11 +111,22 @@ export default function DashboardSidebar({ isOpen, onClose }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-between border-t border-dashed border-border px-3 py-3 text-[0.625rem] text-body">
-          <span>MVP Workspace</span>
-          <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-emerald-400">
-            Live
-          </span>
+        <div className="space-y-2 border-t border-dashed border-border px-3 py-3 text-[0.625rem] text-body">
+          <div className="flex items-center justify-between">
+            <span>MVP Workspace</span>
+            <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-emerald-400">
+              Live
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded border border-border px-2 py-2 text-xs text-body transition-colors hover:bg-white/5"
+          >
+            <LogOut size={14} />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 

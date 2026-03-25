@@ -1,12 +1,36 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, Menu, Moon } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, Moon } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const breadcrumbLabels = {
+  alerts: "Alerts",
+  incidents: "Incidents",
+  analytics: "Analytics",
+  "status-page": "Status Page",
+  team: "Team & Access",
+  billing: "Billing",
+  settings: "Settings",
+};
 
 export default function DashboardNavbar({ onMenuToggle }) {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, clearAuth } = useAuth();
+  const pathname = usePathname();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  const currentSectionLabel = useMemo(() => {
+    if (!pathname || pathname === "/dashboard") {
+      return "Overview";
+    }
+
+    const sectionKey = pathname.replace("/dashboard/", "").split("/")[0];
+    return breadcrumbLabels[sectionKey] || "Overview";
+  }, [pathname]);
 
   const userInitials = useMemo(() => {
     const source =
@@ -19,6 +43,38 @@ export default function DashboardNavbar({ onMenuToggle }) {
       .map((part) => part[0]?.toUpperCase())
       .join("");
   }, [user]);
+
+  useEffect(() => {
+    if (!isProfileOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isProfileOpen]);
+
+  const handleLogout = () => {
+    clearAuth();
+    setIsProfileOpen(false);
+    router.replace("/login");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-dashed border-border bg-black/90 backdrop-blur-md">
@@ -36,7 +92,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
           <div className="flex items-center gap-2 text-xs text-body">
             <span className="text-[0.625rem] uppercase tracking-[0.18em] text-white/45">Dashboard</span>
             <span className="text-white/25">/</span>
-            <span className="text-white/80">Overview</span>
+            <span className="text-white/80">{currentSectionLabel}</span>
           </div>
         </div>
 
@@ -66,19 +122,43 @@ export default function DashboardNavbar({ onMenuToggle }) {
 
           <div className="mx-1 hidden h-8 w-px bg-border md:block" />
 
-          <button
-            type="button"
-            className="hidden items-center gap-2 rounded border border-border bg-white/5 px-2 py-1.5 transition-colors hover:bg-white/10 lg:flex"
-          >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-slate-600 to-slate-900 text-[0.625rem] text-heading">
-              {userInitials || "DU"}
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-[0.6875rem] text-heading">{user?.name || "Workspace User"}</span>
-              <span className="text-[0.625rem] text-body">Workspace</span>
-            </div>
-            <ChevronDown size={14} className="text-body" />
-          </button>
+          <div ref={profileMenuRef} className="relative hidden lg:block">
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded border border-border bg-white/5 px-2 py-1.5 transition-colors hover:bg-white/10"
+            >
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-slate-600 to-slate-900 text-[0.625rem] text-heading">
+                {userInitials || "DU"}
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[0.6875rem] text-heading">{user?.name || "Workspace User"}</span>
+                <span className="text-[0.625rem] text-body">Workspace</span>
+              </div>
+              <ChevronDown
+                size={14}
+                className={`text-body transition-transform ${isProfileOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {isProfileOpen && (
+              <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded border border-border bg-surface-2 p-2 shadow-strong">
+                <div className="mb-2 border-b border-border px-2 pb-2">
+                  <p className="text-xs text-heading">{user?.name || "Workspace User"}</p>
+                  <p className="text-[0.6875rem] text-body">{user?.email || "Signed in"}</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs text-rose-300 transition-colors hover:bg-rose-500/10"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
