@@ -3,6 +3,9 @@
 import { serviceAPI } from "@/lib/api/api";
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
+import DashboardButton from "@/components/ui/DashboardButton";
+import LandingButton from "@/components/ui/LandingButton";
+import { Download, Plus } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -80,7 +83,24 @@ export default function ServicePage() {
             <SectionHeading
                 title="Services"
                 description="Add and manage service base URLs. Define endpoints as path-only routes, not full URLs."
-            />
+            >
+                <DashboardButton variant="secondary">
+                    <Download size={14} />
+                    Export list
+                </DashboardButton>
+                
+                <DashboardButton
+                    variant="primary"
+                    onClick={() => {
+                        document
+                            .querySelector('input[name="name"]')
+                            ?.focus();
+                    }}
+                >
+                    <Plus size={14} />
+                    New service
+                </DashboardButton>
+            </SectionHeading>
 
             <div className="mb-6 border border-dashed border-border bg-surface-1 p-5 sm:p-6">
                 <div className="mb-5 flex items-center justify-between border-b border-border pb-3">
@@ -245,6 +265,33 @@ export default function ServicePage() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div className="mt-6 border border-dashed border-border bg-surface-1 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+                    <h2 className="text-sm uppercase tracking-[0.12em] text-heading">Button Preview</h2>
+                    <span className="text-[0.6875rem] text-body">Reusable UI components</span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-3 border border-dashed border-border p-4">
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted">Dashboard Button</p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <DashboardButton onClick={() => console.log("Dashboard secondary button clicked")}>Secondary</DashboardButton>
+                            <DashboardButton variant="primary" onClick={() => console.log("Dashboard primary button clicked")}>Primary</DashboardButton>
+                            <DashboardButton href="/dashboard" variant="secondary">Go Dashboard</DashboardButton>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 border border-dashed border-border p-4">
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted">Landing Button</p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <LandingButton onClick={() => console.log("Landing primary button clicked")}>Start Free Trial</LandingButton>
+                            <LandingButton variant="ghost" onClick={() => console.log("Landing ghost button clicked")}>View Docs</LandingButton>
+                            <LandingButton href="/" variant="primary">Go Landing</LandingButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Container>

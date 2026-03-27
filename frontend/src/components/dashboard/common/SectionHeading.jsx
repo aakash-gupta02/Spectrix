@@ -1,16 +1,7 @@
 import React from "react";
 
-const baseButtonClassName =
-    "rounded border px-3 py-1.5 text-[0.75rem] transition-colors";
-
-const actionVariants = {
-    secondary: `${baseButtonClassName} border-border text-body hover:bg-white/5`,
-    primary:
-        `${baseButtonClassName} border-primary/40 bg-primary-soft text-primary hover:bg-primary/20`,
-};
-
-const SectionHeading = ({ title, description, actions = [] }) => {
-    const hasActions = actions.length > 0;
+const SectionHeading = ({ title, description, children }) => {
+    const hasActions = Boolean(children);
 
     return (
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -21,32 +12,7 @@ const SectionHeading = ({ title, description, actions = [] }) => {
 
             {hasActions ? (
                 <div className="flex items-center gap-3">
-                    {actions.map((action) => {
-                        const {
-                            label,
-                            href,
-                            type = "button",
-                            variant = "secondary",
-                            className = "",
-                        } = action;
-
-                        const variantClassName = actionVariants[variant] || actionVariants.secondary;
-                        const classes = `${variantClassName} ${className}`.trim();
-
-                        if (href) {
-                            return (
-                                <a key={label} href={href} className={classes}>
-                                    {label}
-                                </a>
-                            );
-                        }
-
-                        return (
-                            <button key={label} type={type} className={classes}>
-                                {label}
-                            </button>
-                        );
-                    })}
+                    {children}
                 </div>
             ) : null}
         </div>
