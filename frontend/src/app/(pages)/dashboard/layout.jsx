@@ -1,7 +1,7 @@
 "use client";
 
-import DashboardNavbar from "@/components/dashboard/DashboardNavbar";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardNavbar from "@/components/dashboard/layout/DashboardNavbar";
+import DashboardSidebar from "@/components/dashboard/layout/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
