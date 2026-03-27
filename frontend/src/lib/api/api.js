@@ -32,13 +32,13 @@ export const serviceAPI = {
 
   // update an existing service
   updateService: async (id, payload) => {
-    const response = await apiClient.put(`/services/${id}`, payload);
+    const response = await apiClient.patch(`/service/${id}`, payload);
     return response.data;
   },
 
   // delete a service
   deleteService: async (id) => {
-    const response = await apiClient.delete(`/services/${id}`);
+    const response = await apiClient.delete(`/service/${id}`);
     return response.data;
   },
 };

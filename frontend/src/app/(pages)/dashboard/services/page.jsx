@@ -4,9 +4,9 @@ import { serviceAPI } from "@/lib/api/api";
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
 import DashboardButton from "@/components/ui/DashboardButton";
-import LandingButton from "@/components/ui/LandingButton";
 import CreateServiceModal from "./_components/CreateServiceModal";
-import { Download, Plus } from "lucide-react";
+import EditServicePanel from "./_components/EditServicePanel";
+import { Download, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -31,6 +31,8 @@ function formatDate(dateValue) {
 export default function ServicePage() {
     const [successMessage, setSuccessMessage] = useState("");
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
+    const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+    const [selectedService, setSelectedService] = useState(null);
 
     const servicesQuery = useQuery({
         queryKey: ["services"],
@@ -72,6 +74,20 @@ export default function ServicePage() {
                 }}
             />
 
+            <EditServicePanel
+                isOpen={isEditPanelOpen}
+                service={selectedService}
+                onClose={() => {
+                    setIsEditPanelOpen(false);
+                    setSelectedService(null);
+                }}
+                onUpdated={(message) => {
+                    setSuccessMessage(message);
+                    setIsEditPanelOpen(false);
+                    setSelectedService(null);
+                }}
+            />
+
             {/* Success Message from create service modal */}
             {successMessage ? (
                 <div className="mb-6 border border-primary/40 bg-primary-soft px-3 py-2 text-sm text-primary">
@@ -95,12 +111,13 @@ export default function ServicePage() {
                                 <th className="px-4 py-3 font-normal">Environment</th>
                                 <th className="px-4 py-3 font-normal">Status</th>
                                 <th className="px-4 py-3 font-normal">Created</th>
+                                <th className="px-4 py-3 font-normal">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {servicesQuery.isLoading ? (
                                 <tr>
-                                    <td className="px-4 py-6 text-body" colSpan={5}>
+                                    <td className="px-4 py-6 text-body" colSpan={6}>
                                         Loading services...
                                     </td>
                                 </tr>
@@ -108,29 +125,39 @@ export default function ServicePage() {
 
                             {servicesQuery.isError ? (
                                 <tr>
-                                    <td className="px-4 py-6 text-red-300" colSpan={5}>
+                                    <td className="px-4 py-6 text-red-300" colSpan={6}>
                                         {servicesQuery.error?.response?.data?.message ||
                                             "Could not load services."}
                                     </td>
                                 </tr>
                             ) : null}
 
+                            {/* No Services Data Message */}
                             {!servicesQuery.isLoading && !servicesQuery.isError && services.length === 0 ? (
                                 <tr>
-                                    <td className="px-4 py-6 text-body" colSpan={5}>
+                                    <td className="px-4 py-6 text-body" colSpan={6}>
                                         No services yet. Create your first service above.
                                     </td>
                                 </tr>
                             ) : null}
 
+                            {/* Service Rows */}
                             {services.map((service) => (
                                 <tr key={service._id || service.id || service.baseUrl} className="border-b border-border/60 last:border-b-0">
+
+                                    {/* Service Name and Description */}
                                     <td className="px-4 py-3 text-heading">
                                         <p>{service.name || "-"}</p>
                                         <p className="mt-1 text-xs text-body">{service.description || "No description"}</p>
                                     </td>
+
+                                    {/* Base URL */}
                                     <td className="px-4 py-3 font-mono text-xs text-body-strong">{service.baseUrl || "-"}</td>
+
+                                    {/* Environment */}
                                     <td className="px-4 py-3 capitalize text-body">{service.environment || "-"}</td>
+
+                                    {/* Active Status */}
                                     <td className="px-4 py-3">
                                         <span
                                             className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] ${service.active
@@ -141,7 +168,43 @@ export default function ServicePage() {
                                             {service.active ? "Active" : "Inactive"}
                                         </span>
                                     </td>
+
+                                    {/* Date */}
                                     <td className="px-4 py-3 text-body">{formatDate(service.createdAt)}</td>
+
+                                    {/* Actions */}
+                                    <td className="px-4 py-3">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <DashboardButton
+                                                type="button"
+                                                variant="secondary"
+                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                                            >
+                                                <Eye size={13} />
+                                                Monitor
+                                            </DashboardButton>
+                                            <DashboardButton
+                                                type="button"
+                                                variant="secondary"
+                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                                                onClick={() => {
+                                                    setSelectedService(service);
+                                                    setIsCreatePanelOpen(false);
+                                                    setIsEditPanelOpen(true);
+                                                }}
+                                            >
+                                                <Pencil size={13} />
+                                                Edit
+                                            </DashboardButton>
+                                            <DashboardButton
+                                                type="button"
+                                                variant="secondary"
+                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                                            >
+                                                <Trash2 size={13} />
+                                            </DashboardButton>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
