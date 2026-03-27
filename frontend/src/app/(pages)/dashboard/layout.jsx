@@ -8,16 +8,20 @@ import { useEffect, useState } from "react";
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isInitialized } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
+        if (!isInitialized) {
+            return;
+        }
+
         if (!isAuthenticated) {
             router.replace("/login");
         }
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, isInitialized, router]);
 
-    if (!isAuthenticated) {
+    if (!isInitialized || !isAuthenticated) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-page">
                 <p className="text-sm text-muted">Checking access...</p>

@@ -39,7 +39,25 @@ function writeStoredUser(user) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => readStoredUser());
+  const [user, setUser] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setUser(readStoredUser());
+      setIsInitialized(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const clearAuth = useCallback(() => {
     setUser(null);
@@ -81,12 +99,12 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isAuthenticated: Boolean(user),
-      isInitialized: true,
+      isInitialized,
       setAuthenticatedUser,
       applyLoginResponse,
       clearAuth,
     }),
-    [applyLoginResponse, clearAuth, setAuthenticatedUser, user],
+    [applyLoginResponse, clearAuth, isInitialized, setAuthenticatedUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
