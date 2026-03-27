@@ -6,6 +6,7 @@ import SectionHeading from "@/components/dashboard/common/SectionHeading";
 import DashboardButton from "@/components/ui/DashboardButton";
 import CreateServiceModal from "./_components/CreateServiceModal";
 import EditServicePanel from "./_components/EditServicePanel";
+import DeleteServiceModal from "./_components/DeleteServiceModal";
 import { Download, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -32,6 +33,7 @@ export default function ServicePage() {
     const [successMessage, setSuccessMessage] = useState("");
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedService, setSelectedService] = useState(null);
 
     const servicesQuery = useQuery({
@@ -84,6 +86,20 @@ export default function ServicePage() {
                 onUpdated={(message) => {
                     setSuccessMessage(message);
                     setIsEditPanelOpen(false);
+                    setSelectedService(null);
+                }}
+            />
+
+            <DeleteServiceModal
+                isOpen={isDeleteModalOpen}
+                service={selectedService}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedService(null);
+                }}
+                onDeleted={(message) => {
+                    setSuccessMessage(message);
+                    setIsDeleteModalOpen(false);
                     setSelectedService(null);
                 }}
             />
@@ -194,12 +210,18 @@ export default function ServicePage() {
                                                 }}
                                             >
                                                 <Pencil size={13} />
-                                                Edit
+
                                             </DashboardButton>
                                             <DashboardButton
                                                 type="button"
                                                 variant="secondary"
                                                 className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                                                onClick={() => {
+                                                    setSelectedService(service);
+                                                    setIsCreatePanelOpen(false);
+                                                    setIsEditPanelOpen(false);
+                                                    setIsDeleteModalOpen(true);
+                                                }}
                                             >
                                                 <Trash2 size={13} />
                                             </DashboardButton>
