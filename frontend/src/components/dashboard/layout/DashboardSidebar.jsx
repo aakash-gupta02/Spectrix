@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import ServiceDropDown from "./ServiceDropDown";
 
 const sideNavGroups = [
   {
@@ -54,27 +55,11 @@ export default function DashboardSidebar({ isOpen, onClose }) {
   return (
     <>
       <aside
-        className={`fixed inset-y-14 left-0 z-40 w-64 border-r border-dashed border-border bg-page transition-transform duration-200 sm:inset-y-16 md:static md:inset-auto md:flex md:translate-x-0 md:flex-col ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-14 left-0 z-40 w-64 border-r border-dashed border-border bg-page transition-transform duration-200 sm:inset-y-16 md:static md:inset-auto md:flex md:translate-x-0 md:flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
-        <div className="border-b border-dashed border-border px-4 py-4">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between rounded bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
-          >
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded bg-primary text-xs font-medium text-black">
-                P
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs text-heading">Production</span>
-                <span className="text-[0.625rem] text-body">us-east-1</span>
-              </div>
-            </div>
-            <ChevronDown size={16} className="text-body" />
-          </button>
-        </div>
+
+        <ServiceDropDown />
 
         <div className="no-scrollbar flex-1 overflow-y-auto py-4 text-xs">
           {sideNavGroups.map((group) => (
@@ -95,11 +80,10 @@ export default function DashboardSidebar({ isOpen, onClose }) {
                       key={item.label}
                       href={item.href}
                       onClick={onClose}
-                      className={`flex w-full items-center gap-2 rounded px-3 py-2 text-[0.75rem] transition-colors ${
-                        isActive
+                      className={`flex w-full items-center gap-2 rounded px-3 py-2 text-[0.75rem] transition-colors ${isActive
                           ? "bg-white/5 text-heading"
                           : "text-body hover:bg-white/5 hover:text-heading"
-                      }`}
+                        }`}
                     >
                       <Icon size={16} className={isActive ? "text-primary" : ""} />
                       <span>{item.label}</span>

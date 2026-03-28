@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-full antialiased selection:bg-primary selection:text-page`}
     >
       <body className="min-h-full flex flex-col">
