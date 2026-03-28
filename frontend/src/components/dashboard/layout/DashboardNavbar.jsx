@@ -14,6 +14,7 @@ const breadcrumbLabels = {
   team: "Team & Access",
   billing: "Billing",
   settings: "Settings",
+  services: "Services",
 };
 
 export default function DashboardNavbar({ onMenuToggle }) {
