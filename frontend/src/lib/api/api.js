@@ -43,3 +43,34 @@ export const serviceAPI = {
   },
 };
 
+const ENDPOINT_MODULE = "endpoint";
+
+export const endPointsAPI = {
+
+  getEndPoints: async () => {
+    const response = await apiClient.get(`/endpoint`);
+    return response.data;
+  },
+
+  getEndPoint: async (id) => {
+    const response = await apiClient.get(`/${ENDPOINT_MODULE}/${id}`);
+    return response.data;
+  },
+
+  createEndpoint: async (payload) => {
+    const response = await apiClient.post(`/${ENDPOINT_MODULE}`, payload);
+    return response.data;
+  },
+
+  updateEndpoint: async (id, payload) => {
+    const response = await apiClient.patch(`/${ENDPOINT_MODULE}/${id}`, payload);
+    return response.data;
+  },
+
+  deleteEndpoint: async (id) => {
+    const response = await apiClient.delete(`/${ENDPOINT_MODULE}/${id}`);
+    return response.data;
+  },
+
+}
+

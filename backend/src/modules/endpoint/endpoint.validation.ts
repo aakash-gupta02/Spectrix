@@ -17,7 +17,10 @@ export const createEndpointSchema = z.object({
 
     body: z.any().optional(),
 
-    interval: z.number().min(10).default(300)
+    interval: z.number().min(10).default(300),
+
+    expectedStatus: z.array(z.number().int().positive()).optional(),
+    active: z.boolean().default(true),
 }).strict();
 
 // Update schema 
@@ -30,6 +33,7 @@ export const updateEndpointSchema = z.object({
     body: z.any().optional(),
     interval: z.number().min(10).default(300).optional(),
     expectedStatus: z.array(z.number().int().positive()).optional(),
+    active: z.boolean().optional(),
 }).strict();
 
 export const getEndpointsQuerySchema = z.object({

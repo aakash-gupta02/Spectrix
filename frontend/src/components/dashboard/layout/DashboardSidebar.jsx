@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   LogOut,
   Settings,
+  Terminal,
   TriangleAlert,
   Users,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const sideNavGroups = [
     title: "Core",
     items: [
       { label: "Overview", href: "/dashboard", icon: LayoutGrid },
+      { label: "API's", href: "/dashboard/apis", icon: Terminal },
       { label: "Alerts", href: "/dashboard/alerts", icon: Bell },
       { label: "Incidents", href: "/dashboard/incidents", icon: TriangleAlert },
       { label: "Analytics", href: "/dashboard/analytics", icon: ChartColumn },

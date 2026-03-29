@@ -11,7 +11,7 @@ import { Download, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
-function formatDate(dateValue) {
+export function formatDate(dateValue) {
     if (!dateValue) {
         return "-";
     }
