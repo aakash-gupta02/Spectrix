@@ -1,10 +1,11 @@
 "use client";
 
 import DashboardButton from "@/components/ui/DashboardButton";
-import { endPointsAPI, serviceAPI } from "@/lib/api/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import LocalServiceDropdown from "@/components/dashboard/layout/LocalServiceDropdown";
+import { endPointsAPI } from "@/lib/api/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const initialFormState = {
   name: "",
@@ -68,13 +69,6 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
   const [formData, setFormData] = useState(initialFormState);
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
-
-  const servicesQuery = useQuery({
-    queryKey: ["services"],
-    queryFn: serviceAPI.getServices,
-  });
-
-  const services = useMemo(() => servicesQuery.data?.service?.services ?? [], [servicesQuery.data]);
 
   const updateEndpointMutation = useMutation({
     mutationFn: ({ id, payload }) => endPointsAPI.updateEndpoint(id, payload),
@@ -195,28 +189,13 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Service</label>
-          <select
-            required
-            name="serviceId"
+          <LocalServiceDropdown
             value={formData.serviceId}
-            onChange={handleChange}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          >
-            <option value="">Select service</option>
-            {services.map((service) => {
-              const serviceId = service?._id || service?.id;
-              if (!serviceId) {
-                return null;
-              }
-
-              return (
-                <option key={serviceId} value={serviceId}>
-                  {service?.name || "Unnamed service"}
-                </option>
-              );
-            })}
-          </select>
+            onChange={(serviceId) =>
+              setFormData((prev) => ({ ...prev, serviceId }))
+            }
+            label="Service"
+          />
         </div>
 
         <div className="space-y-2">

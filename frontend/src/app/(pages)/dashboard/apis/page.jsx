@@ -5,9 +5,10 @@ import SectionHeading from '@/components/dashboard/common/SectionHeading'
 import { endPointsAPI } from '@/lib/api/api'
 import { useQuery } from '@tanstack/react-query'
 import React, { useMemo, useState } from 'react'
-import { Download, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
 import { formatDate } from '../services/page'
 import DashboardButton from '@/components/ui/DashboardButton'
+import LocalServiceFilterDropdown from '@/components/dashboard/layout/LocalServiceFilterDropdown'
 import CreateEndpointModal from './_components/CreateEndpointModal'
 import EditEndpointPanel from './_components/EditEndpointPanel'
 import DeleteEndpointModal from './_components/DeleteEndpointModal'
@@ -18,6 +19,7 @@ const APIsPage = () => {
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedApi, setSelectedApi] = useState(null)
+    const [selectedServiceFilter, setSelectedServiceFilter] = useState('all')
 
     const endpointQuery = useQuery({
         queryKey: ['apis'],
@@ -25,6 +27,13 @@ const APIsPage = () => {
     })
 
     const apis = useMemo(() => endpointQuery.data?.endpoints?.endpoints || [], [endpointQuery.data])
+    const filteredApis = useMemo(() => {
+        if (selectedServiceFilter === 'all') {
+            return apis
+        }
+
+        return apis.filter((api) => api.serviceId === selectedServiceFilter)
+    }, [apis, selectedServiceFilter])
 
     const getMethodBadgeClass = (method) => {
         switch ((method || '').toUpperCase()) {
@@ -49,10 +58,11 @@ const APIsPage = () => {
                 title="APIs"
                 description="Manage your API endpoints and configurations."
             >
-                <DashboardButton variant="secondary">
-                    <Download size={14} />
-                    Export list
-                </DashboardButton>
+                <LocalServiceFilterDropdown
+                    value={selectedServiceFilter}
+                    onChange={setSelectedServiceFilter}
+                    allOptionLabel="All Services"
+                />
 
                 <DashboardButton
                     variant="primary"
@@ -112,7 +122,7 @@ const APIsPage = () => {
             <div className="overflow-hidden border border-dashed border-border bg-surface-1">
                 <div className="flex items-center justify-between border-b border-border px-5 py-3">
                     <h2 className="text-sm uppercase tracking-[0.12em] text-heading">All apis</h2>
-                    <span className="text-[0.6875rem] text-body">{apis.length} total</span>
+                    <span className="text-[0.6875rem] text-body">{filteredApis.length} total</span>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -147,16 +157,18 @@ const APIsPage = () => {
                             ) : null}
 
                             {/* No apis Data Message */}
-                            {!endpointQuery.isLoading && !endpointQuery.isError && apis.length === 0 ? (
+                            {!endpointQuery.isLoading && !endpointQuery.isError && filteredApis.length === 0 ? (
                                 <tr>
                                     <td className="px-4 py-6 text-body" colSpan={7}>
-                                        No apis yet. Create your first api above.
+                                        {selectedServiceFilter === 'all'
+                                            ? 'No apis yet. Create your first api above.'
+                                            : 'No apis found for the selected service.'}
                                     </td>
                                 </tr>
                             ) : null}
 
                             {/* api Rows */}
-                            {apis.map((api) => (
+                            {filteredApis.map((api) => (
                                 <tr key={api._id || api.id || `${api.method}-${api.path}`} className="border-b border-border/60 last:border-b-0">
 
                                     {/* api Name and Description */}

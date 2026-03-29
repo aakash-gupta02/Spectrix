@@ -1,10 +1,11 @@
 "use client";
 
 import DashboardButton from "@/components/ui/DashboardButton";
-import { endPointsAPI, serviceAPI } from "@/lib/api/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import LocalServiceDropdown from "@/components/dashboard/layout/LocalServiceDropdown";
+import { endPointsAPI } from "@/lib/api/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const initialFormState = {
   name: "",
@@ -31,14 +32,6 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
   const [formData, setFormData] = useState(initialFormState);
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
-
-  const servicesQuery = useQuery({
-    queryKey: ["services"],
-    queryFn: serviceAPI.getServices,
-  });
-
-  const services = useMemo(() => servicesQuery.data?.service?.services ?? [], [servicesQuery.data]);
-  const firstServiceId = services[0]?._id || services[0]?.id || "";
 
   const createEndpointMutation = useMutation({
     mutationFn: endPointsAPI.createEndpoint,
@@ -89,10 +82,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
   const handleSubmit = (event) => {
     event.preventDefault();
     setErrorMessage("");
-
-    const resolvedServiceId = formData.serviceId || firstServiceId;
-
-    if (!resolvedServiceId) {
+    if (!formData.serviceId) {
       setErrorMessage("Please select a service.");
       return;
     }
@@ -101,7 +91,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
 
     createEndpointMutation.mutate({
       name: formData.name.trim(),
-      serviceId: resolvedServiceId,
+      serviceId: formData.serviceId,
       method: formData.method,
       path: normalizedPath,
       expectedStatus: parseExpectedStatus(formData.expectedStatus),
@@ -155,28 +145,13 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Service</label>
-          <select
-            required
-            name="serviceId"
-            value={formData.serviceId || firstServiceId}
-            onChange={handleChange}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          >
-            <option value="">Select service</option>
-            {services.map((service) => {
-              const serviceId = service?._id || service?.id;
-              if (!serviceId) {
-                return null;
-              }
-
-              return (
-                <option key={serviceId} value={serviceId}>
-                  {service?.name || "Unnamed service"}
-                </option>
-              );
-            })}
-          </select>
+          <LocalServiceDropdown
+            value={formData.serviceId}
+            onChange={(serviceId) =>
+              setFormData((prev) => ({ ...prev, serviceId }))
+            }
+            label="Service"
+          />
         </div>
 
         <div className="space-y-2">
@@ -233,12 +208,6 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
           </label>
         </div>
 
-        {servicesQuery.isError ? (
-          <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
-            Could not load services. Create at least one service first.
-          </div>
-        ) : null}
-
         {errorMessage ? (
           <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
             {errorMessage}
@@ -257,7 +226,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
           <DashboardButton
             type="submit"
             variant="primary"
-            disabled={createEndpointMutation.isPending || services.length === 0}
+            disabled={createEndpointMutation.isPending}
           >
             {createEndpointMutation.isPending ? "Creating..." : "Create API"}
           </DashboardButton>
