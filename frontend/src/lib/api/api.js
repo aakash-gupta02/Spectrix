@@ -47,8 +47,12 @@ const ENDPOINT_MODULE = "endpoint";
 
 export const endPointsAPI = {
 
-  getEndPoints: async () => {
-    const response = await apiClient.get(`/endpoint`);
+  getEndPoints: async ({ serviceId } = {}) => {
+    const response = await apiClient.get(`/${ENDPOINT_MODULE}`, {
+      params: {
+        ...(serviceId ? { serviceId } : {}),
+      },
+    });
     return response.data;
   },
 
