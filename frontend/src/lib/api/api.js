@@ -44,6 +44,7 @@ export const serviceAPI = {
 };
 
 const ENDPOINT_MODULE = "endpoint";
+const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 
 export const endPointsAPI = {
 
@@ -77,4 +78,16 @@ export const endPointsAPI = {
   },
 
 }
+
+export const endpointMetricsAPI = {
+  getTopLevelMetrics: async (endpointId) => {
+    const response = await apiClient.get(`/${ENDPOINT_METRICS_MODULE}/${endpointId}/top-level`);
+    return response.data;
+  },
+
+  getTimeSeries: async (endpointId) => {
+    const response = await apiClient.get(`/${ENDPOINT_METRICS_MODULE}/${endpointId}/timeseries`);
+    return response.data;
+  },
+};
 

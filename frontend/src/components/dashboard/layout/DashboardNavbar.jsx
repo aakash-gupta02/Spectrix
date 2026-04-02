@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const breadcrumbLabels = {
   alerts: "Alerts",
+  apis: "APIs",
   incidents: "Incidents",
   analytics: "Analytics",
   "status-page": "Status Page",

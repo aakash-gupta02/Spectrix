@@ -27,7 +27,8 @@ const EndpointTable = ({
   errorMessage,
   hasActiveFilter,
   onEdit,
-  onDelete
+  onDelete,
+  onMonitor,
 }) => {
   return (
     <div className="overflow-hidden border border-dashed border-border bg-surface-1">
@@ -111,6 +112,7 @@ const EndpointTable = ({
                       type="button"
                       variant="secondary"
                       className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                      onClick={() => onMonitor(api)}
                     >
                       <Eye size={13} />
                       Monitor

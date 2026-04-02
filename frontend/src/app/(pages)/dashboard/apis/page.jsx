@@ -13,8 +13,10 @@ import EditEndpointPanel from './_components/EditEndpointPanel'
 import DeleteEndpointModal from './_components/DeleteEndpointModal'
 import EndpointTable from './_components/EndpointTable'
 import useServiceFiltering from '@/hooks/useServiceFiltering'
+import { useRouter } from 'next/navigation'
 
 const APIsPage = () => {
+    const router = useRouter()
     const [successMessage, setSuccessMessage] = useState('')
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false)
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false)
@@ -133,6 +135,11 @@ const APIsPage = () => {
                     setIsCreatePanelOpen(false)
                     setIsEditPanelOpen(false)
                     setIsDeleteModalOpen(true)
+                }}
+                onMonitor={(api) => {
+                    const endpointId = api?._id || api?.id
+                    if (!endpointId) return
+                    router.push(`/dashboard/apis/${endpointId}`)
                 }}
             />
 
