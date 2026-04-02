@@ -3,16 +3,16 @@
 import Container from '@/components/dashboard/common/Container'
 import SectionHeading from '@/components/dashboard/common/SectionHeading'
 import { endPointsAPI } from '@/lib/api/api'
-import { useService } from '@/contexts/ServiceContext'
 import { useQuery } from '@tanstack/react-query'
 import React, { useMemo, useState } from 'react'
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
-import { formatDate } from '../services/page'
+import { Plus } from 'lucide-react'
 import DashboardButton from '@/components/ui/DashboardButton'
 import LocalServiceFilterDropdown from '@/components/dashboard/layout/LocalServiceFilterDropdown'
 import CreateEndpointModal from './_components/CreateEndpointModal'
 import EditEndpointPanel from './_components/EditEndpointPanel'
 import DeleteEndpointModal from './_components/DeleteEndpointModal'
+import EndpointTable from './_components/EndpointTable'
+import useServiceFiltering from '@/hooks/useServiceFiltering'
 
 const APIsPage = () => {
     const [successMessage, setSuccessMessage] = useState('')
@@ -20,20 +20,11 @@ const APIsPage = () => {
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedApi, setSelectedApi] = useState(null)
-    const [selectedServiceFilter, setSelectedServiceFilter] = useState('all')
-    const { selectedServiceId } = useService()
-
-    const activeServiceFilter = useMemo(() => {
-        if (selectedServiceFilter !== 'all') {
-            return selectedServiceFilter
-        }
-
-        if (selectedServiceId !== 'all') {
-            return selectedServiceId
-        }
-
-        return undefined
-    }, [selectedServiceFilter, selectedServiceId])
+    const {
+        localServiceId,
+        activeServiceFilter,
+        setLocalFilter
+    } = useServiceFiltering()
 
     const endpointQuery = useQuery({
         queryKey: ['apis', { serviceId: activeServiceFilter || 'all' }],
@@ -66,8 +57,8 @@ const APIsPage = () => {
                 description="Manage your API endpoints and configurations."
             >
                 <LocalServiceFilterDropdown
-                    value={selectedServiceFilter}
-                    onChange={setSelectedServiceFilter}
+                    value={localServiceId}
+                    onChange={setLocalFilter}
                     allOptionLabel="All Services"
                 />
 
@@ -126,136 +117,24 @@ const APIsPage = () => {
                 </div>
             ) : null}
 
-            <div className="overflow-hidden border border-dashed border-border bg-surface-1">
-                <div className="flex items-center justify-between border-b border-border px-5 py-3">
-                    <h2 className="text-sm uppercase tracking-[0.12em] text-heading">All apis</h2>
-                    <span className="text-[0.6875rem] text-body">{apis.length} total</span>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
-                                <th className="px-4 py-3 font-normal">Name</th>
-                                <th className="px-4 py-3 font-normal">Method</th>
-                                <th className="px-4 py-3 font-normal">Path</th>
-                                <th className="px-4 py-3 font-normal">Expected</th>
-                                <th className="px-4 py-3 font-normal">Status</th>
-                                <th className="px-4 py-3 font-normal">Created</th>
-                                <th className="px-4 py-3 font-normal">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {endpointQuery.isLoading ? (
-                                <tr>
-                                    <td className="px-4 py-6 text-body" colSpan={7}>
-                                        Loading apis...
-                                    </td>
-                                </tr>
-                            ) : null}
-
-                            {endpointQuery.isError ? (
-                                <tr>
-                                    <td className="px-4 py-6 text-red-300" colSpan={7}>
-                                        {endpointQuery.error?.response?.data?.message ||
-                                            "Could not load apis."}
-                                    </td>
-                                </tr>
-                            ) : null}
-
-                            {/* No apis Data Message */}
-                            {!endpointQuery.isLoading && !endpointQuery.isError && apis.length === 0 ? (
-                                <tr>
-                                    <td className="px-4 py-6 text-body" colSpan={7}>
-                                        {activeServiceFilter
-                                            ? 'No apis found for the selected service.'
-                                            : 'No apis yet. Create your first api above.'}
-                                    </td>
-                                </tr>
-                            ) : null}
-
-                            {/* api Rows */}
-                            {apis.map((api) => (
-                                <tr key={api._id || api.id || `${api.method}-${api.path}`} className="border-b border-border/60 last:border-b-0">
-
-                                    {/* api Name and Description */}
-                                    <td className="px-4 py-3 text-heading">
-                                        <p>{api.name || "-"}</p>
-                                    </td>
-
-                                    {/* Method */}
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] font-mono uppercase ${getMethodBadgeClass(api.method)}`}>
-                                            {api.method || '-'}
-                                        </span>
-                                    </td>
-
-                                    {/* Path */}
-                                    <td className="px-4 py-3 font-mono text-xs text-body">{api.path || "-"}</td>
-
-                                    {/* Expected Status */}
-                                    <td className="px-4 py-3 text-body">{Array.isArray(api.expectedStatus) ? api.expectedStatus.join(", ") : "-"}</td>
-
-                                    {/* Active Status */}
-                                    <td className="px-4 py-3">
-                                        <span
-                                            className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] ${api.active
-                                                ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
-                                                : "border-rose-500/35 bg-rose-500/10 text-rose-300"
-                                                }`}
-                                        >
-                                            {api.active ? "Active" : "Inactive"}
-                                        </span>
-                                    </td>
-
-                                    {/* Date */}
-                                    <td className="px-4 py-3 text-body">{formatDate(api.createdAt)}</td>
-
-                                    {/* Actions */}
-                                    <td className="px-4 py-3">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <DashboardButton
-                                                type="button"
-                                                variant="secondary"
-                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                                            >
-                                                <Eye size={13} />
-                                                Monitor
-                                            </DashboardButton>
-                                            <DashboardButton
-                                                type="button"
-                                                variant="secondary"
-                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                                                onClick={() => {
-                                                    setSelectedApi(api)
-                                                    setIsCreatePanelOpen(false)
-                                                    setIsEditPanelOpen(true)
-                                                }}
-                                            >
-                                                <Pencil size={13} />
-
-                                            </DashboardButton>
-                                            <DashboardButton
-                                                type="button"
-                                                variant="secondary"
-                                                className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                                                onClick={() => {
-                                                    setSelectedApi(api)
-                                                    setIsCreatePanelOpen(false)
-                                                    setIsEditPanelOpen(false)
-                                                    setIsDeleteModalOpen(true)
-                                                }}
-                                            >
-                                                <Trash2 size={13} />
-                                            </DashboardButton>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <EndpointTable
+                apis={apis}
+                isLoading={endpointQuery.isLoading}
+                isError={endpointQuery.isError}
+                errorMessage={endpointQuery.error?.response?.data?.message}
+                hasActiveFilter={Boolean(activeServiceFilter)}
+                onEdit={(api) => {
+                    setSelectedApi(api)
+                    setIsCreatePanelOpen(false)
+                    setIsEditPanelOpen(true)
+                }}
+                onDelete={(api) => {
+                    setSelectedApi(api)
+                    setIsCreatePanelOpen(false)
+                    setIsEditPanelOpen(false)
+                    setIsDeleteModalOpen(true)
+                }}
+            />
 
 
         </Container>
