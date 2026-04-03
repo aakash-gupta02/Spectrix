@@ -99,7 +99,7 @@ export const getIncidentsService = async (user: { userId: string, role: string }
   const [total, incidents] = await Promise.all([
     Incident.countDocuments(filter),
     Incident.find(filter).sort({ checkedAt: -1 }).skip(skip).limit(limit)
-    .populate("endpointId", "name method" )
+    .populate("endpointId", "name method path" )
     .populate("serviceId", "name environment")
   ]);
 
