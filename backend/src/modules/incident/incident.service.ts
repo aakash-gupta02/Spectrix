@@ -9,9 +9,11 @@ export const createIncident = async (endpoint: EndpointDocument, checkedAt: Date
 
   const endpointDoc = endpoint as any;
   const endpointId = endpointDoc._id;
+  const serviceId = endpointDoc.serviceId;
 
   return Incident.create({
     endpointId: endpointId,
+    serviceId: serviceId,
     userId: endpoint.userId,
     startTime: checkedAt,
     status: "open"
@@ -79,20 +81,26 @@ export const handleIncidentService = async (endpoint: EndpointDocument, result: 
   }
 };
 
-export const getIncidentsService = async (user: { userId: string, role: string }, query: { limit: number, page: number, endpointId?: string }) => {
+export const getIncidentsService = async (user: { userId: string, role: string }, query: { limit: number, page: number, endpointId?: string, serviceId?: string }) => {
 
   const filter: Record<string, unknown> = user.role === "admin" ? {} : { userId: user.userId };
 
-  const { limit, page, endpointId } = query;
+  const { limit, page, endpointId, serviceId } = query;
   const skip = (page - 1) * limit;
 
   if (endpointId) {
     filter.endpointId = endpointId;
   }
 
+  if (serviceId) {
+    filter.serviceId = serviceId;
+  }
+
   const [total, incidents] = await Promise.all([
     Incident.countDocuments(filter),
     Incident.find(filter).sort({ checkedAt: -1 }).skip(skip).limit(limit)
+    .populate("endpointId", "name method" )
+    .populate("serviceId", "name environment")
   ]);
 
   const totalPages = Math.ceil(total / limit) || 1;

@@ -8,6 +8,11 @@ const incidentSchema = new Schema(
             required: true
         },
 
+        serviceId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Service",
+        },
+
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -42,6 +47,8 @@ incidentSchema.index(
 
 incidentSchema.index({ userId: 1, createdAt: -1 });
 incidentSchema.index({ endpointId: 1, createdAt: -1 });
+incidentSchema.index({ serviceId: 1, createdAt: -1 });
+incidentSchema.index({ userId: 1, serviceId: 1, createdAt: -1 });
 
 
 // Types
