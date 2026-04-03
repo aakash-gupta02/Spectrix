@@ -1,4 +1,5 @@
 import DashboardButton from '@/components/ui/DashboardButton'
+import RowActionsMenu from '@/components/common/RowActionsMenu'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import React from 'react'
 import { formatDate } from '../../services/page'
@@ -107,7 +108,7 @@ const EndpointTable = ({
                 <td className="px-4 py-3 text-body">{formatDate(api.createdAt)}</td>
 
                 <td className="px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <DashboardButton
                       type="button"
                       variant="secondary"
@@ -117,22 +118,21 @@ const EndpointTable = ({
                       <Eye size={13} />
                       Monitor
                     </DashboardButton>
-                    <DashboardButton
-                      type="button"
-                      variant="secondary"
-                      className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                      onClick={() => onEdit(api)}
-                    >
-                      <Pencil size={13} />
-                    </DashboardButton>
-                    <DashboardButton
-                      type="button"
-                      variant="secondary"
-                      className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                      onClick={() => onDelete(api)}
-                    >
-                      <Trash2 size={13} />
-                    </DashboardButton>
+                    <RowActionsMenu
+                      actions={[
+                        {
+                          label: 'Edit',
+                          icon: <Pencil size={14} />,
+                          onClick: () => onEdit(api),
+                        },
+                        {
+                          label: 'Delete',
+                          icon: <Trash2 size={14} />,
+                          variant: 'danger',
+                          onClick: () => onDelete(api),
+                        },
+                      ]}
+                    />
                   </div>
                 </td>
               </tr>

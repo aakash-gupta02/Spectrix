@@ -2,6 +2,7 @@ import React from 'react'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import DashboardButton from '@/components/ui/DashboardButton';
 import { formatDate } from '../page';
+import RowActionsMenu from '@/components/common/RowActionsMenu';
 
 const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
     return (
@@ -94,30 +95,22 @@ const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
                                             Monitor
                                         </DashboardButton>
 
-                                        {/* Edit Button */}
-                                        <DashboardButton
-                                            type="button"
-                                            variant="secondary"
-                                            className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                                            onClick={() => {
-                                                onEdit(service);
-                                            }}
-                                        >
-                                            <Pencil size={13} />
-
-                                        </DashboardButton>
-
-                                        {/* Delete Button */}
-                                        <DashboardButton
-                                            type="button"
-                                            variant="secondary"
-                                            className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                                            onClick={() => {
-                                                onDelete(service);
-                                            }}
-                                        >
-                                            <Trash2 size={13} />
-                                        </DashboardButton>
+                                        {/* Row Actions Menu - edit & delete */}
+                                        <RowActionsMenu
+                                            actions={[
+                                                {
+                                                    label: 'Edit',
+                                                    icon: <Pencil size={14} />,
+                                                    onClick: () => onEdit(service),
+                                                },
+                                                {
+                                                    label: 'Delete',
+                                                    icon: <Trash2 size={14} />,
+                                                    variant: 'danger',
+                                                    onClick: () => onDelete(service),
+                                                },
+                                            ]}
+                                        />
                                     </div>
                                 </td>
                             </tr>
