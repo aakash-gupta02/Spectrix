@@ -12,9 +12,55 @@ const initialFormState = {
   serviceId: "",
   method: "GET",
   path: "/",
+  query: "",
+  headers: "",
+  body: "",
+  interval: "300",
   expectedStatus: "200",
   active: true,
 };
+
+function normalizePath(value) {
+  if (!value) {
+    return "/";
+  }
+
+  return value.startsWith("/") ? value : `/${value}`;
+}
+
+function parseJsonObject(value, fieldName) {
+  const trimmed = String(value || "").trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      throw new Error();
+    }
+
+    return parsed;
+  } catch {
+    throw new Error(`${fieldName} must be valid JSON object.`);
+  }
+}
+
+function parseBody(value) {
+  const trimmed = String(value || "").trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
 
 function parseExpectedStatus(value) {
   const parsed = String(value || "")
@@ -87,13 +133,33 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
       return;
     }
 
-    const normalizedPath = formData.path.startsWith("/") ? formData.path : `/${formData.path}`;
+    const interval = Number(formData.interval);
+
+    if (!Number.isInteger(interval) || interval < 10) {
+      setErrorMessage("Interval must be at least 10 seconds.");
+      return;
+    }
+
+    let parsedQuery;
+    let parsedHeaders;
+
+    try {
+      parsedQuery = parseJsonObject(formData.query, "Query");
+      parsedHeaders = parseJsonObject(formData.headers, "Headers");
+    } catch (error) {
+      setErrorMessage(error?.message || "Invalid JSON input.");
+      return;
+    }
 
     createEndpointMutation.mutate({
       name: formData.name.trim(),
       serviceId: formData.serviceId,
       method: formData.method,
-      path: normalizedPath,
+      path: normalizePath(formData.path),
+      ...(parsedQuery ? { query: parsedQuery } : {}),
+      ...(parsedHeaders ? { headers: parsedHeaders } : {}),
+      ...(formData.body.trim() ? { body: parseBody(formData.body) } : {}),
+      interval,
       expectedStatus: parseExpectedStatus(formData.expectedStatus),
       active: Boolean(formData.active),
     });
@@ -138,7 +204,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            maxLength={80}
+            maxLength={50}
             placeholder="Home Check"
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
@@ -183,8 +249,57 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
         </div>
 
         <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Interval (seconds)</label>
+          <input
+            type="number"
+            min="10"
+            name="interval"
+            value={formData.interval}
+            onChange={handleChange}
+            placeholder="300"
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Query Params (JSON object) (Optional)</label>
+          <textarea
+            name="query"
+            value={formData.query}
+            onChange={handleChange}
+            placeholder='{"foo": "bar"}'
+            rows={4}
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Headers (JSON object) (Optional)</label>
+          <textarea
+            name="headers"
+            value={formData.headers}
+            onChange={handleChange}
+            placeholder='{"Authorization": "Bearer token"}'
+            rows={4}
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Body (Optional)</label>
+          <textarea
+            name="body"
+            value={formData.body}
+            onChange={handleChange}
+            placeholder='{"hello": "world"}'
+            rows={5}
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
           <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Expected Status Codes (comma separated)
+            Expected Status Codes (comma separated) (Optional)
           </label>
           <input
             name="expectedStatus"

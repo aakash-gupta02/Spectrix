@@ -12,9 +12,63 @@ const initialFormState = {
   serviceId: "",
   method: "GET",
   path: "/",
+  query: "",
+  headers: "",
+  body: "",
+  interval: "300",
   expectedStatus: "200",
   active: true,
 };
+
+function normalizePath(value) {
+  if (!value) {
+    return "/";
+  }
+
+  return value.startsWith("/") ? value : `/${value}`;
+}
+
+function stringifyJsonValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  return typeof value === "string" ? value : JSON.stringify(value, null, 2);
+}
+
+function parseJsonObject(value, fieldName) {
+  const trimmed = String(value || "").trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      throw new Error();
+    }
+
+    return parsed;
+  } catch {
+    throw new Error(`${fieldName} must be valid JSON object.`);
+  }
+}
+
+function parseBody(value) {
+  const trimmed = String(value || "").trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
 
 function parseExpectedStatus(value) {
   const parsed = String(value || "")
@@ -33,6 +87,10 @@ function toFormState(endpoint) {
     serviceId: endpoint?.serviceId || "",
     method: endpoint?.method || "GET",
     path: endpoint?.path || "/",
+    query: stringifyJsonValue(endpoint?.query),
+    headers: stringifyJsonValue(endpoint?.headers),
+    body: stringifyJsonValue(endpoint?.body),
+    interval: String(endpoint?.interval ?? 300),
     expectedStatus: Array.isArray(endpoint?.expectedStatus)
       ? endpoint.expectedStatus.join(", ")
       : "200",
@@ -47,7 +105,11 @@ function getChangedFields(endpoint, formData) {
   // Field transformations: how to process and send each field
   const fieldTransformations = {
     name: (value) => value.trim(),
-    path: (value) => value.startsWith("/") ? value : `/${value}`,
+    path: (value) => normalizePath(value),
+    query: (value) => parseJsonObject(value, "Query"),
+    headers: (value) => parseJsonObject(value, "Headers"),
+    body: (value) => parseBody(value),
+    interval: (value) => Number(value),
     expectedStatus: (value) => parseExpectedStatus(value),
     active: (value) => value,
     serviceId: (value) => value,
@@ -130,7 +192,37 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
       return;
     }
 
-    const changedFields = getChangedFields(endpoint, formData);
+    const interval = Number(formData.interval);
+
+    if (!Number.isInteger(interval) || interval < 10) {
+      setErrorMessage("Interval must be at least 10 seconds.");
+      return;
+    }
+
+    let changedFields;
+
+    try {
+      changedFields = getChangedFields(endpoint, formData);
+    } catch (error) {
+      setErrorMessage(error?.message || "Invalid JSON input.");
+      return;
+    }
+
+    if (changedFields.query === undefined) {
+      delete changedFields.query;
+    }
+
+    if (changedFields.headers === undefined) {
+      delete changedFields.headers;
+    }
+
+    if (changedFields.body === undefined) {
+      delete changedFields.body;
+    }
+
+    if (changedFields.interval !== undefined) {
+      changedFields.interval = interval;
+    }
 
     if (Object.keys(changedFields).length === 0) {
       setErrorMessage("No changes made.");
@@ -182,7 +274,7 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
             name="name"
             value={formData.name}
             onChange={handleChange}
-            maxLength={80}
+            maxLength={50}
             placeholder="Home Check"
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
@@ -222,6 +314,55 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
             value={formData.path}
             onChange={handleChange}
             placeholder="/"
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Interval (seconds)</label>
+          <input
+            type="number"
+            min="10"
+            name="interval"
+            value={formData.interval}
+            onChange={handleChange}
+            placeholder="300"
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Query Params (JSON object)</label>
+          <textarea
+            name="query"
+            value={formData.query}
+            onChange={handleChange}
+            placeholder='{"foo": "bar"}'
+            rows={4}
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Headers (JSON object)</label>
+          <textarea
+            name="headers"
+            value={formData.headers}
+            onChange={handleChange}
+            placeholder='{"Authorization": "Bearer token"}'
+            rows={4}
+            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Body</label>
+          <textarea
+            name="body"
+            value={formData.body}
+            onChange={handleChange}
+            placeholder='{"hello": "world"}'
+            rows={5}
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
           />
         </div>
