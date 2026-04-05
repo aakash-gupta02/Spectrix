@@ -5,9 +5,12 @@ import { serviceAPI } from "@/lib/api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createServiceSchema } from "@/validation/service.validation";
+import FormInput from "@/components/ui/form/FormInput";
+import FormSelect from "@/components/ui/form/FormSelect";
+import FormCheckbox from "@/components/ui/form/FormCheckbox";
 
 const initialFormState = {
   name: "",
@@ -22,15 +25,12 @@ export default function CreateServiceModal({ isOpen, onClose, onCreated }) {
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
+  const methods = useForm({
     resolver: zodResolver(createServiceSchema),
     defaultValues: initialFormState,
   });
+
+  const { handleSubmit, reset } = methods;
 
   // actual Service Create Logic/Mutation
   const createServiceMutation = useMutation({
@@ -68,7 +68,7 @@ export default function CreateServiceModal({ isOpen, onClose, onCreated }) {
     return () => {
       clearTimeout(timer);
     };
-  }, [handleClose, isOpen, reset]);
+  }, [isOpen]);
 
   const onSubmit = (data) => {
     createServiceMutation.mutate({
@@ -111,112 +111,79 @@ export default function CreateServiceModal({ isOpen, onClose, onCreated }) {
       </div>
 
       {/* Form Content */}
-      <form
-        className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        {/* Service Name */}
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Service Name
-          </label>
-          <input
-            ref={nameInputRef}
-            {...register("name")}
-            maxLength={50}
+      <FormProvider {...methods}>
+        <form
+          className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          {/* Service Name */}
+          <FormInput
+            name="name"
+            label="Service Name"
             placeholder="Payments API"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
+            maxLength={50}
+            inputRef={nameInputRef}
           />
-          {errors.name && (
-            <p className="text-xs text-red-400">{errors.name.message}</p>
-          )}
-        </div>
 
-        {/* Base URL */}
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Base URL
-          </label>
-          <input
+          {/* Base URL */}
+          <FormInput
+            name="baseUrl"
+            label="Base URL"
             type="url"
-            {...register("baseUrl")}
             placeholder="https://api.example.com"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
-          {errors.baseUrl && (
-            <p className="text-xs text-red-400">{errors.baseUrl.message}</p>
-          )}
-        </div>
 
-        {/* Description */}
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Description (optional)
-          </label>
-          <input
-            {...register("description")}
+          {/* Description */}
+          <FormInput
+            name="description"
+            label="Description (optional)"
             maxLength={100}
             placeholder="Tracks checkout and order processing services"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
-          {errors.description && (
-            <p className="text-xs text-red-400">{errors.description.message}</p>
-          )}
-        </div>
 
-        {/* Environment */}
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Environment
-          </label>
-          <select
-            {...register("environment")}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          >
-            <option value="development">Development</option>
-            <option value="staging">Staging</option>
-            <option value="production">Production</option>
-          </select>
-        </div>
+          {/* Environment */}
+          <FormSelect
+            name="environment"
+            label="Environment"
+            options={[
+              { value: "development", label: "Development" },
+              { value: "staging", label: "Staging" },
+              { value: "production", label: "Production" },
+            ]}
+          />
 
-        {/* Active Service */}
-        <div className="flex items-end">
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input
-              type="checkbox"
-              {...register("active")}
-              className="h-4 w-4 accent-primary"
-            />
-            Active service
-          </label>
-        </div>
+          {/* Active Service */}
+          <FormCheckbox name="active" label="Active Service" />
 
-        {/* Error Message */}
-        {errorMessage ? (
-          <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
-            {errorMessage}
+          {/* Error Message */}
+          {errorMessage ? (
+            <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          {/* Submit Button */}
+          <div className="md:col-span-2 flex items-center justify-end gap-3">
+            <DashboardButton
+              type="button"
+              variant="secondary"
+              onClick={handleClose}
+              disabled={createServiceMutation.isPending}
+            >
+              Cancel
+            </DashboardButton>
+            <DashboardButton
+              type="submit"
+              variant="primary"
+              disabled={createServiceMutation.isPending}
+            >
+              {createServiceMutation.isPending
+                ? "Creating..."
+                : "Create Service"}
+            </DashboardButton>
           </div>
-        ) : null}
-
-        {/* Submit Button */}
-        <div className="md:col-span-2 flex items-center justify-end gap-3">
-          <DashboardButton
-            type="button"
-            variant="secondary"
-            onClick={handleClose}
-            disabled={createServiceMutation.isPending}
-          >
-            Cancel
-          </DashboardButton>
-          <DashboardButton
-            type="submit"
-            variant="primary"
-            disabled={createServiceMutation.isPending}
-          >
-            {createServiceMutation.isPending ? "Creating..." : "Create Service"}
-          </DashboardButton>
-        </div>
-      </form>
+        </form>
+      </FormProvider>
     </section>
   );
 }
