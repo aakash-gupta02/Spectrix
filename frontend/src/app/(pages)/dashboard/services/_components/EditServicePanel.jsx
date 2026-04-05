@@ -2,9 +2,12 @@
 
 import DashboardButton from "@/components/ui/DashboardButton";
 import { serviceAPI } from "@/lib/api/api";
+import { updateServiceSchema } from "@/validation/service.validation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 
 const initialFormState = {
   name: "",
@@ -24,11 +27,20 @@ function toFormState(service) {
   };
 }
 
-export default function EditServicePanel({ isOpen, service, onClose, onUpdated }) {
+export default function EditServicePanel({
+  isOpen,
+  service,
+  onClose,
+  onUpdated,
+}) {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState(initialFormState);
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: initialFormState,
+    resolver: zodResolver(updateServiceSchema),
+  });
 
   const updateServiceMutation = useMutation({
     mutationFn: ({ id, payload }) => serviceAPI.updateService(id, payload),
@@ -47,36 +59,19 @@ export default function EditServicePanel({ isOpen, service, onClose, onUpdated }
   });
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen || !service) return;
 
-    const hydrateTimer = setTimeout(() => {
-      setFormData(toFormState(service));
-      setErrorMessage("");
-    }, 0);
+    reset(toFormState(service));
 
     const timer = setTimeout(() => {
+      setErrorMessage("");
       nameInputRef.current?.focus();
     }, 0);
 
-    return () => {
-      clearTimeout(hydrateTimer);
-      clearTimeout(timer);
-    };
-  }, [isOpen, service]);
+    return () => clearTimeout(timer);
+  }, [isOpen, service, reset]);
 
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const onSubmit = (data) => {
     setErrorMessage("");
 
     const serviceId = service?._id || service?.id;
@@ -88,8 +83,8 @@ export default function EditServicePanel({ isOpen, service, onClose, onUpdated }
     updateServiceMutation.mutate({
       id: serviceId,
       payload: {
-        ...formData,
-        description: formData.description?.trim() || undefined,
+        ...data,
+        description: data.description?.trim() || undefined,
       },
     });
   };
@@ -111,7 +106,9 @@ export default function EditServicePanel({ isOpen, service, onClose, onUpdated }
           >
             Edit Service
           </h2>
-          <p className="mt-1 text-[0.6875rem] text-body">Update service details and save changes.</p>
+          <p className="mt-1 text-[0.6875rem] text-body">
+            Update service details and save changes.
+          </p>
         </div>
 
         <button
@@ -124,52 +121,69 @@ export default function EditServicePanel({ isOpen, service, onClose, onUpdated }
         </button>
       </div>
 
-      <form className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2" onSubmit={handleSubmit}>
+      <form
+        className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Service Name</label>
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
+            Service Name
+          </label>
           <input
             ref={nameInputRef}
-            required
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
+            {...register("name")}
             maxLength={50}
             placeholder="Payments API"
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
+          {errors.name && (
+            <p className="text-sm text-red-300">
+              {errors.name.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Base URL</label>
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
+            Base URL
+          </label>
           <input
-            required
             type="url"
-            name="baseUrl"
-            value={formData.baseUrl}
-            onChange={handleChange}
+            {...register("baseUrl")}
             placeholder="https://api.example.com"
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
+          {errors.baseUrl && (
+            <p className="text-sm text-red-300">
+              {errors.baseUrl.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Description (optional)</label>
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
+            Description (optional)
+          </label>
           <input
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
+            {...register("description")}
             maxLength={100}
             placeholder="Tracks checkout and order processing services"
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
+          {errors.description && (
+            <p className="text-sm text-red-300">
+              {errors.description.message}
+            </p>
+          )}
+
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Environment</label>
+          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
+            Environment
+          </label>
           <select
-            name="environment"
-            value={formData.environment}
-            onChange={handleChange}
+            {...register("environment")}
             className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           >
             <option value="development">Development</option>
@@ -182,9 +196,7 @@ export default function EditServicePanel({ isOpen, service, onClose, onUpdated }
           <label className="flex items-center gap-2 text-sm text-body">
             <input
               type="checkbox"
-              name="active"
-              checked={formData.active}
-              onChange={handleChange}
+              {...register("active")}
               className="h-4 w-4 accent-primary"
             />
             Active service
