@@ -1,13 +1,16 @@
 "use client";
 
 import DashboardButton from "@/components/ui/DashboardButton";
+import FormCheckbox from "@/components/ui/form/FormCheckbox";
+import FormInput from "@/components/ui/form/FormInput";
+import FormSelect from "@/components/ui/form/FormSelect";
 import { serviceAPI } from "@/lib/api/api";
 import { updateServiceSchema } from "@/validation/service.validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 
 const initialFormState = {
   name: "",
@@ -27,6 +30,26 @@ function toFormState(service) {
   };
 }
 
+function getChangedFields(service, formData) {
+  const original = toFormState(service);
+  const normalized = {
+    ...formData,
+    name: formData.name?.trim() || "",
+    baseUrl: formData.baseUrl?.trim() || "",
+    description: formData.description?.trim() || "",
+    active: Boolean(formData.active),
+  };
+  const changed = {};
+
+  Object.entries(normalized).forEach(([field, value]) => {
+    if (original[field] !== value) {
+      changed[field] = field === "description" ? value || undefined : value;
+    }
+  });
+
+  return changed;
+}
+
 export default function EditServicePanel({
   isOpen,
   service,
@@ -37,15 +60,24 @@ export default function EditServicePanel({
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    defaultValues: initialFormState,
+  const methods = useForm({
     resolver: zodResolver(updateServiceSchema),
+    defaultValues: initialFormState,
   });
+
+  const { handleSubmit, reset } = methods;
+
+  const handleClose = useCallback(() => {
+    setErrorMessage("");
+    reset(initialFormState);
+    onClose();
+  }, [onClose, reset]);
 
   const updateServiceMutation = useMutation({
     mutationFn: ({ id, payload }) => serviceAPI.updateService(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
+      reset(initialFormState);
       setErrorMessage("");
       onUpdated?.("Service updated successfully.");
       onClose();
@@ -59,7 +91,9 @@ export default function EditServicePanel({
   });
 
   useEffect(() => {
-    if (!isOpen || !service) return;
+    if (!isOpen || !service) {
+      return;
+    }
 
     reset(toFormState(service));
 
@@ -80,12 +114,16 @@ export default function EditServicePanel({
       return;
     }
 
+    const changedFields = getChangedFields(service, data);
+
+    if (Object.keys(changedFields).length === 0) {
+      setErrorMessage("No changes made.");
+      return;
+    }
+
     updateServiceMutation.mutate({
       id: serviceId,
-      payload: {
-        ...data,
-        description: data.description?.trim() || undefined,
-      },
+      payload: changedFields,
     });
   };
 
@@ -113,7 +151,7 @@ export default function EditServicePanel({
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close edit service panel"
           className="inline-flex items-center rounded border border-border p-2 text-body transition-colors hover:bg-white/5"
         >
@@ -121,112 +159,74 @@ export default function EditServicePanel({
         </button>
       </div>
 
-      <form
-        className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Service Name
-          </label>
-          <input
-            ref={nameInputRef}
-            {...register("name")}
-            maxLength={50}
+      <FormProvider {...methods}>
+        <form
+          className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <FormInput
+            name="name"
+            label="Service Name"
             placeholder="Payments API"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
+            maxLength={50}
+            inputRef={nameInputRef}
           />
-          {errors.name && (
-            <p className="text-sm text-red-300">
-              {errors.name.message}
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Base URL
-          </label>
-          <input
+          <FormInput
+            name="baseUrl"
+            label="Base URL"
             type="url"
-            {...register("baseUrl")}
             placeholder="https://api.example.com"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
           />
-          {errors.baseUrl && (
-            <p className="text-sm text-red-300">
-              {errors.baseUrl.message}
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Description (optional)
-          </label>
-          <input
-            {...register("description")}
-            maxLength={100}
-            placeholder="Tracks checkout and order processing services"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          />
-          {errors.description && (
-            <p className="text-sm text-red-300">
-              {errors.description.message}
-            </p>
-          )}
-
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Environment
-          </label>
-          <select
-            {...register("environment")}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          >
-            <option value="development">Development</option>
-            <option value="staging">Staging</option>
-            <option value="production">Production</option>
-          </select>
-        </div>
-
-        <div className="flex items-end">
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input
-              type="checkbox"
-              {...register("active")}
-              className="h-4 w-4 accent-primary"
+          <div className="md:col-span-2">
+            <FormInput
+              name="description"
+              label="Description (optional)"
+              maxLength={100}
+              placeholder="Tracks checkout and order processing services"
             />
-            Active service
-          </label>
-        </div>
-
-        {errorMessage ? (
-          <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
-            {errorMessage}
           </div>
-        ) : null}
 
-        <div className="md:col-span-2 flex items-center justify-end gap-3">
-          <DashboardButton
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={updateServiceMutation.isPending}
-          >
-            Cancel
-          </DashboardButton>
-          <DashboardButton
-            type="submit"
-            variant="primary"
-            disabled={updateServiceMutation.isPending}
-          >
-            {updateServiceMutation.isPending ? "Saving..." : "Save changes"}
-          </DashboardButton>
-        </div>
-      </form>
+          <FormSelect
+            name="environment"
+            label="Environment"
+            options={[
+              { value: "development", label: "Development" },
+              { value: "staging", label: "Staging" },
+              { value: "production", label: "Production" },
+            ]}
+          />
+
+          <div className="flex items-end">
+            <FormCheckbox name="active" label="Active Service" />
+          </div>
+
+          {errorMessage ? (
+            <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <div className="md:col-span-2 flex items-center justify-end gap-3">
+            <DashboardButton
+              type="button"
+              variant="secondary"
+              onClick={handleClose}
+              disabled={updateServiceMutation.isPending}
+            >
+              Cancel
+            </DashboardButton>
+            <DashboardButton
+              type="submit"
+              variant="primary"
+              disabled={updateServiceMutation.isPending}
+            >
+              {updateServiceMutation.isPending ? "Saving..." : "Save changes"}
+            </DashboardButton>
+          </div>
+        </form>
+      </FormProvider>
     </section>
   );
 }
