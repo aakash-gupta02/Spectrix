@@ -2,10 +2,17 @@
 
 import DashboardButton from "@/components/ui/DashboardButton";
 import LocalServiceDropdown from "@/components/dashboard/layout/LocalServiceDropdown";
+import FormCheckbox from "@/components/ui/form/FormCheckbox";
+import FormInput from "@/components/ui/form/FormInput";
+import FormSelect from "@/components/ui/form/FormSelect";
+import FormTextarea from "@/components/ui/form/FormTextarea";
 import { endPointsAPI } from "@/lib/api/api";
+import { createEndpointFormSchema } from "@/validation/endpoint.validation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 
 const initialFormState = {
   name: "",
@@ -15,7 +22,7 @@ const initialFormState = {
   query: "",
   headers: "",
   body: "",
-  interval: "300",
+  interval: 300,
   expectedStatus: "200",
   active: true,
 };
@@ -75,15 +82,26 @@ function parseExpectedStatus(value) {
 
 export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState(initialFormState);
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
+
+  const methods = useForm({
+    resolver: zodResolver(createEndpointFormSchema),
+    defaultValues: initialFormState,
+  });
+
+  const {
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = methods;
 
   const createEndpointMutation = useMutation({
     mutationFn: endPointsAPI.createEndpoint,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apis"] });
-      setFormData(initialFormState);
+      reset(initialFormState);
       setErrorMessage("");
       onCreated?.("API endpoint created successfully.");
       onClose();
@@ -98,9 +116,9 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
 
   const handleClose = useCallback(() => {
     setErrorMessage("");
-    setFormData(initialFormState);
+    reset(initialFormState);
     onClose();
-  }, [onClose]);
+  }, [onClose, reset]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -116,52 +134,31 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
     };
   }, [isOpen]);
 
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const onSubmit = (data) => {
     setErrorMessage("");
-    if (!formData.serviceId) {
-      setErrorMessage("Please select a service.");
-      return;
-    }
-
-    const interval = Number(formData.interval);
-
-    if (!Number.isInteger(interval) || interval < 10) {
-      setErrorMessage("Interval must be at least 10 seconds.");
-      return;
-    }
 
     let parsedQuery;
     let parsedHeaders;
 
     try {
-      parsedQuery = parseJsonObject(formData.query, "Query");
-      parsedHeaders = parseJsonObject(formData.headers, "Headers");
+      parsedQuery = parseJsonObject(data.query, "Query");
+      parsedHeaders = parseJsonObject(data.headers, "Headers");
     } catch (error) {
       setErrorMessage(error?.message || "Invalid JSON input.");
       return;
     }
 
     createEndpointMutation.mutate({
-      name: formData.name.trim(),
-      serviceId: formData.serviceId,
-      method: formData.method,
-      path: normalizePath(formData.path),
+      name: data.name.trim(),
+      serviceId: data.serviceId,
+      method: data.method,
+      path: normalizePath(data.path),
       ...(parsedQuery ? { query: parsedQuery } : {}),
       ...(parsedHeaders ? { headers: parsedHeaders } : {}),
-      ...(formData.body.trim() ? { body: parseBody(formData.body) } : {}),
-      interval,
-      expectedStatus: parseExpectedStatus(formData.expectedStatus),
-      active: Boolean(formData.active),
+      ...(data.body?.trim() ? { body: parseBody(data.body) } : {}),
+      interval: data.interval,
+      expectedStatus: parseExpectedStatus(data.expectedStatus),
+      active: Boolean(data.active),
     });
   };
 
@@ -195,158 +192,132 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
         </button>
       </div>
 
-      <form className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Endpoint Name</label>
-          <input
-            ref={nameInputRef}
-            required
+      <FormProvider {...methods}>
+        <form
+          className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <FormInput
             name="name"
-            value={formData.name}
-            onChange={handleChange}
-            maxLength={50}
+            label="Endpoint Name"
             placeholder="Home Check"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
+            maxLength={50}
+            inputRef={nameInputRef}
           />
-        </div>
 
-        <div className="space-y-2">
-          <LocalServiceDropdown
-            value={formData.serviceId}
-            onChange={(serviceId) =>
-              setFormData((prev) => ({ ...prev, serviceId }))
-            }
-            label="Service"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Method</label>
-          <select
-            name="method"
-            value={formData.method}
-            onChange={handleChange}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          >
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="PATCH">PATCH</option>
-            <option value="DELETE">DELETE</option>
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Path</label>
-          <input
-            required
-            name="path"
-            value={formData.path}
-            onChange={handleChange}
-            placeholder="/"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Interval (seconds)</label>
-          <input
-            type="number"
-            min="10"
-            name="interval"
-            value={formData.interval}
-            onChange={handleChange}
-            placeholder="300"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Query Params (JSON object) (Optional)</label>
-          <textarea
-            name="query"
-            value={formData.query}
-            onChange={handleChange}
-            placeholder='{"foo": "bar"}'
-            rows={4}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Headers (JSON object) (Optional)</label>
-          <textarea
-            name="headers"
-            value={formData.headers}
-            onChange={handleChange}
-            placeholder='{"Authorization": "Bearer token"}'
-            rows={4}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">Body (Optional)</label>
-          <textarea
-            name="body"
-            value={formData.body}
-            onChange={handleChange}
-            placeholder='{"hello": "world"}'
-            rows={5}
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs uppercase tracking-[0.12em] text-muted">
-            Expected Status Codes (comma separated) (Optional)
-          </label>
-          <input
-            name="expectedStatus"
-            value={formData.expectedStatus}
-            onChange={handleChange}
-            placeholder="200, 201"
-            className="w-full rounded border border-border bg-surface-2 px-3 py-2 text-sm text-heading outline-none transition focus:border-primary"
-          />
-        </div>
-
-        <div className="md:col-span-2 flex items-end">
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input
-              type="checkbox"
-              name="active"
-              checked={formData.active}
-              onChange={handleChange}
-              className="h-4 w-4 accent-primary"
+          <div className="space-y-2">
+            <Controller
+              name="serviceId"
+              control={control}
+              render={({ field }) => (
+                <>
+                  <LocalServiceDropdown
+                    value={field.value}
+                    onChange={field.onChange}
+                    label="Service"
+                  />
+                  {errors.serviceId ? (
+                    <p className="text-xs text-red-400">{errors.serviceId.message}</p>
+                  ) : null}
+                </>
+              )}
             />
-            Active endpoint
-          </label>
-        </div>
-
-        {errorMessage ? (
-          <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
-            {errorMessage}
           </div>
-        ) : null}
 
-        <div className="md:col-span-2 flex items-center justify-end gap-3">
-          <DashboardButton
-            type="button"
-            variant="secondary"
-            onClick={handleClose}
-            disabled={createEndpointMutation.isPending}
-          >
-            Cancel
-          </DashboardButton>
-          <DashboardButton
-            type="submit"
-            variant="primary"
-            disabled={createEndpointMutation.isPending}
-          >
-            {createEndpointMutation.isPending ? "Creating..." : "Create API"}
-          </DashboardButton>
-        </div>
-      </form>
+          <FormSelect
+            name="method"
+            label="Method"
+            options={[
+              { value: "GET", label: "GET" },
+              { value: "POST", label: "POST" },
+              { value: "PUT", label: "PUT" },
+              { value: "PATCH", label: "PATCH" },
+              { value: "DELETE", label: "DELETE" },
+            ]}
+          />
+
+          <FormInput
+            name="path"
+            label="Path"
+            placeholder="/"
+          />
+
+          <div className="md:col-span-2">
+            <FormInput
+              name="interval"
+              label="Interval (seconds)"
+              type="number"
+              placeholder="300"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <FormTextarea
+              name="query"
+              label="Query Params (JSON object) (Optional)"
+              placeholder='{"foo": "bar"}'
+              rows={4}
+              className="font-mono"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <FormTextarea
+              name="headers"
+              label="Headers (JSON object) (Optional)"
+              placeholder='{"Authorization": "Bearer token"}'
+              rows={4}
+              className="font-mono"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <FormTextarea
+              name="body"
+              label="Body (Optional)"
+              placeholder='{"hello": "world"}'
+              rows={5}
+              className="font-mono"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <FormInput
+              name="expectedStatus"
+              label="Expected Status Codes (comma separated) (Optional)"
+              placeholder="200, 201"
+            />
+          </div>
+
+          <div className="md:col-span-2 flex items-end">
+            <FormCheckbox name="active" label="Active endpoint" />
+          </div>
+
+          {errorMessage ? (
+            <div className="md:col-span-2 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <div className="md:col-span-2 flex items-center justify-end gap-3">
+            <DashboardButton
+              type="button"
+              variant="secondary"
+              onClick={handleClose}
+              disabled={createEndpointMutation.isPending}
+            >
+              Cancel
+            </DashboardButton>
+            <DashboardButton
+              type="submit"
+              variant="primary"
+              disabled={createEndpointMutation.isPending}
+            >
+              {createEndpointMutation.isPending ? "Creating..." : "Create API"}
+            </DashboardButton>
+          </div>
+        </form>
+      </FormProvider>
     </section>
   );
 }
