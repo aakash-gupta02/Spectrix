@@ -1,9 +1,12 @@
 "use client";
 
 import { authAPI } from "@/lib/api/api";
+import { registerFormSchema } from "@/validation/auth.validation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { useState } from "react";
 
 const initialFormState = {
@@ -13,35 +16,39 @@ const initialFormState = {
 };
 
 export default function RegisterPage() {
-    const [formData, setFormData] = useState(initialFormState);
     const [successMessage, setSuccessMessage] = useState("");
     const router = useRouter();
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(registerFormSchema),
+        defaultValues: initialFormState,
+    });
 
 
     const registerMutation = useMutation({
         mutationFn: authAPI.register,
         onSuccess: () => {
-            setSuccessMessage("Account created successfully. You can login now.");
-            setFormData(initialFormState);
-            router.push("/dashboard");
+            setSuccessMessage("Account created successfully!");
+            reset(initialFormState);
+            router.push("/dashboard/services");
         },
         onError: () => {
             setSuccessMessage("");
         },
     });
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
+    const onSubmit = (data) => {
         setSuccessMessage("");
-        registerMutation.mutate(formData);
+        registerMutation.mutate({
+            name: data.name.trim(),
+            email: data.email.trim(),
+            password: data.password,
+        });
     };
 
     return (
@@ -69,20 +76,20 @@ export default function RegisterPage() {
 
                 {/* Form Section */}
                 <div className="p-7">
-                    <form className="space-y-5" onSubmit={handleSubmit}>
+                    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
                         <div className="space-y-2">
                             <label className="block text-xs font-medium uppercase tracking-wider text-muted">
                                 Full name
                             </label>
                             <input
-                                required
                                 type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
+                                {...register("name")}
                                 placeholder="Jane Doe"
                                 className="w-full border border-border bg-surface-2 px-4 py-3 text-sm text-heading outline-none transition focus:border-primary focus:bg-surface-2"
                             />
+                            {errors.name ? (
+                                <p className="text-xs text-red-400">{errors.name.message}</p>
+                            ) : null}
                         </div>
 
                         <div className="space-y-2">
@@ -90,14 +97,14 @@ export default function RegisterPage() {
                                 Email
                             </label>
                             <input
-                                required
                                 type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
+                                {...register("email")}
                                 placeholder="you@example.com"
                                 className="w-full border border-border bg-surface-2 px-4 py-3 text-sm text-heading outline-none transition focus:border-primary focus:bg-surface-2"
                             />
+                            {errors.email ? (
+                                <p className="text-xs text-red-400">{errors.email.message}</p>
+                            ) : null}
                         </div>
 
                         <div className="space-y-2">
@@ -105,15 +112,14 @@ export default function RegisterPage() {
                                 Password
                             </label>
                             <input
-                                required
-                                minLength={8}
                                 type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="At least 8 characters"
+                                {...register("password")}
+                                placeholder="At least 6 characters"
                                 className="w-full border border-border bg-surface-2 px-4 py-3 text-sm text-heading outline-none transition focus:border-primary focus:bg-surface-2"
                             />
+                            {errors.password ? (
+                                <p className="text-xs text-red-400">{errors.password.message}</p>
+                            ) : null}
                         </div>
 
                         {registerMutation.isError && (
