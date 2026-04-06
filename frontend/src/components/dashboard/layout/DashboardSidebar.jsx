@@ -8,6 +8,7 @@ import {
   Globe,
   LayoutGrid,
   LogOut,
+  Logs,
   Settings,
   Terminal,
   TriangleAlert,
@@ -24,8 +25,9 @@ const sideNavGroups = [
     items: [
       { label: "Overview", href: "/dashboard", icon: LayoutGrid },
       { label: "API's", href: "/dashboard/apis", icon: Terminal },
-      { label: "Alerts", href: "/dashboard/alerts", icon: Bell },
       { label: "Incidents", href: "/dashboard/incidents", icon: TriangleAlert },
+      { label: "Logs", href: "/dashboard/logs", icon: Logs },
+      { label: "Alerts", href: "/dashboard/alerts", icon: Bell },
       { label: "Analytics", href: "/dashboard/analytics", icon: ChartColumn },
     ],
   },

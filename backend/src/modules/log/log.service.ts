@@ -16,6 +16,8 @@ export const getLogsService = async ({ endpointId, page, limit }: GetLogsQueryIn
     const [total, logs] = await Promise.all([
         Log.countDocuments(filter),
         Log.find(filter).sort({ checkedAt: -1 }).skip(skip).limit(limit)
+        .populate("endpointId", "name method path")
+        .select("-__v -userId -createdAt -updatedAt")
     ])
 
     const totalPages = Math.ceil(total / limit) || 1;

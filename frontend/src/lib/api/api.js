@@ -46,6 +46,7 @@ export const serviceAPI = {
 const ENDPOINT_MODULE = "endpoint";
 const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 const INCIDENT_MODULE = "incident";
+const LOGS_MODULE = "log";
 
 export const endPointsAPI = {
 
@@ -107,4 +108,17 @@ export const incidentAPI = {
     return response.data;
   },
 
-}
+};
+
+export const logsAPI = {
+  getLogs: async ({ endpointId, limit = 50, page = 1 } = {}) => {
+    const response = await apiClient.get(`/${LOGS_MODULE}`, {
+      params: {
+        ...(endpointId ? { endpointId } : {}),
+        limit,
+        page,
+      },
+    });
+    return response.data;
+  },
+};

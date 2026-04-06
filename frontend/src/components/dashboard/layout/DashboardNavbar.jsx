@@ -10,6 +10,7 @@ const breadcrumbLabels = {
   alerts: "Alerts",
   apis: "APIs",
   incidents: "Incidents",
+  logs: "Logs",
   analytics: "Analytics",
   "status-page": "Status Page",
   team: "Team & Access",

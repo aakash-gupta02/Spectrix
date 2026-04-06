@@ -11,9 +11,7 @@ import { logger } from "../../config/logger.js";
 export const getLogs = CatchAsync(async (req: Request, res: Response) => {
     const { endpointId, page, limit } = req.query as unknown as GetLogsQueryInput;
     const { userId, role } = req.user;
-
-    logger.info(`[log.controller] getLogs called by userId=${userId} with query: endpointId=${endpointId}, page=${page}, limit=${limit}`);
-
+    
     const data = await getLogsService({ endpointId, page, limit }, { userId, role });
 
     sendResponse(res, StatusCodes.OK, "Logs Fetched Successfully", { logs: data })
