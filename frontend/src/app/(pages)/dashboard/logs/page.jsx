@@ -2,7 +2,9 @@
 
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
+import LocalServiceFilterDropdown from "@/components/dashboard/layout/LocalServiceFilterDropdown";
 import DashboardButton from "@/components/ui/DashboardButton";
+import useServiceFiltering from "@/hooks/useServiceFiltering";
 import { endPointsAPI, logsAPI } from "@/lib/api/api";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
@@ -92,6 +94,9 @@ const Page = () => {
   const [methodFilter, setMethodFilter] = useState("all");
   const [statusCodeFilter, setStatusCodeFilter] = useState("");
 
+  const { localServiceId, activeServiceFilter, setLocalFilter } =
+    useServiceFiltering();
+
   const endpointQuery = useQuery({
     queryKey: ["endpoint-options"],
     queryFn: () => endPointsAPI.getEndPoints(),
@@ -105,12 +110,11 @@ const Page = () => {
   const logQuery = useQuery({
     queryKey: [
       "logs",
-      { page, limit: PAGE_SIZE, endpointId: selectedEndpointId },
+      { page, limit: PAGE_SIZE, serviceId: activeServiceFilter },
     ],
     queryFn: async () => {
       return logsAPI.getLogs({
-        endpointId:
-          selectedEndpointId === "all" ? undefined : selectedEndpointId,
+        serviceId: activeServiceFilter,
         limit: PAGE_SIZE,
         page,
       });
@@ -160,7 +164,13 @@ const Page = () => {
       <SectionHeading
         title="Logs"
         description="Inspect endpoint checks with filtering and pagination."
-      />
+      >
+        <LocalServiceFilterDropdown
+          value={localServiceId}
+          onChange={setLocalFilter}
+          allOptionLabel="All Services"
+        />
+      </SectionHeading>
 
       {/* Filters */}
       <div className="mb-6 border border-dashed border-border bg-surface-1">

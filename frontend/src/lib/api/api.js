@@ -111,10 +111,11 @@ export const incidentAPI = {
 };
 
 export const logsAPI = {
-  getLogs: async ({ endpointId, limit = 50, page = 1 } = {}) => {
+  getLogs: async ({ endpointId, serviceId, limit = 50, page = 1 } = {}) => {
     const response = await apiClient.get(`/${LOGS_MODULE}`, {
       params: {
         ...(endpointId ? { endpointId } : {}),
+        ...(serviceId ? { serviceId } : {}),
         limit,
         page,
       },
