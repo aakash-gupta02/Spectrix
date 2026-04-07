@@ -8,11 +8,13 @@ import {
 import {
   getEndpointTimeseries,
   getEndpointTopLevel,
+  overview,
 } from "./metrics.controller.js";
 import {
   endpointIdParamsSchema,
   getEndpointTopLevelQuerySchema,
   getEndpointTimeseriesQuerySchema,
+  serviceIdQuerySchema,
 } from "./metrics.validation.js";
 
 const router = Router();
@@ -23,14 +25,16 @@ router.get(
   "/endpoint/:id/top-level",
   validateParams(endpointIdParamsSchema),
   validateQuery(getEndpointTopLevelQuerySchema),
-  getEndpointTopLevel
+  getEndpointTopLevel,
 );
 
 router.get(
   "/endpoint/:id/timeseries",
   validateParams(endpointIdParamsSchema),
   validateQuery(getEndpointTimeseriesQuerySchema),
-  getEndpointTimeseries
+  getEndpointTimeseries,
 );
+
+router.get("/overview", validateQuery(serviceIdQuerySchema), overview);
 
 export default router;

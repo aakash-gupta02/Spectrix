@@ -7,7 +7,9 @@ import { Log } from "../log/log.model.js";
 import type {
   GetEndpointTimeseriesQueryInput,
   GetEndpointTopLevelQueryInput,
+  OverviewQueryInput,
 } from "./metrics.validation.js";
+import { Incident } from "../incident/incident.model.js";
 
 type TimeseriesRequest = GetEndpointTimeseriesQueryInput & {
   endpointId: string;
@@ -16,6 +18,8 @@ type TimeseriesRequest = GetEndpointTimeseriesQueryInput & {
 type TopLevelRequest = GetEndpointTopLevelQueryInput & {
   endpointId: string;
 };
+
+type OverviewRequest = OverviewQueryInput;
 
 type UserContext = {
   userId: string;
@@ -74,12 +78,12 @@ const getWindowStats = (points: Point[]) => {
 
   const successChecks = points.reduce(
     (sum, point) => sum + (point.success / 100) * point.total,
-    0
+    0,
   );
 
   const latencyWeightedTotal = points.reduce(
     (sum, point) => sum + point.avgLatency * point.total,
-    0
+    0,
   );
 
   return {
@@ -91,7 +95,7 @@ const getWindowStats = (points: Point[]) => {
 
 const getTrend = (
   previous: number,
-  current: number
+  current: number,
 ): { direction: "up" | "down" | "flat"; deltaPercent: number } => {
   if (previous === 0 && current === 0) {
     return { direction: "flat", deltaPercent: 0 };
@@ -116,7 +120,7 @@ const getTrend = (
 
 const getAccessibleEndpoint = async (
   endpointId: string,
-  { userId, role }: UserContext
+  { userId, role }: UserContext,
 ) => {
   const endpointFilter: Record<string, unknown> = {
     _id: new mongoose.Types.ObjectId(endpointId),
@@ -127,7 +131,7 @@ const getAccessibleEndpoint = async (
   }
 
   const endpoint = await Endpoint.findOne(endpointFilter).select(
-    "_id name path method"
+    "_id name path method",
   );
 
   if (!endpoint) {
@@ -142,13 +146,71 @@ const percentileFromSorted = (sortedValues: number[], p: number): number => {
     return 0;
   }
 
-  const index = Math.max(0, Math.min(sortedValues.length - 1, Math.ceil(p * sortedValues.length) - 1));
+  const index = Math.max(
+    0,
+    Math.min(sortedValues.length - 1, Math.ceil(p * sortedValues.length) - 1),
+  );
   return sortedValues[index] ?? 0;
+};
+
+const calculateRate = (numerator: number, denominator: number): number => {
+  if (denominator <= 0) {
+    return 0;
+  }
+
+  return safeRound((numerator / denominator) * 100, 2);
+};
+
+const getLogSummary = async (
+  endpointIds: mongoose.Types.ObjectId[],
+  fromDate: Date,
+  toDate: Date,
+) => {
+  const [summary] = await Log.aggregate<{
+    total: number;
+    successChecks: number;
+    failureChecks: number;
+    avgLatency: number;
+  }>([
+    {
+      $match: {
+        endpointId: { $in: endpointIds },
+        checkedAt: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        successChecks: {
+          $sum: {
+            $cond: [{ $eq: ["$result", "success"] }, 1, 0],
+          },
+        },
+        failureChecks: {
+          $sum: {
+            $cond: [{ $eq: ["$result", "failure"] }, 1, 0],
+          },
+        },
+        avgLatency: { $avg: "$responseTime" },
+      },
+    },
+  ]);
+
+  return {
+    total: summary?.total ?? 0,
+    successChecks: summary?.successChecks ?? 0,
+    failureChecks: summary?.failureChecks ?? 0,
+    avgLatency: safeRound(summary?.avgLatency ?? 0, 2),
+  };
 };
 
 export const getEndpointTopLevelService = async (
   { endpointId, hours }: TopLevelRequest,
-  user: UserContext
+  user: UserContext,
 ) => {
   const endpoint = await getAccessibleEndpoint(endpointId, user);
 
@@ -265,10 +327,10 @@ export const getEndpointTopLevelService = async (
     summary.totalChecks === 0
       ? "unknown"
       : summary.successRate >= 99
-      ? "healthy"
-      : summary.successRate >= 95
-      ? "degraded"
-      : "critical";
+        ? "healthy"
+        : summary.successRate >= 95
+          ? "degraded"
+          : "critical";
 
   return {
     endpoint: {
@@ -306,7 +368,7 @@ export const getEndpointTopLevelService = async (
 
 export const getEndpointTimeseriesService = async (
   { endpointId, hours, bucketMinutes, timezone }: TimeseriesRequest,
-  { userId, role }: UserContext
+  { userId, role }: UserContext,
 ) => {
   validateTimezone(timezone);
 
@@ -361,10 +423,7 @@ export const getEndpointTimeseriesService = async (
             {
               $round: [
                 {
-                  $multiply: [
-                    { $divide: ["$successChecks", "$total"] },
-                    100,
-                  ],
+                  $multiply: [{ $divide: ["$successChecks", "$total"] }, 100],
                 },
                 2,
               ],
@@ -377,7 +436,7 @@ export const getEndpointTimeseriesService = async (
   ]);
 
   const bucketMap = new Map(
-    aggregated.map((item) => [new Date(item.bucketStart).getTime(), item])
+    aggregated.map((item) => [new Date(item.bucketStart).getTime(), item]),
   );
 
   const startBucket = floorToBucket(fromDate, bucketMinutes);
@@ -410,9 +469,18 @@ export const getEndpointTimeseriesService = async (
   const previousStats = getWindowStats(previousWindow);
   const currentStats = getWindowStats(currentWindow);
 
-  const latencyTrend = getTrend(previousStats.avgLatency, currentStats.avgLatency);
-  const successTrend = getTrend(previousStats.successRate, currentStats.successRate);
-  const trafficTrend = getTrend(previousStats.totalChecks, currentStats.totalChecks);
+  const latencyTrend = getTrend(
+    previousStats.avgLatency,
+    currentStats.avgLatency,
+  );
+  const successTrend = getTrend(
+    previousStats.successRate,
+    currentStats.successRate,
+  );
+  const trafficTrend = getTrend(
+    previousStats.totalChecks,
+    currentStats.totalChecks,
+  );
 
   return {
     endpoint: {
@@ -457,5 +525,126 @@ export const getEndpointTimeseriesService = async (
       total: point.total,
       bucketStart: point.bucketStart,
     })),
+  };
+};
+
+export const overviewService = async (
+  user: UserContext,
+  { serviceId, topErrorsLimit }: OverviewRequest,
+) => {
+  const endpointFilter: Record<string, unknown> =
+    user.role === "admin"
+      ? {}
+      : { userId: new mongoose.Types.ObjectId(user.userId) };
+
+  if (serviceId) {
+    endpointFilter.serviceId = new mongoose.Types.ObjectId(serviceId);
+  }
+
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [endpoints, totalApis, newApisThisWeek] = await Promise.all([
+    Endpoint.find(endpointFilter).select("_id name path method"),
+    Endpoint.countDocuments(endpointFilter),
+    Endpoint.countDocuments({
+      ...endpointFilter,
+      createdAt: { $gte: sevenDaysAgo, $lte: now },
+    }),
+  ]);
+
+  const endpointIds = endpoints.map((endpoint) => endpoint._id);
+
+  const [summary7d, summaryPrevious7d, summary24h, summary30d, topErrorsRaw, openIncidents] =
+    await Promise.all([
+      getLogSummary(endpointIds, sevenDaysAgo, now),
+      getLogSummary(endpointIds, fourteenDaysAgo, sevenDaysAgo),
+      getLogSummary(endpointIds, twentyFourHoursAgo, now),
+      getLogSummary(endpointIds, thirtyDaysAgo, now),
+      Log.aggregate<{ endpointId: mongoose.Types.ObjectId; errorCount: number }>([
+        {
+          $match: {
+            endpointId: { $in: endpointIds },
+            checkedAt: { $gte: twentyFourHoursAgo, $lte: now },
+            result: "failure",
+          },
+        },
+        {
+          $group: {
+            _id: "$endpointId",
+            errorCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            endpointId: "$_id",
+            errorCount: 1,
+          },
+        },
+        { $sort: { errorCount: -1 } },
+        { $limit: topErrorsLimit },
+      ]),
+      Incident.countDocuments({
+        ...endpointFilter,
+        status: "open",
+      }),
+    ]);
+
+  const endpointMap = new Map(
+    endpoints.map((endpoint) => [String(endpoint._id), endpoint]),
+  );
+
+  const uptime7d = calculateRate(summary7d.successChecks, summary7d.total);
+  const uptime24h = calculateRate(summary24h.successChecks, summary24h.total);
+  const uptime30d = calculateRate(summary30d.successChecks, summary30d.total);
+  const errorRate24h = calculateRate(summary24h.failureChecks, summary24h.total);
+
+  const avgResponseTimeMs = summary7d.avgLatency;
+  const avgResponseTimeDeltaMsVsLastWeek = safeRound(
+    summary7d.avgLatency - summaryPrevious7d.avgLatency,
+    2,
+  );
+
+  return {
+    generatedAt: now,
+    totalApis: {
+      value: totalApis,
+      newThisWeek: newApisThisWeek,
+    },
+    uptime: {
+      value: uptime7d,
+      window: "7d",
+      last24h: uptime24h,
+      last30d: uptime30d,
+    },
+    avgResponseTime: {
+      valueMs: avgResponseTimeMs,
+      deltaMsVsLastWeek: avgResponseTimeDeltaMsVsLastWeek,
+    },
+    incidents: {
+      open: openIncidents,
+    },
+    errorRate: {
+      value: errorRate24h,
+      window: "24h",
+    },
+    errorsByApi24h: {
+      top: topErrorsLimit,
+      items: topErrorsRaw.map((entry) => {
+        const endpoint = endpointMap.get(String(entry.endpointId));
+
+        return {
+          endpointId: String(entry.endpointId),
+          endpointName: endpoint?.name ?? null,
+          method: endpoint?.method ?? null,
+          path: endpoint?.path ?? null,
+          count: entry.errorCount,
+        };
+      }),
+    },
   };
 };

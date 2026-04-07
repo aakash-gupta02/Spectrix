@@ -7,10 +7,12 @@ import type {
   EndpointIdParams,
   GetEndpointTopLevelQueryInput,
   GetEndpointTimeseriesQueryInput,
+  OverviewQueryInput,
 } from "./metrics.validation.js";
 import {
   getEndpointTimeseriesService,
   getEndpointTopLevelService,
+  overviewService,
 } from "./metrics.service.js";
 
 export const getEndpointTopLevel = CatchAsync(
@@ -24,13 +26,18 @@ export const getEndpointTopLevel = CatchAsync(
         endpointId: id,
         ...query,
       },
-      { userId, role }
+      { userId, role },
     );
 
-    sendResponse(res, StatusCodes.OK, "Endpoint top-level metrics fetched successfully", {
-      metrics: data,
-    });
-  }
+    sendResponse(
+      res,
+      StatusCodes.OK,
+      "Endpoint top-level metrics fetched successfully",
+      {
+        metrics: data,
+      },
+    );
+  },
 );
 
 export const getEndpointTimeseries = CatchAsync(
@@ -44,11 +51,26 @@ export const getEndpointTimeseries = CatchAsync(
         endpointId: id,
         ...query,
       },
-      { userId, role }
+      { userId, role },
     );
 
-    sendResponse(res, StatusCodes.OK, "Endpoint time series fetched successfully", {
-      metrics: data,
-    });
-  }
+    sendResponse(
+      res,
+      StatusCodes.OK,
+      "Endpoint time series fetched successfully",
+      {
+        metrics: data,
+      },
+    );
+  },
 );
+
+export const overview = CatchAsync(async (req: Request, res: Response) => {
+  const { userId, role } = req.user;
+  const query = req.query as unknown as OverviewQueryInput;
+
+  const data = await overviewService({ userId, role }, query);
+  sendResponse(res, StatusCodes.OK, "Overview metrics fetched successfully", {
+    metrics: data,
+  });
+});
