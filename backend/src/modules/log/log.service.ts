@@ -3,9 +3,13 @@ import type { GetLogsOverviewQueryInput, GetLogsQueryInput } from "./log.validat
 import { Log } from "./log.model.js";
 
 
-export const getLogsService = async ({ endpointId, page, limit }: GetLogsQueryInput, { userId, role }: { userId: string; role: string }) => {
+export const getLogsService = async ({ serviceId, endpointId, page, limit }: GetLogsQueryInput, { userId, role }: { userId: string; role: string }) => {
 
     const filter: Record<string, unknown> = role === "admin" ? {} : { userId: userId };
+
+    if (serviceId) {
+        filter.serviceId = serviceId;
+    }
 
     if (endpointId) {
         filter.endpointId = endpointId;

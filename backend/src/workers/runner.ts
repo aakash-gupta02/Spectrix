@@ -86,7 +86,7 @@ export async function runCheck(endpoint: EndpointDocument) {
     const url = baseUrl + endpoint.path;
 
     logger.info(
-      `[worker] START endpointId=${endpointId} ${endpoint.method} ${url}`
+      `[worker] START endpointId=${endpointId} ${endpoint.method} ${url}`,
     );
 
     const res = await axios({
@@ -96,17 +96,19 @@ export async function runCheck(endpoint: EndpointDocument) {
       headers: toStringRecord(endpoint.headers),
       data: endpoint.body,
       timeout: endpoint.timeout,
-      validateStatus: () => true // IMPORTANT: Don't throw on any status code
+      validateStatus: () => true, // IMPORTANT: Don't throw on any status code
     });
 
     responseTime = Date.now() - start;
     statusCode = res.status;
-    
-    // Fix: Check if expectedStatus exists and is an array
-    const isSuccess = endpoint.expectedStatus && Array.isArray(endpoint.expectedStatus) && endpoint.expectedStatus.length > 0
-      ? endpoint.expectedStatus.includes(res.status)
-      : res.status >= 200 && res.status < 300;
 
+    // Fix: Check if expectedStatus exists and is an array
+    const isSuccess =
+      endpoint.expectedStatus &&
+      Array.isArray(endpoint.expectedStatus) &&
+      endpoint.expectedStatus.length > 0
+        ? endpoint.expectedStatus.includes(res.status)
+        : res.status >= 200 && res.status < 300;
 
     result = isSuccess ? "success" : "failure";
 
@@ -116,17 +118,17 @@ export async function runCheck(endpoint: EndpointDocument) {
 
     await Log.create({
       endpointId: (endpoint as any)._id,
+      serviceId: endpoint.serviceId,
       userId: endpoint.userId,
       result,
       statusCode,
       responseTime,
-      errorMessage
+      errorMessage,
     });
 
     logger.info(
-      `[worker] ${isSuccess ? "PASS" : "FAIL"} endpointId=${endpointId} ${endpoint.method} ${url} status=${res.status} responseTime=${responseTime}ms`
+      `[worker] ${isSuccess ? "PASS" : "FAIL"} endpointId=${endpointId} ${endpoint.method} ${url} status=${res.status} responseTime=${responseTime}ms`,
     );
-
   } catch (err: any) {
     // This block only runs for network errors, timeouts, etc.
     // NOT for HTTP status codes like 409
@@ -137,15 +139,16 @@ export async function runCheck(endpoint: EndpointDocument) {
 
     await Log.create({
       endpointId,
+      serviceId: endpoint.serviceId,
       userId: endpoint.userId,
       result: "failure",
       statusCode,
       responseTime,
-      errorMessage
+      errorMessage,
     });
 
     logger.error(
-      `[worker] FAIL endpointId=${endpointId} ${endpoint.method} ${endpoint.path} status=${statusCode ?? "N/A"} responseTime=${responseTime}ms error=${errorMessage}`
+      `[worker] FAIL endpointId=${endpointId} ${endpoint.method} ${endpoint.path} status=${statusCode ?? "N/A"} responseTime=${responseTime}ms error=${errorMessage}`,
     );
   } finally {
     // Handle incident based on the result
@@ -153,7 +156,7 @@ export async function runCheck(endpoint: EndpointDocument) {
       await handleIncidentService(endpoint, result, checkedAt);
     } catch (incidentError) {
       logger.error(
-        `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`
+        `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`,
       );
     }
   }

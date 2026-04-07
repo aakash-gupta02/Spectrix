@@ -3,12 +3,14 @@ import { objectIdSchema } from '../../utils/validation.js';
 
 export const getLogsQuerySchema = z.object({
     endpointId: objectIdSchema.optional(),
+    serviceId: objectIdSchema.optional(),
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(100).default(50),
 }).strict();
 
 export const getLogsOverviewQuerySchema = z.object({
     endpointId: objectIdSchema.optional(),
+    serviceId: objectIdSchema.optional(),
     hours: z.coerce.number().int().positive().max(24 * 30).default(24),
 }).strict();
 
