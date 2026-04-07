@@ -11,6 +11,18 @@ export const authAPI = {
   },
 };
 
+export const overviewAPI = {
+  getOverviewMetrics: async ({ serviceId } = {}) => {
+    const response = await apiClient.get("/metrics/overview", {
+      params: {
+        ...(serviceId ? { serviceId } : {}),
+      },
+    });
+
+    return response.data;
+  },
+};
+
 export const serviceAPI = {
   // get all services
   getServices: async () => {

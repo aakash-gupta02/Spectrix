@@ -1,109 +1,203 @@
+"use client";
+
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
-import { Activity, AlertTriangle, Clock3, Server } from "lucide-react";
+import LocalServiceFilterDropdown from "@/components/dashboard/layout/LocalServiceFilterDropdown";
+import DashboardButton from "@/components/ui/DashboardButton";
+import { useService } from "@/contexts/ServiceContext";
+import useServiceFiltering from "@/hooks/useServiceFiltering";
+import { overviewAPI } from "@/lib/api/api";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, AlertTriangle, Clock3, RefreshCw, Server } from "lucide-react";
+import { useMemo } from "react";
+import OverviewMetricCard from "./_components/overview/OverviewMetricCard";
+import OverviewSectionCard from "./_components/overview/OverviewSectionCard";
+import OverviewTopErrors from "./_components/overview/OverviewTopErrors";
 
-const topMetrics = [
-    {
-        title: "Total APIs",
-        value: "18",
-        meta: "+3 this month",
-        icon: Server,
-    },
-    {
-        title: "Average Uptime",
-        value: "99.94%",
-        meta: "SLA target 99.90%",
-        icon: Activity,
-    },
-    {
-        title: "Avg Response",
-        value: "241ms",
-        meta: "-18ms vs yesterday",
-        icon: Clock3,
-    },
-    {
-        title: "Incidents",
-        value: "2",
-        meta: "1 critical in last 7d",
-        icon: AlertTriangle,
-    },
-];
+const formatNumber = (value, minimumFractionDigits = 0, maximumFractionDigits = 2) => {
+    if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) {
+        return "-";
+    }
+
+    return new Intl.NumberFormat("en-US", {
+        minimumFractionDigits,
+        maximumFractionDigits,
+    }).format(Number(value));
+};
+
+const formatDateTime = (value) => {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+    }).format(date);
+};
 
 export default function DashboardPage() {
+    const { selectedService } = useService();
+    const { localServiceId, activeServiceFilter, setLocalFilter } = useServiceFiltering();
+
+    const overviewQuery = useQuery({
+        queryKey: ["overview-metrics", activeServiceFilter || "all"],
+        queryFn: () => overviewAPI.getOverviewMetrics({ serviceId: activeServiceFilter }),
+    });
+
+    const metrics = overviewQuery.data?.metrics;
+    const errorItems = useMemo(() => metrics?.errorsByApi24h?.items ?? [], [metrics]);
+
+    const generatedAt = formatDateTime(metrics?.generatedAt);
+    const totalApis = metrics?.totalApis?.value ?? 0;
+    const newThisWeek = metrics?.totalApis?.newThisWeek ?? 0;
+    const uptimeValue = metrics?.uptime?.value ?? 0;
+    const uptime24h = metrics?.uptime?.last24h ?? uptimeValue;
+    const uptime30d = metrics?.uptime?.last30d ?? uptimeValue;
+    const avgResponseTime = metrics?.avgResponseTime?.valueMs ?? 0;
+    const deltaResponseTime = metrics?.avgResponseTime?.deltaMsVsLastWeek ?? 0;
+    const openIncidents = metrics?.incidents?.open ?? 0;
+    const errorRate = metrics?.errorRate?.value ?? 0;
+
+    const selectedScopeLabel = activeServiceFilter
+        ? selectedService?.name || "Filtered service"
+        : "All services";
+
     return (
         <Container>
-
             <SectionHeading
-                title="API Monitoring Overview"
-                description="Real-time uptime, response time, incidents, and performance signals."
-                actions={[
-                    { label: "Export report", variant: "secondary" },
-                    { label: "Create monitor", variant: "primary" },
-                ]}
+                title="Overview"
+                description="Real-time uptime, response time, incident pressure, and endpoint error concentration."
+            >
+                <LocalServiceFilterDropdown
+                    value={localServiceId}
+                    onChange={setLocalFilter}
+                    allOptionLabel="All Services"
+                />
 
-            />
+                <DashboardButton
+                    variant="secondary"
+                    onClick={() => overviewQuery.refetch()}
+                    disabled={overviewQuery.isFetching}
+                >
+                    <RefreshCw size={14} className={overviewQuery.isFetching ? "animate-spin" : ""} />
+                    Refresh
+                </DashboardButton>
+            </SectionHeading>
 
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {topMetrics.map((metric) => {
-                    const Icon = metric.icon;
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[0.6875rem] text-body">
+                <span className="rounded border border-border bg-surface-1 px-2 py-1 uppercase tracking-[0.12em] text-white/55">
+                    Scope
+                </span>
+                <span className="rounded border border-border bg-surface-1 px-2 py-1 text-heading">
+                    {selectedScopeLabel}
+                </span>
+                <span className="text-white/35">Updated {generatedAt}</span>
+            </div>
 
-                    return (
-                        <article
-                            key={metric.title}
-                            className="rounded-lg border border-dashed border-border bg-page p-4"
+            {overviewQuery.isLoading ? (
+                <div className="rounded-lg border border-dashed border-border bg-surface-1 px-5 py-6 text-body">
+                    Loading overview metrics...
+                </div>
+            ) : null}
+
+            {overviewQuery.isError ? (
+                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-rose-200">
+                    Could not load overview metrics.
+                </div>
+            ) : null}
+
+            {metrics ? (
+                <>
+                    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <OverviewMetricCard
+                            title="Total APIs"
+                            value={formatNumber(totalApis, 0, 0)}
+                            meta={`${formatNumber(newThisWeek, 0, 0)} new this week`}
+                            icon={Server}
+                        />
+
+                        <OverviewMetricCard
+                            title="Uptime"
+                            value={`${formatNumber(uptimeValue, 0, 2)}%`}
+                            meta={`7d window · 24h ${formatNumber(uptime24h, 0, 2)}% · 30d ${formatNumber(uptime30d, 0, 2)}%`}
+                            icon={Activity}
+                        />
+
+                        <OverviewMetricCard
+                            title="Avg Response Time"
+                            value={`${formatNumber(avgResponseTime, 0, 2)} ms`}
+                            meta={`${deltaResponseTime >= 0 ? "+" : ""}${formatNumber(deltaResponseTime, 0, 2)} ms vs last week`}
+                            icon={Clock3}
+                            tone={deltaResponseTime <= 0 ? "success" : "warning"}
+                        />
+
+                        <OverviewMetricCard
+                            title="Incidents / Error Rate"
+                            value={`${formatNumber(openIncidents, 0, 0)} open`}
+                            meta={`${formatNumber(errorRate, 0, 2)}% error rate over 24h`}
+                            icon={AlertTriangle}
+                            tone={openIncidents === 0 ? "success" : "danger"}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                        <OverviewSectionCard
+                            title="Service Health"
+                            description="A compact view of the current reliability posture for the selected scope."
+                            className="lg:col-span-2"
                         >
-                            <div className="mb-4 flex items-center justify-between">
-                                <p className="text-[0.6875rem] uppercase tracking-[0.15em] text-white/45">
-                                    {metric.title}
-                                </p>
-                                <Icon size={16} className="text-primary" />
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="rounded border border-border bg-surface-2 p-4">
+                                    <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-muted">Windowed uptime</p>
+                                    <div className="mt-2 text-3xl font-light tracking-tight text-heading">{formatNumber(uptimeValue, 0, 2)}%</div>
+                                    <p className="mt-2 text-[0.6875rem] text-body">Last 7 days · updated {generatedAt}</p>
+
+                                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
+                                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-primary" style={{ width: `${Math.max(0, Math.min(100, uptimeValue))}%` }} />
+                                    </div>
+                                </div>
+
+                                <div className="rounded border border-border bg-surface-2 p-4">
+                                    <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-muted">Reliability snapshot</p>
+                                    <div className="mt-3 space-y-3 text-xs text-body">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>Open incidents</span>
+                                            <span className="text-heading">{formatNumber(openIncidents, 0, 0)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>24h error rate</span>
+                                            <span className="text-heading">{formatNumber(errorRate, 0, 2)}%</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>Response time delta</span>
+                                            <span className={deltaResponseTime <= 0 ? "text-emerald-300" : "text-amber-300"}>
+                                                {deltaResponseTime >= 0 ? "+" : ""}{formatNumber(deltaResponseTime, 0, 2)} ms
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-3xl font-light tracking-tight text-heading">{metric.value}</p>
-                            <p className="mt-1 text-[0.6875rem] text-body">{metric.meta}</p>
-                        </article>
-                    );
-                })}
-            </div>
+                        </OverviewSectionCard>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <article className="rounded-lg border border-dashed border-border bg-page p-4 lg:col-span-2">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-sm text-heading">Response Time Trend</h2>
-                        <span className="text-[0.6875rem] text-body">Last 24 hours</span>
+                        <OverviewSectionCard
+                            title="Top Error Endpoints"
+                            description="The endpoints generating the most errors over the last 24 hours."
+                        >
+                            <OverviewTopErrors items={errorItems} />
+                        </OverviewSectionCard>
                     </div>
-
-                    <div className="relative h-40 overflow-hidden rounded border border-border bg-surface-1">
-                        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(198,249,31,0.12),transparent)]" />
-                        <div className="absolute inset-x-0 bottom-0 h-px bg-border" />
-                        <div className="absolute left-0 right-0 top-1/2 h-px border-t border-dashed border-border" />
-                        <div className="absolute left-0 right-0 top-1/4 h-px border-t border-dashed border-border" />
-                        <div className="absolute left-0 right-0 top-3/4 h-px border-t border-dashed border-border" />
-                        <div className="absolute inset-x-4 bottom-10 h-14 rounded-full border border-primary/30" />
-                    </div>
-                </article>
-
-                <article className="rounded-lg border border-dashed border-border bg-page p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-sm text-heading">Latest Incidents</h2>
-                        <span className="text-[0.6875rem] text-body">This week</span>
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="rounded border border-rose-500/25 bg-rose-500/5 p-3">
-                            <p className="text-xs text-rose-300">Payment API timeout spike</p>
-                            <p className="mt-1 text-[0.6875rem] text-body">Resolved in 17m</p>
-                        </div>
-                        <div className="rounded border border-amber-400/25 bg-amber-400/5 p-3">
-                            <p className="text-xs text-amber-300">Webhook retries elevated</p>
-                            <p className="mt-1 text-[0.6875rem] text-body">Monitoring active</p>
-                        </div>
-                        <div className="rounded border border-emerald-500/25 bg-emerald-500/5 p-3">
-                            <p className="text-xs text-emerald-300">Public status page stable</p>
-                            <p className="mt-1 text-[0.6875rem] text-body">No disruption</p>
-                        </div>
-                    </div>
-                </article>
-            </div>
+                </>
+            ) : null}
         </Container>
     );
 }
