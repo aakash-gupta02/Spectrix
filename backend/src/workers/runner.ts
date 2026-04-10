@@ -1,6 +1,9 @@
 import axios from "axios";
 import { Log } from "../modules/log/log.model.js";
-import { EndpointDocument } from "../modules/endpoint/endpoint.model.js";
+import {
+  Endpoint,
+  EndpointDocument,
+} from "../modules/endpoint/endpoint.model.js";
 import { logger } from "../config/logger.js";
 import { handleIncidentService } from "../modules/incident/incident.service.js"; // Adjust path as needed
 
@@ -151,7 +154,26 @@ export async function runCheck(endpoint: EndpointDocument) {
       `[worker] FAIL endpointId=${endpointId} ${endpoint.method} ${endpoint.path} status=${statusCode ?? "N/A"} responseTime=${responseTime}ms error=${errorMessage}`,
     );
   } finally {
-    // Handle incident based on the result
+    const now = new Date();
+
+    if (!endpoint.nextCheckAt) {
+      endpoint.nextCheckAt = new Date(now.getTime() + endpoint.interval * 1000);
+    } else {
+      endpoint.nextCheckAt = new Date(
+        endpoint.nextCheckAt.getTime() + endpoint.interval * 1000,
+      );
+
+      if (endpoint.nextCheckAt < now) {
+        endpoint.nextCheckAt = new Date(
+          now.getTime() + endpoint.interval * 1000,
+        );
+      }
+    }
+    await Endpoint.updateOne(
+      { _id: endpointId },
+      { nextCheckAt: endpoint.nextCheckAt },
+    );
+
     try {
       await handleIncidentService(endpoint, result, checkedAt);
     } catch (incidentError) {

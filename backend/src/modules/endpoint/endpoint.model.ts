@@ -82,7 +82,9 @@ const endpointSchema = new Schema(
             default: true
         },
 
-        lastCheckedAt: Date
+        lastCheckedAt: Date,
+
+        nextCheckAt: Date
     },
     { timestamps: true }
 );
