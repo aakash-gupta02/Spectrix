@@ -45,6 +45,7 @@ async function runWorker() {
               statusCode: result.statusCode,
               responseTime: result.responseTime,
               errorMessage: result.errorMessage,
+              errorType: result.errorType,
             });
 
             // Incident

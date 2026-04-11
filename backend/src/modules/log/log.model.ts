@@ -44,6 +44,19 @@ const logSchema = new Schema(
       maxlength: 500,
     },
 
+    errorType: {
+      type: String,
+      enum: [
+        "network",
+        "timeout",
+        "dns",
+        "refused",
+        "server",
+        "client",
+        "unknown",
+      ],
+    },
+
     checkedAt: {
       type: Date,
       default: Date.now,

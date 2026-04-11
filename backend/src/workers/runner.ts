@@ -122,11 +122,29 @@ async function apiCheck(endpoint: EndpointDocument) {
       errorMessage: isSuccess ? undefined : `Unexpected status ${res.status}`,
     };
   } catch (err) {
+    let type = "network";
+
+    if (axios.isAxiosError(err)) {
+      if (err.code === "ECONNABORTED") type = "timeout";
+      else if (err.code === "ENOTFOUND") type = "dns";
+      else if (err.code === "ECONNREFUSED") type = "refused";
+      else type = "network";
+
+      logger.error(
+        `API Check error for endpoint ${endpoint.name}: ${err.code}`,
+      );
+    } else if (err instanceof Error) {
+      logger.error(`API Check error: ${err.message}`);
+    } else {
+      logger.error(`API Check error: ${String(err)}`);
+    }
+
     return {
       result: "failure",
       statusCode: null,
       responseTime: Date.now() - start,
       errorMessage: getErrorMessage(err),
+      errorType: type,
     };
   }
 }
