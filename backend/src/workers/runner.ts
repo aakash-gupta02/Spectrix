@@ -1,14 +1,6 @@
 import axios from "axios";
-import { Log } from "../modules/log/log.model.js";
-import {
-  Endpoint,
-  EndpointDocument,
-} from "../modules/endpoint/endpoint.model.js";
+import { EndpointDocument } from "../modules/endpoint/endpoint.model.js";
 import { logger } from "../config/logger.js";
-import { handleIncidentService } from "../modules/incident/incident.service.js";
-
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -73,6 +65,11 @@ const toStringRecord = (value: unknown): Record<string, string> => {
   return result;
 };
 
+// Sleep function to pause execution for a given number of milliseconds
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// Calculate the next check time for an endpoint based on its interval and last check time
 export const calculateNextCheckAt = (endpoint: EndpointDocument) => {
   const now = new Date();
 
@@ -92,6 +89,7 @@ export const calculateNextCheckAt = (endpoint: EndpointDocument) => {
   return nextCheckAt;
 };
 
+// Actual API Call
 async function apiCheck(endpoint: EndpointDocument) {
   const start = Date.now();
   const baseUrl = (endpoint.serviceId as any)?.baseUrl;
@@ -133,6 +131,7 @@ async function apiCheck(endpoint: EndpointDocument) {
   }
 }
 
+// Retry function for AOI Checks
 export async function retryApiCheck(endpoint: EndpointDocument) {
   const retries = Math.max(1, endpoint.retries ?? 1);
   const endpointId = (endpoint as any)?._id;
@@ -156,137 +155,4 @@ export async function retryApiCheck(endpoint: EndpointDocument) {
   }
 
   return finalResult;
-}
-
-export async function runCheck(
-  endpoint: EndpointDocument,
-): Promise<"success" | "failure"> {
-  const start = Date.now();
-  const endpointId = (endpoint as any)?._id;
-  const checkedAt = new Date();
-  let result: "success" | "failure" = "failure";
-  let statusCode: number | null = null;
-  let responseTime: number;
-  let errorMessage: string | undefined;
-
-  try {
-    const baseUrl = (endpoint.serviceId as any)?.baseUrl;
-
-    if (!baseUrl) {
-      throw new Error("Missing service baseUrl for endpoint check");
-    }
-
-    const url = baseUrl + endpoint.path;
-
-    logger.info(
-      `[worker] START endpointId=${endpointId} ${endpoint.method} ${url}`,
-    );
-
-    const res = await axios({
-      method: endpoint.method,
-      url,
-      params: toStringRecord(endpoint.query),
-      headers: toStringRecord(endpoint.headers),
-      data: endpoint.body,
-      timeout: endpoint.timeout,
-      validateStatus: () => true, // IMPORTANT: Don't throw on any status code
-    });
-
-    responseTime = Date.now() - start;
-    statusCode = res.status;
-
-    // Fix: Check if expectedStatus exists and is an array
-    const isSuccess =
-      endpoint.expectedStatus &&
-      Array.isArray(endpoint.expectedStatus) &&
-      endpoint.expectedStatus.length > 0
-        ? endpoint.expectedStatus.includes(res.status)
-        : res.status >= 200 && res.status < 300;
-
-    result = isSuccess ? "success" : "failure";
-
-    if (!isSuccess) {
-      errorMessage = `Unexpected status code: ${res.status}`;
-    }
-
-    await Log.create({
-      endpointId: (endpoint as any)._id,
-      serviceId: endpoint.serviceId,
-      userId: endpoint.userId,
-      result,
-      statusCode,
-      responseTime,
-      errorMessage,
-    });
-
-    logger.info(
-      `[worker] ${isSuccess ? "PASS" : "FAIL"} endpointId=${endpointId} ${endpoint.method} ${url} status=${res.status} responseTime=${responseTime}ms`,
-    );
-  } catch (err: any) {
-    // This block only runs for network errors, timeouts, etc.
-    // NOT for HTTP status codes like 409
-
-    responseTime = Date.now() - start;
-    errorMessage = getErrorMessage(err);
-    statusCode = err?.response?.status || null;
-    result = "failure";
-
-    await Log.create({
-      endpointId,
-      serviceId: endpoint.serviceId,
-      userId: endpoint.userId,
-      result: "failure",
-      statusCode,
-      responseTime,
-      errorMessage,
-    });
-
-    logger.error(
-      `[worker] FAIL endpointId=${endpointId} ${endpoint.method} ${endpoint.path} status=${statusCode ?? "N/A"} responseTime=${responseTime}ms error=${errorMessage}`,
-    );
-  } finally {
-    const now = new Date();
-
-    // Schedule next check
-
-    const nextCheckAt = calculateNextCheckAt(endpoint);
-
-    await Endpoint.updateOne({ _id: endpointId }, { nextCheckAt: nextCheckAt });
-
-    // Handle incident if check failed
-    try {
-      await handleIncidentService(endpoint, result, checkedAt);
-    } catch (incidentError) {
-      logger.error(
-        `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`,
-      );
-    }
-  }
-  return result;
-}
-
-export async function retryRunCheck(endpoint: EndpointDocument) {
-  const retries = Math.max(1, endpoint.retries ?? 1);
-
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    logger.info(
-      `[worker] Attempt ${attempt}/${retries} for endpointId=${(endpoint as any)._id}`,
-    );
-
-    const result = await runCheck(endpoint);
-    if (result === "success") {
-      return;
-    }
-
-    if (attempt < retries) {
-      logger.warn(
-        `[worker] Attempt ${attempt} failed for endpointId=${(endpoint as any)._id}. Retrying in 1s...`,
-      );
-      await sleep(1000);
-    } else {
-      logger.error(
-        `[worker] All retries failed for endpointId=${(endpoint as any)._id}`,
-      );
-    }
-  }
 }

@@ -1,6 +1,6 @@
 import { Endpoint } from "../modules/endpoint/endpoint.model.js";
 import "../modules/service/service.model.js";
-import { calculateNextCheckAt, retryApiCheck, retryRunCheck, runCheck } from "./runner.js";
+import { calculateNextCheckAt, retryApiCheck } from "./runner.js";
 import { connectDB } from "../config/db.js";
 import { logger } from "../config/logger.js";
 import { Log } from "../modules/log/log.model.js";
@@ -13,6 +13,7 @@ async function runWorker() {
 
   setInterval(async () => {
     try {
+      // Find endpoints that are due for a check
       const endpoints = await Endpoint.find({
         nextCheckAt: { $lte: new Date() },
         active: true,
@@ -22,6 +23,8 @@ async function runWorker() {
       logger.info(
         `[worker] Poll started with ${endpoints.length} active endpoints`,
       );
+
+      // Process each endpoint check with retry logic and log results
       const results = await Promise.allSettled(
         endpoints.map(async (endpoint) => {
           try {
@@ -61,6 +64,7 @@ async function runWorker() {
 
       let failedCount = 0;
 
+      // Count failed checks and log errors
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           failedCount += 1;
@@ -71,6 +75,7 @@ async function runWorker() {
         }
       });
 
+      // Log summary of the poll results
       logger.info(
         `[worker] Poll completed: total=${results.length} rejected=${failedCount} fulfilled=${results.length - failedCount}`,
       );
