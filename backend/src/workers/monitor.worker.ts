@@ -1,6 +1,6 @@
 import { Endpoint } from "../modules/endpoint/endpoint.model.js";
 import "../modules/service/service.model.js";
-import { runCheck } from "./runner.js";
+import { retryRunCheck, runCheck } from "./runner.js";
 import { connectDB } from "../config/db.js";
 import { logger } from "../config/logger.js";
 const POLL_INTERVAL = 5000; // 5 seconds - ms value
@@ -20,7 +20,7 @@ async function runWorker() {
         `[worker] Poll started with ${endpoints.length} active endpoints`,
       );
       const results = await Promise.allSettled(
-        endpoints.map((endpoint) => runCheck(endpoint)),
+        endpoints.map((endpoint) => retryRunCheck(endpoint)),
       );
 
       let failedCount = 0;
@@ -30,7 +30,7 @@ async function runWorker() {
           failedCount += 1;
           const endpointId = (endpoints[index] as any)?._id;
           logger.error(
-            `runCheck failed for endpoint ${endpointId}: ${String(result.reason)}`,
+            `retryRunCheck failed for endpoint ${endpointId}: ${String(result.reason)}`,
           );
         }
       });

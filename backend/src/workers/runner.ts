@@ -5,7 +5,10 @@ import {
   EndpointDocument,
 } from "../modules/endpoint/endpoint.model.js";
 import { logger } from "../config/logger.js";
-import { handleIncidentService } from "../modules/incident/incident.service.js"; // Adjust path as needed
+import { handleIncidentService } from "../modules/incident/incident.service.js";
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -70,7 +73,9 @@ const toStringRecord = (value: unknown): Record<string, string> => {
   return result;
 };
 
-export async function runCheck(endpoint: EndpointDocument) {
+export async function runCheck(
+  endpoint: EndpointDocument,
+): Promise<"success" | "failure"> {
   const start = Date.now();
   const endpointId = (endpoint as any)?._id;
   const checkedAt = new Date();
@@ -135,6 +140,7 @@ export async function runCheck(endpoint: EndpointDocument) {
   } catch (err: any) {
     // This block only runs for network errors, timeouts, etc.
     // NOT for HTTP status codes like 409
+
     responseTime = Date.now() - start;
     errorMessage = getErrorMessage(err);
     statusCode = err?.response?.status || null;
@@ -156,6 +162,7 @@ export async function runCheck(endpoint: EndpointDocument) {
   } finally {
     const now = new Date();
 
+    // Schedule next check
     if (!endpoint.nextCheckAt) {
       endpoint.nextCheckAt = new Date(now.getTime() + endpoint.interval * 1000);
     } else {
@@ -174,11 +181,40 @@ export async function runCheck(endpoint: EndpointDocument) {
       { nextCheckAt: endpoint.nextCheckAt },
     );
 
+    // Handle incident if check failed
     try {
       await handleIncidentService(endpoint, result, checkedAt);
     } catch (incidentError) {
       logger.error(
         `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`,
+      );
+    }
+
+    return result;
+  }
+}
+
+export async function retryRunCheck(endpoint: EndpointDocument) {
+  const retries = Math.max(1, endpoint.retries ?? 1);
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    logger.info(
+      `[worker] Attempt ${attempt}/${retries} for endpointId=${(endpoint as any)._id}`,
+    );
+
+    const result = await runCheck(endpoint);
+    if (result === "success") {
+      return;
+    }
+
+    if (attempt < retries) {
+      logger.warn(
+        `[worker] Attempt ${attempt} failed for endpointId=${(endpoint as any)._id}. Retrying in 1s...`,
+      );
+      await sleep(1000);
+    } else {
+      logger.error(
+        `[worker] All retries failed for endpointId=${(endpoint as any)._id}`,
       );
     }
   }
