@@ -73,7 +73,7 @@ const toStringRecord = (value: unknown): Record<string, string> => {
   return result;
 };
 
-const calculateNextCheckAt = (endpoint: EndpointDocument) => {
+export const calculateNextCheckAt = (endpoint: EndpointDocument) => {
   const now = new Date();
 
   if (!endpoint.nextCheckAt) {
@@ -81,7 +81,7 @@ const calculateNextCheckAt = (endpoint: EndpointDocument) => {
   }
 
   let nextCheckAt = new Date(
-    endpoint.nextCheckAt.getTime() + endpoint.interval * 1000
+    endpoint.nextCheckAt.getTime() + endpoint.interval * 1000,
   );
 
   // If we are behind schedule, reset from now
@@ -91,6 +91,72 @@ const calculateNextCheckAt = (endpoint: EndpointDocument) => {
 
   return nextCheckAt;
 };
+
+async function apiCheck(endpoint: EndpointDocument) {
+  const start = Date.now();
+  const baseUrl = (endpoint.serviceId as any)?.baseUrl;
+
+  if (!baseUrl) {
+    throw new Error("Missing service baseUrl for endpoint check");
+  }
+
+  try {
+    const res = await axios({
+      method: endpoint.method,
+      url: baseUrl + endpoint.path,
+      params: toStringRecord(endpoint.query),
+      headers: toStringRecord(endpoint.headers),
+      data: endpoint.body,
+      timeout: endpoint.timeout || 3000,
+      validateStatus: () => true,
+    });
+
+    const responseTime = Date.now() - start;
+
+    const isSuccess = endpoint.expectedStatus?.length
+      ? endpoint.expectedStatus.includes(res.status)
+      : res.status >= 200 && res.status < 300;
+
+    return {
+      result: isSuccess ? "success" : "failure",
+      statusCode: res.status,
+      responseTime,
+      errorMessage: isSuccess ? undefined : `Unexpected status ${res.status}`,
+    };
+  } catch (err) {
+    return {
+      result: "failure",
+      statusCode: null,
+      responseTime: Date.now() - start,
+      errorMessage: getErrorMessage(err),
+    };
+  }
+}
+
+export async function retryApiCheck(endpoint: EndpointDocument) {
+  const retries = Math.max(1, endpoint.retries ?? 1);
+  const endpointId = (endpoint as any)?._id;
+
+  let finalResult;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    logger.info(
+      `[worker] Attempt ${attempt}/${retries} endpointId=${endpointId}`,
+    );
+
+    const res = await apiCheck(endpoint);
+
+    finalResult = res;
+
+    if (res.result === "success") break;
+
+    if (attempt < retries) {
+      await sleep(1000);
+    }
+  }
+
+  return finalResult;
+}
 
 export async function runCheck(
   endpoint: EndpointDocument,
