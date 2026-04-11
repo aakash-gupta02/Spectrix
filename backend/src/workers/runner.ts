@@ -73,6 +73,25 @@ const toStringRecord = (value: unknown): Record<string, string> => {
   return result;
 };
 
+const calculateNextCheckAt = (endpoint: EndpointDocument) => {
+  const now = new Date();
+
+  if (!endpoint.nextCheckAt) {
+    return new Date(now.getTime() + endpoint.interval * 1000);
+  }
+
+  let nextCheckAt = new Date(
+    endpoint.nextCheckAt.getTime() + endpoint.interval * 1000
+  );
+
+  // If we are behind schedule, reset from now
+  if (nextCheckAt < now) {
+    nextCheckAt = new Date(now.getTime() + endpoint.interval * 1000);
+  }
+
+  return nextCheckAt;
+};
+
 export async function runCheck(
   endpoint: EndpointDocument,
 ): Promise<"success" | "failure"> {
@@ -163,23 +182,10 @@ export async function runCheck(
     const now = new Date();
 
     // Schedule next check
-    if (!endpoint.nextCheckAt) {
-      endpoint.nextCheckAt = new Date(now.getTime() + endpoint.interval * 1000);
-    } else {
-      endpoint.nextCheckAt = new Date(
-        endpoint.nextCheckAt.getTime() + endpoint.interval * 1000,
-      );
 
-      if (endpoint.nextCheckAt < now) {
-        endpoint.nextCheckAt = new Date(
-          now.getTime() + endpoint.interval * 1000,
-        );
-      }
-    }
-    await Endpoint.updateOne(
-      { _id: endpointId },
-      { nextCheckAt: endpoint.nextCheckAt },
-    );
+    const nextCheckAt = calculateNextCheckAt(endpoint);
+
+    await Endpoint.updateOne({ _id: endpointId }, { nextCheckAt: nextCheckAt });
 
     // Handle incident if check failed
     try {
@@ -189,9 +195,8 @@ export async function runCheck(
         `[worker] Failed to handle incident for endpoint ${endpointId}: ${String(incidentError)}`,
       );
     }
-
-    return result;
   }
+  return result;
 }
 
 export async function retryRunCheck(endpoint: EndpointDocument) {
