@@ -74,7 +74,8 @@ const endpointSchema = new Schema(
 
         retries: {
             type: Number,
-            default: 1
+            default: 1,
+            max: 3,
         },
 
         active: {

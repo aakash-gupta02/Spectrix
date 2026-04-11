@@ -13,6 +13,7 @@ async function runWorker() {
     try {
       const endpoints = await Endpoint.find({
         nextCheckAt: { $lte: new Date() },
+        active: true,
       }).populate("serviceId", "baseUrl"); // populate service's baseUrl
 
       // Run checks in parallel but still observe each failure.

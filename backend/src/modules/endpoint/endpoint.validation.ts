@@ -21,6 +21,7 @@ export const createEndpointSchema = z.object({
 
     expectedStatus: z.array(z.number().int().positive()).optional(),
     active: z.boolean().default(true),
+    retries: z.number().int().min(1).max(3).default(1),
 }).strict();
 
 // Update schema 
@@ -34,6 +35,7 @@ export const updateEndpointSchema = z.object({
     interval: z.number().min(10).default(300).optional(),
     expectedStatus: z.array(z.number().int().positive()).optional(),
     active: z.boolean().optional(),
+    retries: z.number().int().min(1).max(3).default(1).optional(),
 }).strict();
 
 export const getEndpointsQuerySchema = z.object({

@@ -25,6 +25,7 @@ const initialFormState = {
   interval: "300",
   expectedStatus: "200",
   active: true,
+  retries: "0",
 };
 
 function normalizePath(value) {
@@ -102,6 +103,7 @@ function toFormState(endpoint) {
       ? endpoint.expectedStatus.join(", ")
       : "200",
     active: Boolean(endpoint?.active),
+    retries: String(endpoint?.retries ?? 0),
   };
 }
 
@@ -121,6 +123,7 @@ function getChangedFields(endpoint, formData) {
     active: (value) => value,
     serviceId: (value) => value,
     method: (value) => value,
+    retries: (value) => Number(value),
   };
 
   // Loop through form fields and compare with original
@@ -221,6 +224,10 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
       changedFields.interval = Number(data.interval);
     }
 
+    if (changedFields.retries !== undefined) {
+      changedFields.retries = Number(data.retries);
+    }
+
     if (Object.keys(changedFields).length === 0) {
       setErrorMessage("No changes made.");
       return;
@@ -312,14 +319,18 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
             placeholder="/"
           />
 
-          <div className="md:col-span-2">
             <FormInput
               name="interval"
               label="Interval (seconds)"
               type="number"
               placeholder="300"
             />
-          </div>
+            <FormInput
+              name="retries"
+              label="Retries"
+              type="number"
+              placeholder="3"
+            />
 
           <div className="md:col-span-2">
             <FormTextarea

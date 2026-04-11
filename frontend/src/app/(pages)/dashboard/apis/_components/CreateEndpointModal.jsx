@@ -25,6 +25,7 @@ const initialFormState = {
   interval: 300,
   expectedStatus: "200",
   active: true,
+  retries: '0',
 };
 
 function normalizePath(value) {
@@ -159,6 +160,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
       interval: data.interval,
       expectedStatus: parseExpectedStatus(data.expectedStatus),
       active: Boolean(data.active),
+      retries: Number(data.retries),
     });
   };
 
@@ -242,14 +244,18 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
             placeholder="/"
           />
 
-          <div className="md:col-span-2">
             <FormInput
               name="interval"
               label="Interval (seconds)"
               type="number"
               placeholder="300"
             />
-          </div>
+            <FormInput
+              name="retries"
+              label="Retries"
+              type="number"
+              placeholder="3"
+            />
 
           <div className="md:col-span-2">
             <FormTextarea

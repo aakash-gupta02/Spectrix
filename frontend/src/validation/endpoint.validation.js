@@ -51,6 +51,7 @@ export const createEndpointSchema = z.object({
     interval: z.number().int().min(10, "Interval must be at least 10 seconds").default(300),
     expectedStatus: z.array(z.number().int().positive()).optional(),
     active: z.boolean().default(true),
+    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
 }).strict();
 
 export const updateEndpointSchema = z.object({
@@ -64,6 +65,8 @@ export const updateEndpointSchema = z.object({
     interval: z.number().int().min(10, "Interval must be at least 10 seconds").optional(),
     expectedStatus: z.array(z.number().int().positive()).optional(),
     active: z.boolean().optional(),
+    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
+
 }).strict();
 
 const endpointFormBaseSchema = z.object({
@@ -80,6 +83,7 @@ const endpointFormBaseSchema = z.object({
         .optional()
         .refine(isValidExpectedStatusString, "Expected status codes must be comma-separated HTTP codes"),
     active: z.boolean().default(true),
+    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
 });
 
 export const createEndpointFormSchema = endpointFormBaseSchema.strict();
