@@ -336,7 +336,7 @@ const Page = () => {
                       <span
                         className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase ${getResultBadgeClass(log?.result)}`}
                       >
-                        {String(log?.result || "unknown")}
+                        {String(log?.result || "unknown")} {log?.errorType && `(${log.errorType})`}
                       </span>
                     </td>
 
@@ -344,7 +344,7 @@ const Page = () => {
                       <span
                         className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] font-mono ${getStatusCodeBadgeClass(log?.statusCode)}`}
                       >
-                        {log?.statusCode ?? "-"}
+                        {log?.statusCode ?? "N/A"}
                       </span>
                     </td>
 
