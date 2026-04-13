@@ -3,20 +3,28 @@ import ApiError from "../../utils/ApiError.js";
 import { Incident } from "./incident.model.js";
 import { EndpointDocument } from "../endpoint/endpoint.model.js";
 import { Log } from "../log/log.model.js";
+import { triggerAlert } from "../alert/alert.service.js";
 
-
-export const createIncident = async (endpoint: EndpointDocument, checkedAt: Date) => {
-
+export const createIncident = async (
+  endpoint: EndpointDocument,
+  checkedAt: Date,
+) => {
   const endpointDoc = endpoint as any;
   const endpointId = endpointDoc._id;
   const serviceId = endpointDoc.serviceId;
+
+  await triggerAlert({
+    type: "incident_created",
+    endpoint,
+    incident: {} as any,
+  });
 
   return Incident.create({
     endpointId: endpointId,
     serviceId: serviceId,
     userId: endpoint.userId,
     startTime: checkedAt,
-    status: "open"
+    status: "open",
   });
 };
 
@@ -31,28 +39,38 @@ export const hasFailureStreak = async (endpointId: string, count = 3) => {
 
   if (logs.length < count) return false;
 
-  return logs.every(log => log.result === "failure");
+  return logs.every((log) => log.result === "failure");
 };
 
 export const incrementFailure = (incidentId: string) => {
-  return Incident.updateOne(
-    { _id: incidentId },
-    { $inc: { failureCount: 1 } }
-  );
+  return Incident.updateOne({ _id: incidentId }, { $inc: { failureCount: 1 } });
 };
 
-export const resolveIncident = (incidentId: string, checkedAt: Date) => {
+export const resolveIncident = async (
+  incidentId: string,
+  checkedAt: Date,
+  endpoint: EndpointDocument,
+) => {
+  await triggerAlert({
+    type: "incident_resolved",
+    endpoint: endpoint,
+    incident: {} as any,
+  });
+
   return Incident.updateOne(
     { _id: incidentId },
     {
       status: "resolved",
-      resolvedAt: checkedAt
-    }
+      resolvedAt: checkedAt,
+    },
   );
 };
 
-export const handleIncidentService = async (endpoint: EndpointDocument, result: string, checkedAt: Date) => {
-
+export const handleIncidentService = async (
+  endpoint: EndpointDocument,
+  result: string,
+  checkedAt: Date,
+) => {
   const endpointDoc = endpoint as any;
   const endpointId = endpointDoc._id;
 
@@ -60,7 +78,6 @@ export const handleIncidentService = async (endpoint: EndpointDocument, result: 
 
   const openIncidentDoc = openIncident as any;
   const openIncidentId = openIncidentDoc?._id;
-
 
   if (result === "failure") {
     if (!openIncident) {
@@ -76,14 +93,22 @@ export const handleIncidentService = async (endpoint: EndpointDocument, result: 
 
   if (result === "success") {
     if (openIncident) {
-      await resolveIncident(openIncidentId, checkedAt);
+      await resolveIncident(openIncidentId, checkedAt, endpoint);
     }
   }
 };
 
-export const getIncidentsService = async (user: { userId: string, role: string }, query: { limit: number, page: number, endpointId?: string, serviceId?: string }) => {
-
-  const filter: Record<string, unknown> = user.role === "admin" ? {} : { userId: user.userId };
+export const getIncidentsService = async (
+  user: { userId: string; role: string },
+  query: {
+    limit: number;
+    page: number;
+    endpointId?: string;
+    serviceId?: string;
+  },
+) => {
+  const filter: Record<string, unknown> =
+    user.role === "admin" ? {} : { userId: user.userId };
 
   const { limit, page, endpointId, serviceId } = query;
   const skip = (page - 1) * limit;
@@ -98,9 +123,12 @@ export const getIncidentsService = async (user: { userId: string, role: string }
 
   const [total, incidents] = await Promise.all([
     Incident.countDocuments(filter),
-    Incident.find(filter).sort({ checkedAt: -1 }).skip(skip).limit(limit)
-    .populate("endpointId", "name method path" )
-    .populate("serviceId", "name environment")
+    Incident.find(filter)
+      .sort({ checkedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("endpointId", "name method path")
+      .populate("serviceId", "name environment"),
   ]);
 
   const totalPages = Math.ceil(total / limit) || 1;
@@ -115,12 +143,16 @@ export const getIncidentsService = async (user: { userId: string, role: string }
       hasNextPage: query.page < totalPages,
       hasPreviousPage: query.page > 1,
     },
-
   };
 };
 
-export const getIncidentByIdService = async (incidentId: string, userId: string, role: string) => {
-  const filter: Record<string, unknown> = role === "admin" ? {} : { userId: userId };
+export const getIncidentByIdService = async (
+  incidentId: string,
+  userId: string,
+  role: string,
+) => {
+  const filter: Record<string, unknown> =
+    role === "admin" ? {} : { userId: userId };
 
   const incident = await Incident.findOne({ _id: incidentId, ...filter });
 
