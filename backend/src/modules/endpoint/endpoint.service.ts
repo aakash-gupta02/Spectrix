@@ -11,7 +11,9 @@ export const createEndpointService = async (payload: CreateEndpointInput, userId
         throw new ApiError(StatusCodes.NOT_FOUND, "Service not found");
     }
 
-    const endpoint = await Endpoint.create({ ...payload, userId: userId });
+    const nextCheckAt = new Date(Date.now() + 5 * 1000);
+
+    const endpoint = await Endpoint.create({ ...payload, userId: userId, nextCheckAt });
 
     return endpoint;
 };
