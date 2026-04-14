@@ -1,4 +1,4 @@
-import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, HydratedDocument } from "mongoose";
 
 const incidentSchema = new Schema(
     {
@@ -52,7 +52,9 @@ incidentSchema.index({ userId: 1, serviceId: 1, createdAt: -1 });
 
 
 // Types
-export type IncidentDocument = InferSchemaType<typeof incidentSchema>;
+export type IncidentSchemaType = InferSchemaType<typeof incidentSchema>;
+export type IncidentDocument = HydratedDocument<IncidentSchemaType>;
+export type IncidentEntity = IncidentSchemaType & { _id: mongoose.Types.ObjectId };
 
 // Export
-export const Incident = mongoose.model<IncidentDocument>("Incident", incidentSchema);
+export const Incident = mongoose.model<IncidentSchemaType>("Incident", incidentSchema);

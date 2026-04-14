@@ -53,20 +53,30 @@ export const resolveIncident = async (
   checkedAt: Date,
   endpoint: EndpointWithService,
 ) => {
-  const resolvedIncident = await Incident.updateOne(
+
+  const resolvedIncident = await Incident.findByIdAndUpdate(
     { _id: incidentId },
 
     {
       status: "resolved",
       resolvedAt: checkedAt,
     },
+    { new: true }
   );
+
+  if (!resolvedIncident) {
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to resolve incident",
+    );
+  }
 
   await triggerAlert({
     type: "incident_resolved",
     endpoint: endpoint,
+    incident: resolvedIncident,
   });
-  
+
   return resolvedIncident;
 };
 
