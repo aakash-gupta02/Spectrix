@@ -1,4 +1,9 @@
-import mongoose, { type Model, Schema, type InferSchemaType } from "mongoose";
+import mongoose, {
+    Schema,
+    type HydratedDocument,
+    type InferSchemaType,
+    type Types,
+} from "mongoose";
 
 const serviceSchema = new Schema(
     {
@@ -59,6 +64,11 @@ serviceSchema.index({ userId: 1, name: 1 }, { unique: true }); // Ensure unique 
 
 
 // Types
-export type ServiceDocument = InferSchemaType<typeof serviceSchema>;
+export type ServiceSchemaType = InferSchemaType<typeof serviceSchema>;
 
-export const Service = mongoose.model<ServiceDocument>("Service", serviceSchema);
+export type ServiceDocument = HydratedDocument<ServiceSchemaType>;
+
+// Plain (lean) shape including _id, useful when using `.lean()`.
+export type ServiceEntity = ServiceSchemaType & { _id: Types.ObjectId };
+
+export const Service = mongoose.model<ServiceSchemaType>("Service", serviceSchema);

@@ -1,38 +1,40 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import { Incident } from "./incident.model.js";
-import { EndpointDocument } from "../endpoint/endpoint.model.js";
 import { Log } from "../log/log.model.js";
 import { triggerAlert } from "../alert/alert.service.js";
+import { EndpointWithService } from "../alert/alert.formatter.js";
+import type { Types } from "mongoose";
 
 export const createIncident = async (
-  endpoint: EndpointDocument,
+  endpoint: EndpointWithService,
   checkedAt: Date,
 ) => {
-  const endpointDoc = endpoint as any;
-  const endpointId = endpointDoc._id;
-  const serviceId = endpointDoc.serviceId;
+  const endpointId = endpoint._id;
+  const serviceId = endpoint.serviceId._id;
 
   await triggerAlert({
     type: "incident_created",
     endpoint,
-    incident: {} as any,
   });
 
   return Incident.create({
     endpointId: endpointId,
     serviceId: serviceId,
     userId: endpoint.userId,
-    startTime: checkedAt,
+    startedAt: checkedAt,
     status: "open",
   });
 };
 
-export const getOpenIncident = (endpointId: string) => {
+export const getOpenIncident = (endpointId: string | Types.ObjectId) => {
   return Incident.findOne({ endpointId, status: "open" });
 };
 
-export const hasFailureStreak = async (endpointId: string, count = 3) => {
+export const hasFailureStreak = async (
+  endpointId: string | Types.ObjectId,
+  count = 3,
+) => {
   const logs = await Log.find({ endpointId })
     .sort({ checkedAt: -1 })
     .limit(count);
@@ -49,35 +51,35 @@ export const incrementFailure = (incidentId: string) => {
 export const resolveIncident = async (
   incidentId: string,
   checkedAt: Date,
-  endpoint: EndpointDocument,
+  endpoint: EndpointWithService,
 ) => {
-  await triggerAlert({
-    type: "incident_resolved",
-    endpoint: endpoint,
-    incident: {} as any,
-  });
-
-  return Incident.updateOne(
+  const resolvedIncident = await Incident.updateOne(
     { _id: incidentId },
+
     {
       status: "resolved",
       resolvedAt: checkedAt,
     },
   );
+
+  await triggerAlert({
+    type: "incident_resolved",
+    endpoint: endpoint,
+  });
+  
+  return resolvedIncident;
 };
 
 export const handleIncidentService = async (
-  endpoint: EndpointDocument,
+  endpoint: EndpointWithService,
   result: string,
   checkedAt: Date,
 ) => {
-  const endpointDoc = endpoint as any;
-  const endpointId = endpointDoc._id;
+  const endpointId = endpoint._id;
 
   const openIncident = await getOpenIncident(endpointId);
 
-  const openIncidentDoc = openIncident as any;
-  const openIncidentId = openIncidentDoc?._id;
+  const openIncidentId = openIncident?._id;
 
   if (result === "failure") {
     if (!openIncident) {
@@ -87,13 +89,13 @@ export const handleIncidentService = async (
         await createIncident(endpoint, checkedAt);
       }
     } else {
-      await incrementFailure(openIncidentId);
+      await incrementFailure(String(openIncidentId));
     }
   }
 
   if (result === "success") {
     if (openIncident) {
-      await resolveIncident(openIncidentId, checkedAt, endpoint);
+      await resolveIncident(String(openIncidentId), checkedAt, endpoint);
     }
   }
 };

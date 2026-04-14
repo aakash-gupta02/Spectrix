@@ -5,6 +5,7 @@ import { connectDB } from "../config/db.js";
 import { logger } from "../config/logger.js";
 import { Log } from "../modules/log/log.model.js";
 import { handleIncidentService } from "../modules/incident/incident.service.js";
+import type { EndpointWithService } from "../modules/alert/alert.formatter.js";
 const POLL_INTERVAL = 5000; // 5 seconds - ms value
 
 async function runWorker() {
@@ -17,7 +18,11 @@ async function runWorker() {
       const endpoints = await Endpoint.find({
         nextCheckAt: { $lte: new Date() },
         active: true,
-      }).populate("serviceId", "baseUrl"); // populate service's baseUrl
+      })
+        .populate("serviceId", "baseUrl name environment")
+        .lean<EndpointWithService[]>(); // lean + populated for clean typing + faster worker
+
+      const populatedEndpoints = endpoints;
 
       // Run checks in parallel but still observe each failure.
       logger.info(
@@ -26,7 +31,7 @@ async function runWorker() {
 
       // Process each endpoint check with retry logic and log results
       const results = await Promise.allSettled(
-        endpoints.map(async (endpoint) => {
+        populatedEndpoints.map(async (endpoint) => {
           try {
             const checkedAt = new Date();
 
@@ -39,7 +44,7 @@ async function runWorker() {
             // Log the result
             await Log.create({
               endpointId: endpoint._id,
-              serviceId: endpoint.serviceId,
+              serviceId: endpoint.serviceId._id,
               userId: endpoint.userId,
               result: result.result,
               statusCode: result.statusCode,
@@ -69,7 +74,7 @@ async function runWorker() {
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           failedCount += 1;
-          const endpointId = (endpoints[index] as any)?._id;
+          const endpointId = populatedEndpoints[index]?._id;
           logger.error(
             `retryRunCheck failed for endpoint ${endpointId}: ${String(result.reason)}`,
           );

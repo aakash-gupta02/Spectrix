@@ -1,6 +1,16 @@
 import axios from "axios";
-import { EndpointDocument } from "../modules/endpoint/endpoint.model.js";
+import type { EndpointEntity } from "../modules/endpoint/endpoint.model.js";
 import { logger } from "../config/logger.js";
+
+type ServiceWithBaseUrl = {
+  baseUrl: string;
+};
+
+type EndpointCheckable = Omit<EndpointEntity, "serviceId"> & {
+  serviceId: ServiceWithBaseUrl;
+};
+
+type EndpointSchedulable = Pick<EndpointEntity, "interval" | "nextCheckAt">;
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -69,8 +79,7 @@ const toStringRecord = (value: unknown): Record<string, string> => {
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-// Calculate the next check time for an endpoint based on its interval and last check time
-export const calculateNextCheckAt = (endpoint: EndpointDocument) => {
+export const calculateNextCheckAt = (endpoint: EndpointSchedulable) => {
   const now = new Date();
 
   if (!endpoint.nextCheckAt) {
@@ -90,9 +99,9 @@ export const calculateNextCheckAt = (endpoint: EndpointDocument) => {
 };
 
 // Actual API Call
-async function apiCheck(endpoint: EndpointDocument) {
+async function apiCheck(endpoint: EndpointCheckable) {
   const start = Date.now();
-  const baseUrl = (endpoint.serviceId as any)?.baseUrl;
+  const baseUrl = endpoint.serviceId?.baseUrl;
 
   if (!baseUrl) {
     throw new Error("Missing service baseUrl for endpoint check");
@@ -150,9 +159,9 @@ async function apiCheck(endpoint: EndpointDocument) {
 }
 
 // Retry function for AOI Checks
-export async function retryApiCheck(endpoint: EndpointDocument) {
+export async function retryApiCheck(endpoint: EndpointCheckable) {
   const retries = Math.max(1, endpoint.retries ?? 1);
-  const endpointId = (endpoint as any)?._id;
+  const endpointId = endpoint._id;
 
   let finalResult;
 

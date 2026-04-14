@@ -1,4 +1,9 @@
-import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import mongoose, {
+    Schema,
+    type HydratedDocument,
+    type InferSchemaType,
+    type Types,
+} from "mongoose";
 
 const endpointSchema = new Schema(
     {
@@ -97,9 +102,11 @@ endpointSchema.index(
     { unique: true }
 ); // Ensure unique endpoint paths per service and method
 
-export type EndpointDocument = InferSchemaType<typeof endpointSchema>;
+export type EndpointSchemaType = InferSchemaType<typeof endpointSchema>;
 
-export const Endpoint = mongoose.model<EndpointDocument>(
-    "Endpoint",
-    endpointSchema
-);
+export type EndpointDocument = HydratedDocument<EndpointSchemaType>;
+
+// Plain (lean) shape including _id, useful for workers/services that use `.lean()`.
+export type EndpointEntity = EndpointSchemaType & { _id: Types.ObjectId };
+
+export const Endpoint = mongoose.model<EndpointSchemaType>("Endpoint", endpointSchema);
