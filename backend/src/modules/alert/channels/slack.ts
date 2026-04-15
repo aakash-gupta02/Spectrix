@@ -1,9 +1,7 @@
 import axios from "axios";
 import { env } from "../../../config/env.js";
 
-export async function sendSlack(message: string) {
-  const url = env.SLACK_WEBHOOK_URL;
-
+export async function sendSlack(url: string, message: string) {
   if (!url) return;
 
   await axios.post(url, {
