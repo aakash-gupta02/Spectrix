@@ -48,10 +48,10 @@ export type AlertChannelEntity = AlertChannelSchemaType & {
   _id: Types.ObjectId;
 };
 
-const AlertChannelModel = mongoose.model<AlertChannelDocument>(
+const AlertChannel = mongoose.model<AlertChannelDocument>(
   "AlertChannel",
   alertChannelSchema,
   "alertChannels",
 );
 
-export default AlertChannelModel;
+export default AlertChannel;
