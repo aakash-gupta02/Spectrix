@@ -6,6 +6,7 @@ import endpointRoutes from "../modules/endpoint/endpoint.route.js";
 import logRoutes from "../modules/log/log.route.js";
 import metricsRoutes from "../modules/metrics/metrics.route.js";
 import incidentRoutes from "../modules/incident/incident.route.js";
+import alertChannelRoutes from "../modules/alert/alertChannel/alertChannel.route.js";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use("/endpoint", endpointRoutes);
 router.use("/log", logRoutes);
 router.use("/metrics", metricsRoutes);
 router.use("/incident", incidentRoutes);
+router.use("/alert-channel", alertChannelRoutes);
 
 export default router;
