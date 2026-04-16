@@ -42,7 +42,7 @@ export const createAlertChannelSchema = z
 
 // Validation schema for alert channel ID parameter
 export const alertChannelIdParamSchema = z.object({
-  alertChannelId: z
+  id: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, "Invalid alert channel ID"),
 });
