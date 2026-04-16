@@ -10,6 +10,29 @@ import { sendByType } from "../alert.service.js";
 // version for encryption & decryption
 const version = env.CURRENT_KEY_VERSION;
 
+// Utility function to mask URL segments
+export const maskUrlSegments = (url: string, mask = "***") => {
+  try {
+    const parsed = new URL(url);
+
+    const parts = parsed.pathname.split("/").filter(Boolean);    
+
+    if (parts.length > 0) {
+      // parts[parts.length - 1] = mask;
+      for (let index = 0; index < parts.length; index++) {
+        const element = parts[index];
+        element.length > 4 && (parts[index] = element.substring(0, 8) + mask);
+      }
+    }
+
+    const maskedPath = "/" + parts.join("/");
+
+    return `${parsed.origin}${maskedPath}${parsed.search}`;
+  } catch {
+    return "Invalid URL";
+  }
+}
+
 export const createAlertChannelService = async (
   userId: Types.ObjectId | string,
   data: CreateAlertChannelInput,
@@ -55,7 +78,7 @@ export const getAlertChannelsService = async (
   // Decrypt the URLs before returning
   return alertChannels.map((channel) => ({
     ...channel.toObject(),
-    url: decrypt(channel.url, channel.keyVersion),
+    url: maskUrlSegments(decrypt(channel.url, channel.keyVersion)),
   }));
 };
 
