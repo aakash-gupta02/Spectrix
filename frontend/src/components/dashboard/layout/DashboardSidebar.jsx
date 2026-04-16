@@ -20,6 +20,7 @@ import { usePathname, useRouter } from "next/navigation";
 import ServiceDropDown from "./ServiceDropDown";
 
 const sideNavGroups = [
+  // Core
   {
     title: "Core",
     items: [
@@ -27,22 +28,31 @@ const sideNavGroups = [
       { label: "API's", href: "/dashboard/apis", icon: Terminal },
       { label: "Incidents", href: "/dashboard/incidents", icon: TriangleAlert },
       { label: "Logs", href: "/dashboard/logs", icon: Logs },
-      { label: "Alerts", href: "/dashboard/alerts", icon: Bell },
+      {
+        label: "Alerts",
+        href: "/dashboard/alerts",
+        icon: Bell,
+        children: [{ label: "Channel", href: "/dashboard/alerts/channel" }],
+      },
       { label: "Analytics", href: "/dashboard/analytics", icon: ChartColumn },
     ],
   },
-  {
-    title: "Client Experience",
-    items: [{ label: "Status Page", href: "/dashboard/status-page", icon: Globe }],
-  },
-  {
-    title: "Workspace",
-    items: [
-      { label: "Team & Access", href: "/dashboard/team", icon: Users },
-      { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
-      { label: "Settings", href: "/dashboard/settings", icon: Settings },
-    ],
-  },
+
+  // // Client Experience
+  // {
+  //   title: "Client Experience",
+  //   items: [{ label: "Status Page", href: "/dashboard/status-page", icon: Globe }],
+  // },
+
+  // // Workspace
+  // {
+  //   title: "Workspace",
+  //   items: [
+  //     { label: "Team & Access", href: "/dashboard/team", icon: Users },
+  //     { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
+  //     { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  //   ],
+  // },
 ];
 
 export default function DashboardSidebar({ isOpen, onClose }) {
@@ -78,20 +88,45 @@ export default function DashboardSidebar({ isOpen, onClose }) {
                     item.href === "/dashboard"
                       ? pathname === "/dashboard"
                       : pathname?.startsWith(item.href);
+                  const hasChildren = Array.isArray(item.children) && item.children.length > 0;
 
                   return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={onClose}
-                      className={`flex w-full items-center gap-2 rounded px-3 py-2 text-[0.75rem] transition-colors ${isActive
+                    <div key={item.label}>
+                      <Link
+                        href={item.href}
+                        onClick={onClose}
+                        className={`flex w-full items-center gap-2 rounded px-3 py-2 text-[0.75rem] transition-colors ${isActive
                           ? "bg-white/5 text-heading"
                           : "text-body hover:bg-white/5 hover:text-heading"
-                        }`}
-                    >
-                      <Icon size={16} className={isActive ? "text-primary" : ""} />
-                      <span>{item.label}</span>
-                    </Link>
+                          }`}
+                      >
+                        <Icon size={16} className={isActive ? "text-primary" : ""} />
+                        <span>{item.label}</span>
+                        {hasChildren ? <ChevronDown size={12} className="ml-auto text-white/50" /> : null}
+                      </Link>
+
+                      {hasChildren && isActive ? (
+                        <div className="ml-6 mt-1 space-y-1 border-l border-dashed border-border pl-3">
+                          {item.children.map((child) => {
+                            const isChildActive = pathname === child.href || pathname?.startsWith(`${child.href}/`);
+
+                            return (
+                              <Link
+                                key={child.label}
+                                href={child.href}
+                                onClick={onClose}
+                                className={`block rounded px-2 py-1.5 text-[0.6875rem] transition-colors ${isChildActive
+                                  ? "bg-white/5 text-heading"
+                                  : "text-body hover:bg-white/5 hover:text-heading"
+                                  }`}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                   );
                 })}
               </nav>

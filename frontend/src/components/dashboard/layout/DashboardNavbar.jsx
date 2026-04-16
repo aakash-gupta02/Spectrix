@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const breadcrumbLabels = {
   alerts: "Alerts",
+  channel: "Channel",
   apis: "APIs",
   incidents: "Incidents",
   logs: "Logs",
@@ -26,13 +27,36 @@ export default function DashboardNavbar({ onMenuToggle }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
+  const formatSlugLabel = (value) =>
+    value
+      .split("-")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
   const currentSectionLabel = useMemo(() => {
     if (!pathname || pathname === "/dashboard") {
       return "Overview";
     }
 
-    const sectionKey = pathname.replace("/dashboard/", "").split("/")[0];
-    return breadcrumbLabels[sectionKey] || "Overview";
+    const segments = pathname.replace("/dashboard/", "").split("/").filter(Boolean);
+    if (!segments.length) {
+      return "Overview";
+    }
+
+    const primary = segments[0];
+    const secondary = segments[1];
+    const primaryLabel = breadcrumbLabels[primary] || formatSlugLabel(primary);
+
+    if (!secondary) {
+      return primaryLabel;
+    }
+
+    const secondaryLabel =
+      breadcrumbLabels[secondary] ||
+      (/^[0-9a-f]{12,}$/i.test(secondary) ? "Details" : formatSlugLabel(secondary));
+
+    return `${primaryLabel} / ${secondaryLabel}`;
   }, [pathname]);
 
   const userInitials = useMemo(() => {

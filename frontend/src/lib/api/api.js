@@ -59,6 +59,7 @@ const ENDPOINT_MODULE = "endpoint";
 const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 const INCIDENT_MODULE = "incident";
 const LOGS_MODULE = "log";
+const ALERT_CHANNEL_MODULE = "alert-channel";
 
 export const endPointsAPI = {
 
@@ -132,6 +133,23 @@ export const logsAPI = {
         page,
       },
     });
+    return response.data;
+  },
+};
+
+export const alertChannelAPI = {
+  getAlertChannels: async () => {
+    const response = await apiClient.get(`/${ALERT_CHANNEL_MODULE}`);
+    return response.data;
+  },
+
+  createAlertChannel: async (payload) => {
+    const response = await apiClient.post(`/${ALERT_CHANNEL_MODULE}`, payload);
+    return response.data;
+  },
+
+  deleteAlertChannel: async (id) => {
+    const response = await apiClient.delete(`/${ALERT_CHANNEL_MODULE}/${id}`);
     return response.data;
   },
 };
