@@ -41,3 +41,18 @@ export const setCookie = (
     const cookieOptions: CookieOptions = { ...defaultOptions, ...options };
     res.cookie(name, value, cookieOptions);
 };
+
+export const clearCookie = (
+    res: Response,
+    name: string,
+    options: CookieOptions = {}
+): void => {
+    const defaultOptions: CookieOptions = {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+    };
+
+    const cookieOptions: CookieOptions = { ...defaultOptions, ...options };
+    res.clearCookie(name, cookieOptions);
+};
