@@ -19,9 +19,18 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+
 export const metadata = {
   title: "Spectrix - API Monitoring Tool",
   description: "Spectrix is an API monitoring solution designed to ensure reliability, performance, and uptime across critical services. It provides clear visibility into system health, helping identify issues before they impact users.",
+  ...(googleSiteVerification
+    ? {
+        verification: {
+          google: googleSiteVerification,
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({ children }) {
