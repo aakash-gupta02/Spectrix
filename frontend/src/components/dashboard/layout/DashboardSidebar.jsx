@@ -1,5 +1,6 @@
 "use client";
 
+import { authAPI } from "@/lib/api/api";
 import {
   Bell,
   ChartColumn,
@@ -60,7 +61,13 @@ export default function DashboardSidebar({ isOpen, onClose }) {
   const { clearAuth } = useAuth();
   const pathname = usePathname();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch {
+      // Continue local cleanup even if the request fails.
+    }
+
     clearAuth();
     onClose();
     router.replace("/login");

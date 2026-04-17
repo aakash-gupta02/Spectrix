@@ -1,5 +1,6 @@
 "use client";
 
+import { authAPI } from "@/lib/api/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, ChevronDown, LogOut, Menu, Moon } from "lucide-react";
 import Link from "next/link";
@@ -97,7 +98,13 @@ export default function DashboardNavbar({ onMenuToggle }) {
     };
   }, [isProfileOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch {
+      // Continue local cleanup even if the request fails.
+    }
+
     clearAuth();
     setIsProfileOpen(false);
     router.replace("/login");
