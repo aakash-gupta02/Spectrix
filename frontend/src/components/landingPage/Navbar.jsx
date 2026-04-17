@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, isInitialized } = useAuth();
 
   const navLinks = [
     { name: "Features", href: "#" },
@@ -13,10 +15,51 @@ export default function Navbar() {
     { name: "Pricing", href: "#" },
   ];
 
+  const renderAuthAction = ({ mobile = false } = {}) => {
+    if (!isInitialized) {
+      return mobile ? null : (
+        <div className="h-full border-x border-dashed border-border px-6 sm:px-10" />
+      );
+    }
+
+    if (isAuthenticated) {
+      return (
+        <Link
+          href="/dashboard"
+          onClick={mobile ? () => setIsOpen(false) : undefined}
+          className={
+            mobile
+              ? "flex items-center justify-between border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
+              : "group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
+          }
+        >
+          Dashboard
+          <ArrowRight
+            size={mobile ? 16 : 14}
+            className={mobile ? undefined : "transition-transform group-hover:translate-x-1"}
+          />
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        href="/login"
+        onClick={mobile ? () => setIsOpen(false) : undefined}
+        className={
+          mobile
+            ? "border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
+            : "group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
+        }
+      >
+        Login
+      </Link>
+    );
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-page">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between sm:h-20">
-
         {/* LOGO */}
         <div className="flex h-full items-center border-x border-dashed border-border px-6">
           <Link href="/" className="flex items-center gap-2">
@@ -44,26 +87,8 @@ export default function Navbar() {
 
         {/* RIGHT */}
         <div className="flex h-full items-center">
-
-          {/* LOGIN */}
-          <Link
-            href="/login"
-            className="hidden h-full items-center border-x border-dashed border-border px-8 text-xs font-medium uppercase tracking-wide text-muted transition-colors hover:text-white hover:bg-white/5 md:flex"
-          >
-            Login
-          </Link>
-
-          {/* DASHBOARD (FIXED) */}
-          <Link
-            href="/dashboard"
-            className="group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
-          >
-            Dashboard
-            <ArrowRight
-              size={14}
-              className="transition-transform group-hover:translate-x-1"
-            />
-          </Link>
+          {/* LOGIN & DASHBOARD BUTTON */}
+          {renderAuthAction()}
 
           {/* MOBILE TOGGLE */}
           <button
@@ -92,13 +117,7 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setIsOpen(false)}
-            className="border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-muted hover:bg-white/5 hover:text-white"
-          >
-            Login
-          </Link>
+          {renderAuthAction({ mobile: true })}
         </nav>
       </div>
     </header>
