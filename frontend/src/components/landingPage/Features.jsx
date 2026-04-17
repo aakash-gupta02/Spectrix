@@ -11,13 +11,13 @@ import SectionHeading from "../common/SectionHeading";
 
 export default function Features() {
   return (
-    <section className="border-b border-dashed border-white/10 bg-page py-24">
+    <section id="features" className="scroll-mt-24 border-b border-dashed border-white/10 bg-page py-24">
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeading
           eyebrow="01. Features"
-          title="Comprehensive API observability."
-          buttonTxt="View Features"
-          description="From single endpoints to complex microservices, we provide the tools to ensure continuous reliability."
+          title="Core monitoring features, nothing extra."
+          buttonTxt="See Setup Flow"
+          description="Track uptime, latency, and errors with alerting that helps you act fast."
         />
 
         <section className="relative z-10 border-b border-dashed border-white/10 bg-page">
@@ -30,11 +30,11 @@ export default function Features() {
                 </span>
               </div>
               <h3 className="mb-4 text-3xl font-light tracking-tighter text-white md:text-4xl">
-                Data that empowers.
+                Built for production APIs.
               </h3>
               <p className="text-sm leading-relaxed text-white/70">
-                We believe in proactive monitoring, not reactive debugging. Our platform is built
-                to catch degradation before users do.
+                Keep visibility on critical routes and catch issues before they become support
+                tickets.
               </p>
             </div>
 
@@ -66,8 +66,7 @@ export default function Features() {
                   Endpoint Monitoring
                 </h3>
                 <p className="text-xs leading-relaxed text-white/70">
-                  Track health, uptime, and response times across all your critical API endpoints
-                  from global edge locations.
+                  Monitor health checks and uptime across the endpoints that matter most.
                 </p>
               </div>
 
@@ -84,8 +83,7 @@ export default function Features() {
                 </div>
                 <h3 className="mb-2 flex items-center gap-2 font-normal text-white">Latency Tracking</h3>
                 <p className="text-xs leading-relaxed text-white/70">
-                  Identify bottlenecks with detailed latency distribution and geographical routing
-                  insights.
+                  Track response-time trends and quickly spot regressions.
                 </p>
               </div>
             </div>
@@ -96,31 +94,31 @@ export default function Features() {
               <Bug size={20} className="text-slate-400 transition-colors group-hover:text-primary" strokeWidth={1.5} />
               <div>
                 <h4 className="text-sm font-normal text-white">Error Tracking</h4>
-                <p className="mt-1 text-[10px] text-slate-500">Capture and analyze failure rates.</p>
+                <p className="mt-1 text-[10px] text-slate-500">See failed checks and error spikes.</p>
               </div>
             </div>
 
             <div className="group flex flex-col gap-3 p-6 transition-colors hover:bg-white/2">
               <BellRing size={20} className="text-slate-400 transition-colors group-hover:text-primary" strokeWidth={1.5} />
               <div>
-                <h4 className="text-sm font-normal text-white">Alerting Rules</h4>
-                <p className="mt-1 text-[10px] text-slate-500">Custom thresholds and triggers.</p>
+                <h4 className="text-sm font-normal text-white">Real-Time Alerts</h4>
+                <p className="mt-1 text-[10px] text-slate-500">Send alerts to Slack, Discord, or webhooks.</p>
               </div>
             </div>
 
             <div className="group flex flex-col gap-3 p-6 transition-colors hover:bg-white/2">
               <Globe size={20} className="text-slate-400 transition-colors group-hover:text-primary" strokeWidth={1.5} />
               <div>
-                <h4 className="text-sm font-normal text-white">Global Locations</h4>
-                <p className="mt-1 text-[10px] text-slate-500">Test from multiple regions globally.</p>
+                <h4 className="text-sm font-normal text-white">Multi-Region Checks</h4>
+                <p className="mt-1 text-[10px] text-slate-500">Run checks from multiple regions.</p>
               </div>
             </div>
 
             <div className="group flex flex-col gap-3 p-6 transition-colors hover:bg-white/2">
               <CirclePlus size={20} className="text-slate-400 transition-colors group-hover:text-primary" strokeWidth={1.5} />
               <div>
-                <h4 className="text-sm font-normal text-white">SLA Reporting</h4>
-                <p className="mt-1 text-[10px] text-slate-500">Automated weekly uptime reports.</p>
+                <h4 className="text-sm font-normal text-white">Alert Rules</h4>
+                <p className="mt-1 text-[10px] text-slate-500">Set thresholds for latency, downtime, and errors.</p>
               </div>
             </div>
           </div>

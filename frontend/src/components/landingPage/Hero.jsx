@@ -7,10 +7,11 @@ import {
   Ellipsis,
   LayoutDashboard,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="grid grid-cols-1 border-b border-dashed border-white/10 lg:grid-cols-2">
+    <section id="hero" className="grid scroll-mt-24 grid-cols-1 border-b border-dashed border-white/10 lg:grid-cols-2">
       <div className="relative flex flex-col justify-center overflow-hidden border-r border-dashed border-white/10 bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] from-slate-900/40 via-page to-page px-6 py-16 lg:px-20 lg:py-24">
 
 
@@ -18,39 +19,46 @@ export default function Hero() {
           <div className="mb-6 flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-primary" />
             <p className="font-mono text-xs uppercase tracking-widest text-body">
-              API Observability v1.0
+              Lightweight API monitoring for developers
             </p>
           </div>
 
           <h1 className="mb-8 text-5xl font-light leading-[1.1] tracking-tighter text-heading sm:text-6xl lg:text-7xl">
-            Real-time
+            Monitor API health
             <br />
-            visibility for
+            without heavyweight
             <br />
-            <span className="font-light tracking-tighter text-body">high-performance APIs.</span>
+            <span className="font-light tracking-tighter text-body">observability overhead.</span>
           </h1>
 
           <p className="mb-12 max-w-lg text-lg font-light leading-relaxed text-body-strong sm:text-xl">
-            Monitor endpoints, track latency globally, and resolve incidents faster with
-            institutional-grade observability tools.
+            Spectrix helps backend teams monitor endpoint uptime, latency, and errors, then sends
+            real-time alerts to Slack, Discord, or webhooks when something breaks.
           </p>
 
           <div className="grid max-w-lg grid-cols-1 overflow-hidden rounded-sm border border-dashed border-white/10 sm:grid-cols-2">
-            <button className="group flex items-center justify-center gap-3 border-b border-r border-dashed border-white/10 px-8 py-5 transition-all duration-300 hover:bg-primary/5 sm:border-b-0">
+            <Link
+              href="/start"
+              className="group flex items-center justify-center gap-3 border-b border-r border-dashed border-white/10 px-8 py-5 transition-all duration-300 hover:bg-primary/5 sm:border-b-0"
+            >
               <span className="text-xs font-normal uppercase tracking-wide text-primary">
                 Start Free Trial
               </span>
-            </button>
+            </Link>
 
-            <button className="group flex items-center justify-center gap-3 px-8 py-5 transition-all duration-300 hover:bg-white/5">
-              <span className="text-xs font-normal uppercase tracking-wide text-heading">View Docs</span>
+            <Link
+              href="#how-it-works"
+              className="group flex items-center justify-center gap-3 px-8 py-5 transition-all duration-300 hover:bg-white/5"
+            >
+              <span className="text-xs font-normal uppercase tracking-wide text-heading">How It Works</span>
               <ArrowUpRight
                 size={16}
                 strokeWidth={1.5}
                 className="text-white transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
               />
-            </button>
+            </Link>
           </div>
+          <p className="mt-4 text-xs text-body">No credit card required. Setup in under 10 minutes.</p>
         </div>
       </div>
 

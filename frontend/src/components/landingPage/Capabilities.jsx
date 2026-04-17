@@ -15,13 +15,13 @@ import SectionHeading from "../common/SectionHeading";
 
 export default function Capabilities() {
     return (
-        <section className="border-b border-dashed border-white/10 bg-page py-24">
+        <section id="alerts" className="scroll-mt-24 border-b border-dashed border-white/10 bg-page py-24">
             <div className="mx-auto max-w-7xl px-6">
 
                 <SectionHeading
-                    eyebrow="02. Capabilities"
-                    title="Precision in every request."
-                    description="Trusted by engineering teams. We combine high-frequency polling with advanced anomaly analytics."
+                    eyebrow="03. Alerts And Visibility"
+                    title="Actionable alerts, clear dashboard context."
+                    description="Get notified quickly and investigate with incident and endpoint context in one place."
                 />
 
                 <section className="relative z-10 border-b border-dashed border-white/10 bg-page">
@@ -43,19 +43,18 @@ export default function Capabilities() {
                             </div>
 
                             <div className="absolute bottom-0 left-0 w-full bg-linear-to-t from-page via-page/80 to-transparent p-8 pt-20">
-                                <h3 className="mb-2 text-lg font-normal text-white">ANOMALY DETECTION</h3>
+                                <h3 className="mb-2 text-lg font-normal text-white">Issue Detection</h3>
                                 <p className="pr-4 text-xs leading-relaxed text-white/70">
-                                    Continuous surveillance of traffic patterns to detect latency spikes and errors
-                                    instantly.
+                                    Spot latency spikes and endpoint failures as soon as checks cross your thresholds.
                                 </p>
                             </div>
                         </div>
 
                         <div className="col-span-12 flex h-90 flex-col border-b border-dashed border-white/10 p-8 md:col-span-4 md:border-b-0 md:border-r">
                             <div className="mb-6">
-                                <h3 className="mb-2 text-lg font-normal text-white">REAL-TIME ALERTS</h3>
+                                <h3 className="mb-2 text-lg font-normal text-white">Alert Examples</h3>
                                 <p className="text-xs leading-relaxed text-white/70">
-                                    Stay updated with instant notifications via Slack, PagerDuty, or custom Webhooks.
+                                    Route notifications to Slack, Discord, or webhooks so the right people know fast.
                                 </p>
                             </div>
 
@@ -194,13 +193,13 @@ export default function Capabilities() {
                             </div>
 
                             <div className="relative z-10 mt-12">
-                                <div className="mb-2 text-[64px] leading-none tracking-tighter text-primary">50B+</div>
+                                <div className="mb-2 text-[64px] leading-none tracking-tighter text-primary">Live</div>
                                 <h3 className="mb-2 text-lg font-normal uppercase tracking-wide text-white">
-                                    Requests Processed Daily
+                                    Dashboard Preview
                                 </h3>
                                 <p className="max-w-md text-sm leading-relaxed text-white/70">
-                                    Empowering engineering teams worldwide. We monitor diverse architectures designed
-                                    for high availability.
+                                    View service status, recent incidents, and endpoint health from one focused
+                                    dashboard.
                                 </p>
                             </div>
                         </div>
@@ -208,11 +207,11 @@ export default function Capabilities() {
                         <div className="col-span-12 flex h-full min-h-75 flex-col justify-end p-8 pt-16 md:col-span-4">
                             <div className="mt-auto">
                                 <h3 className="mb-2 text-lg font-normal uppercase tracking-wide text-white">
-                                    Global Edge Network
+                                    Real Use Case
                                 </h3>
                                 <p className="text-sm leading-relaxed text-white/70">
-                                    Our testing nodes operate in major server hubs globally, ensuring accurate
-                                    latency tracking from your users&apos; perspective.
+                                    A small SaaS team can monitor auth, billing, and webhook endpoints to catch
+                                    regressions before customers report them.
                                 </p>
                             </div>
                         </div>

@@ -3,59 +3,15 @@
 import { useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, isInitialized } = useAuth();
 
   const navLinks = [
-    { name: "Features", href: "#" },
-    { name: "Docs", href: "#" },
-    { name: "Pricing", href: "#" },
+    { name: "Features", href: "#features" },
+    { name: "How It Works", href: "#how-it-works" },
+    { name: "Alerts", href: "#alerts" },
   ];
-
-  const renderAuthAction = ({ mobile = false } = {}) => {
-    if (!isInitialized) {
-      return mobile ? null : (
-        <div className="h-full border-x border-dashed border-border px-6 sm:px-10" />
-      );
-    }
-
-    if (isAuthenticated) {
-      return (
-        <Link
-          href="/dashboard"
-          onClick={mobile ? () => setIsOpen(false) : undefined}
-          className={
-            mobile
-              ? "flex items-center justify-between border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
-              : "group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
-          }
-        >
-          Dashboard
-          <ArrowRight
-            size={mobile ? 16 : 14}
-            className={mobile ? undefined : "transition-transform group-hover:translate-x-1"}
-          />
-        </Link>
-      );
-    }
-
-    return (
-      <Link
-        href="/login"
-        onClick={mobile ? () => setIsOpen(false) : undefined}
-        className={
-          mobile
-            ? "border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
-            : "group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
-        }
-      >
-        Login
-      </Link>
-    );
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-page">
@@ -87,8 +43,16 @@ export default function Navbar() {
 
         {/* RIGHT */}
         <div className="flex h-full items-center">
-          {/* LOGIN & DASHBOARD BUTTON */}
-          {renderAuthAction()}
+          <Link
+            href="/start"
+            className="group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
+          >
+            Go to App
+            <ArrowRight
+              size={14}
+              className="transition-transform group-hover:translate-x-1"
+            />
+          </Link>
 
           {/* MOBILE TOGGLE */}
           <button
@@ -117,7 +81,14 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-          {renderAuthAction({ mobile: true })}
+          <Link
+            href="/start"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
+          >
+            Go to App
+            <ArrowRight size={16} />
+          </Link>
         </nav>
       </div>
     </header>

@@ -1,12 +1,13 @@
 import React from "react";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 export default function CTA() {
   const points = [
-    "14-day free trial, no credit card",
-    "Deploy in under 10 minutes",
-    "Slack + PagerDuty alerts included",
-    "SOC 2-ready infrastructure",
+    "No credit card required",
+    "Setup in under 10 minutes",
+    "Slack, Discord, and webhook alerts",
+    "Built for developers and small teams",
   ];
 
   return (
@@ -21,23 +22,29 @@ export default function CTA() {
               </div>
 
               <h2 className="max-w-2xl text-4xl leading-[1.05] font-light tracking-tighter text-heading md:text-5xl lg:text-6xl">
-                Put your API on autopilot.
+                Start monitoring your API in minutes.
               </h2>
 
               <p className="mt-5 max-w-xl text-base leading-relaxed text-body md:text-lg">
-                Spin up synthetic checks, anomaly alerts, and weekly SLA reports in one workflow.
-                Built for teams shipping at production scale.
+                Configure checks, set alert rules, and get fast visibility into endpoint health
+                without heavyweight setup.
               </p>
 
               <div className="mt-10 grid max-w-xl grid-cols-1 overflow-hidden border border-dashed border-border sm:grid-cols-2">
-                <button className="flex items-center justify-center gap-2 border-b border-border bg-primary px-6 py-4 text-xs font-medium tracking-wide text-black transition-colors hover:bg-primary-strong sm:border-b-0 sm:border-r">
+                <Link
+                  href="/start"
+                  className="flex items-center justify-center gap-2 border-b border-border bg-primary px-6 py-4 text-xs font-medium tracking-wide text-black transition-colors hover:bg-primary-strong sm:border-b-0 sm:border-r"
+                >
                   Start Free Trial
                   <ArrowUpRight size={16} strokeWidth={1.8} />
-                </button>
-                <button className="flex items-center justify-center gap-2 px-6 py-4 text-xs font-medium tracking-wide text-heading transition-colors hover:bg-surface-2">
-                  Book Live Demo
+                </Link>
+                <Link
+                  href="#how-it-works"
+                  className="flex items-center justify-center gap-2 px-6 py-4 text-xs font-medium tracking-wide text-heading transition-colors hover:bg-surface-2"
+                >
+                  View Setup Steps
                   <ArrowUpRight size={16} strokeWidth={1.8} />
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -59,8 +66,8 @@ export default function CTA() {
 
               <div className="mt-8 border border-border bg-surface-2/50 p-4">
                 <p className="text-[11px] leading-relaxed text-muted">
-                  Trusted by teams running high-throughput APIs across fintech, logistics, and
-                  health-tech.
+                  Spectrix is a lightweight API monitoring tool focused on fast setup and clear
+                  alerts for production services.
                 </p>
               </div>
             </div>
