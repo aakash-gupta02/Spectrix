@@ -4,6 +4,8 @@ import { EndpointWithService, formatAlertMessage } from "./alert.formatter.js";
 import { EndpointDocument } from "../endpoint/endpoint.model.js";
 import { IncidentDocument } from "../incident/incident.model.js";
 import sendWebhook from "./channels/webhook.js";
+import AlertChannel from "./alertChannel/alertChannel.model.js";
+import { decrypt } from "../../utils/encryption/encryption.js";
 
 export async function triggerAlert({
   type,
@@ -17,7 +19,21 @@ export async function triggerAlert({
   try {
     const message = formatAlertMessage({ type, endpoint, incident });
 
-    // await Promise.all([sendSlack(message), sendDiscord(message)]);
+    const alertChannels = await AlertChannel.find({
+      userId: endpoint.userId,
+      isActive: true,
+    });
+
+    await Promise.allSettled(
+      alertChannels.map((channel) =>
+        sendByType({
+          type: channel.type,
+          url: decrypt(channel.url, channel.keyVersion),
+          message,
+        }),
+      ),
+    );
+
   } catch (err) {
     console.error("[ALERT ERROR]", err);
   }
