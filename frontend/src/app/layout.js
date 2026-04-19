@@ -3,6 +3,7 @@ import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ServiceProvider } from "@/contexts/ServiceContext";
+import { defaultMetadata, defaultViewport } from "@/lib/seo/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,19 +20,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
-
-export const metadata = {
-  title: "Spectrix - API Monitoring Tool",
-  description: "Spectrix is an API monitoring solution designed to ensure reliability, performance, and uptime across critical services. It provides clear visibility into system health, helping identify issues before they impact users.",
-  ...(googleSiteVerification
-    ? {
-        verification: {
-          google: googleSiteVerification,
-        },
-      }
-    : {}),
-};
+export const metadata = defaultMetadata;
+export const viewport = defaultViewport;
 
 export default function RootLayout({ children }) {
   return (
