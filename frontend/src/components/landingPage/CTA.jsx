@@ -32,7 +32,7 @@ export default function CTA() {
 
               <div className="mt-10 grid max-w-xl grid-cols-1 overflow-hidden border border-dashed border-border sm:grid-cols-2">
                 <Link
-                  href="/start"
+                  href="/dashboard"
                   className="flex items-center justify-center gap-2 border-b border-border bg-primary px-6 py-4 text-xs font-medium tracking-wide text-black transition-colors hover:bg-primary-strong sm:border-b-0 sm:border-r"
                 >
                   Start Free Trial

@@ -6,12 +6,12 @@ export default function robots() {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/login", "/register", "/start"],
+        disallow: ["/dashboard", "/login", "/register"],
       },
       {
         userAgent: "Googlebot",
         allow: "/",
-        disallow: ["/dashboard", "/login", "/register", "/start"],
+        disallow: ["/dashboard", "/login", "/register"],
       },
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,

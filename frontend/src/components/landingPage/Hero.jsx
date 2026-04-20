@@ -38,7 +38,7 @@ export default function Hero() {
 
           <div className="grid max-w-lg grid-cols-1 overflow-hidden rounded-sm border border-dashed border-white/10 sm:grid-cols-2">
             <Link
-              href="/start"
+              href="/dashboard"
               className="group flex items-center justify-center gap-3 border-b border-r border-dashed border-white/10 px-8 py-5 transition-all duration-300 hover:bg-primary/5 sm:border-b-0"
             >
               <span className="text-xs font-normal uppercase tracking-wide text-primary">

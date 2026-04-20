@@ -44,7 +44,7 @@ export default function Navbar() {
         {/* RIGHT */}
         <div className="flex h-full items-center">
           <Link
-            href="/start"
+            href="/dashboard"
             className="group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
           >
             Go to App
@@ -82,7 +82,7 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
-            href="/start"
+            href="/dashboard"
             onClick={() => setIsOpen(false)}
             className="flex items-center justify-between border-b border-border p-8 text-sm font-medium uppercase tracking-wide text-primary hover:bg-white/5"
           >
