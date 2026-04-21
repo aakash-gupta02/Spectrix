@@ -5,7 +5,7 @@ import { createEndpoint, deleteEndpoint, getEndpointById, getEndpoints, updateEn
 import { createEndpointSchema, endpointIdParamsSchema, getEndpointsQuerySchema, updateEndpointSchema } from "./endpoint.validation.js";
 
 const router = Router();
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 // Create
 router.post("/", validateBody(createEndpointSchema), createEndpoint);

@@ -7,7 +7,7 @@ import { createServiceSchema, serviceIdParamsSchema, serviceListQuerySchema, upd
 
 const router = Router();
 
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 router.post("/", validateBody(createServiceSchema), createService);
 router.get("/", validateQuery(serviceListQuerySchema), getServices);

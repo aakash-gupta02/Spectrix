@@ -7,10 +7,18 @@ import logRoutes from "../modules/log/log.route.js";
 import metricsRoutes from "../modules/metrics/metrics.route.js";
 import incidentRoutes from "../modules/incident/incident.route.js";
 import alertChannelRoutes from "../modules/alert/alertChannel/alertChannel.route.js";
+import {
+  authMiddleware,
+  blockDemoWrites,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
+
+router.use(authMiddleware); // Apply authentication middleware to all routes below
+router.use(blockDemoWrites); // Block write operations in demo mode
+
 router.use("/service", serviceRoutes);
 router.use("/endpoint", endpointRoutes);
 router.use("/log", logRoutes);

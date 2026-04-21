@@ -5,7 +5,7 @@ import { validateParams, validateQuery } from "../../middlewares/validateRequest
 import { getIncidentsQuerySchema, incidentIdParamsSchema } from "./incident.validation.js";
 
 const router = Router();
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 
 router.get("/", validateQuery(getIncidentsQuerySchema), getIncidents);

@@ -19,7 +19,7 @@ import {
 
 const router = Router();
 
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 router.get(
   "/endpoint/:id/top-level",

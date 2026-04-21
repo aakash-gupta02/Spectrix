@@ -5,7 +5,7 @@ import { authMiddleware } from "../../../middlewares/auth.middleware.js";
 import { validateBody, validateParams } from "../../../middlewares/validateRequest.middleware.js";
 
 const router = Router();
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 // Create
 router.post("/", validateBody(createAlertChannelSchema), createAlertChannel);
