@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
+import ToastProvider from "@/providers/ToastProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ServiceProvider } from "@/contexts/ServiceContext";
 import { defaultMetadata, defaultViewport } from "@/lib/seo/metadata";
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-full antialiased selection:bg-primary selection:text-page`}
     >
       <body className="min-h-full flex flex-col">
+        <ToastProvider />
         <QueryProvider>
           <AuthProvider>
             <ServiceProvider>{children}</ServiceProvider>

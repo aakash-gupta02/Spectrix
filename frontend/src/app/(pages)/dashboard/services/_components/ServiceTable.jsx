@@ -3,6 +3,7 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 import DashboardButton from '@/components/ui/DashboardButton';
 import { formatDate } from '../page';
 import RowActionsMenu from '@/components/common/RowActionsMenu';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
     return (
@@ -121,4 +122,4 @@ const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
         </div>)
 }
 
-export default ServiceTable
+export default ServiceTable;

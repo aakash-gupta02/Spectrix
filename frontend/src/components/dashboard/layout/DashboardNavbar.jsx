@@ -122,12 +122,18 @@ export default function DashboardNavbar({ onMenuToggle }) {
           </Link>
         </div>
 
-        <div className="hidden flex-1 items-center border-r border-dashed border-border px-4 md:flex">
+        <div className="hidden flex-1 items-center justify-between border-r border-dashed border-border px-4 md:flex">
           <div className="flex items-center gap-2 text-xs text-body">
             <span className="text-[0.625rem] uppercase tracking-[0.18em] text-white/45">Dashboard</span>
             <span className="text-white/25">/</span>
             <span className="text-white/80">{currentSectionLabel}</span>
           </div>
+
+          {user?.role === "demo" && (
+             <div className="rounded border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[0.625rem] uppercase tracking-widest text-sky-400">
+                Demo Account
+             </div>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center justify-end gap-2 px-3 sm:px-6">

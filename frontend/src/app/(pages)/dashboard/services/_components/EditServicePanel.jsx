@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 const initialFormState = {
   name: "",
@@ -57,6 +58,7 @@ export default function EditServicePanel({
   onUpdated,
 }) {
   const queryClient = useQueryClient();
+  const checkDemoAction = useDemoAction();
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
 
@@ -107,6 +109,10 @@ export default function EditServicePanel({
 
   const onSubmit = (data) => {
     setErrorMessage("");
+
+    if (!checkDemoAction("Updating a service")) {
+      return;
+    }
 
     const serviceId = service?._id || service?.id;
     if (!serviceId) {

@@ -8,6 +8,7 @@ import { alertChannelAPI } from "@/lib/api/api";
 import { createAlertChannelFormSchema } from "@/validation/alertChannel.validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDemoAction } from "@/contexts/AuthContext";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -20,6 +21,7 @@ const initialFormState = {
 
 export default function CreateAlertChannelModal({ isOpen, onClose, onCreated }) {
   const queryClient = useQueryClient();
+  const checkDemoAction = useDemoAction();
   const [errorMessage, setErrorMessage] = useState("");
   const urlInputRef = useRef(null);
 
@@ -69,6 +71,9 @@ export default function CreateAlertChannelModal({ isOpen, onClose, onCreated }) 
 
   const onSubmit = (data) => {
     setErrorMessage("");
+    if (!checkDemoAction("Creating an alert channel")) {
+      return;
+    }
     createAlertChannelMutation.mutate({
       type: data.type,
       url: data.url.trim(),

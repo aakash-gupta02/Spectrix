@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 const initialFormState = {
   name: "",
@@ -140,6 +141,7 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
   const queryClient = useQueryClient();
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
+  const checkDemoAction = useDemoAction();
 
   const methods = useForm({
     resolver: zodResolver(updateEndpointFormSchema),
@@ -199,6 +201,9 @@ export default function EditEndpointPanel({ isOpen, endpoint, onClose, onUpdated
       return;
     }
 
+    if (!checkDemoAction("Updating an endpoint")) {
+      return;
+    }
     let changedFields;
 
     try {

@@ -5,6 +5,7 @@ import { alertChannelAPI } from "@/lib/api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect } from "react";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 export default function DeleteAlertChannelModal({
   isOpen,
@@ -13,6 +14,7 @@ export default function DeleteAlertChannelModal({
   onDeleted,
 }) {
   const queryClient = useQueryClient();
+  const checkDemoAction = useDemoAction();
 
   const deleteAlertChannelMutation = useMutation({
     mutationFn: (id) => alertChannelAPI.deleteAlertChannel(id),
@@ -42,6 +44,10 @@ export default function DeleteAlertChannelModal({
   }, [deleteAlertChannelMutation.isPending, isOpen, onClose]);
 
   const handleDelete = () => {
+    if (!checkDemoAction("Deleting an alert channel")) {
+      return;
+    }
+
     const channelId = channel?._id || channel?.id;
     if (!channelId) {
       return;

@@ -5,10 +5,12 @@ import { endPointsAPI } from "@/lib/api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect } from "react";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 export default function DeleteEndpointModal({ isOpen, endpoint, onClose, onDeleted }) {
   const queryClient = useQueryClient();
 
+  const checkDemoAction = useDemoAction();
   const deleteEndpointMutation = useMutation({
     mutationFn: (id) => endPointsAPI.deleteEndpoint(id),
     onSuccess: () => {
@@ -37,6 +39,10 @@ export default function DeleteEndpointModal({ isOpen, endpoint, onClose, onDelet
   }, [deleteEndpointMutation.isPending, isOpen, onClose]);
 
   const handleDelete = () => {
+    if (!checkDemoAction("Deleting an endpoint")) {
+      return;
+    }
+
     const endpointId = endpoint?._id || endpoint?.id;
     if (!endpointId) {
       return;

@@ -3,7 +3,6 @@ import RowActionsMenu from '@/components/common/RowActionsMenu'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import React from 'react'
 import { formatDate } from '../../services/page'
-
 const getMethodBadgeClass = (method) => {
   switch ((method || '').toUpperCase()) {
     case 'GET':

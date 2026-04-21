@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import toast from "react-hot-toast";
 
 const AUTH_STORAGE_KEY = "spectrix.auth.user";
 const AuthContext = createContext(null);
@@ -99,6 +100,7 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isAuthenticated: Boolean(user),
+      isDemoUser: user?.role === "demo",
       isInitialized,
       setAuthenticatedUser,
       applyLoginResponse,
@@ -118,4 +120,18 @@ export function useAuth() {
   }
 
   return context;
+}
+
+export function useDemoAction() {
+  const { isDemoUser } = useAuth();
+  
+  return useCallback((actionName = "This action") => {
+    if (isDemoUser) {
+      toast.error(
+        `${actionName} is blocked in demo account. Demo accounts are read-only.`
+      );
+      return false;
+    }
+    return true;
+  }, [isDemoUser]);
 }

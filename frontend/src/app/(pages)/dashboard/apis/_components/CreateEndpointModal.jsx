@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 const initialFormState = {
   name: "",
@@ -85,6 +86,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
   const queryClient = useQueryClient();
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
+  const checkDemoAction = useDemoAction();
 
   const methods = useForm({
     resolver: zodResolver(createEndpointFormSchema),
@@ -138,6 +140,10 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
   const onSubmit = (data) => {
     setErrorMessage("");
 
+    if (!checkDemoAction("Creating an endpoint")) {
+      return;
+    }
+
     let parsedQuery;
     let parsedHeaders;
 
@@ -148,6 +154,7 @@ export default function CreateEndpointModal({ isOpen, onClose, onCreated }) {
       setErrorMessage(error?.message || "Invalid JSON input.");
       return;
     }
+
 
     createEndpointMutation.mutate({
       name: data.name.trim(),

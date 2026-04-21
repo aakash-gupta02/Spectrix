@@ -3,7 +3,6 @@
 import RowActionsMenu from "@/components/common/RowActionsMenu";
 import { Trash2 } from "lucide-react";
 import { formatDate } from "../page";
-
 export default function AlertChannelTable({
   channels,
   alertChannelQuery,

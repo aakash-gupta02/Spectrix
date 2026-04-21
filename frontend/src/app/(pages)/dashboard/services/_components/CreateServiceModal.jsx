@@ -9,6 +9,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createServiceSchema } from "@/validation/service.validation";
 import FormInput from "@/components/ui/form/FormInput";
+import { useDemoAction } from "@/contexts/AuthContext";
 import FormSelect from "@/components/ui/form/FormSelect";
 import FormCheckbox from "@/components/ui/form/FormCheckbox";
 
@@ -22,6 +23,7 @@ const initialFormState = {
 
 export default function CreateServiceModal({ isOpen, onClose, onCreated }) {
   const queryClient = useQueryClient();
+  const checkDemoAction = useDemoAction();
   const [errorMessage, setErrorMessage] = useState("");
   const nameInputRef = useRef(null);
 
@@ -71,6 +73,10 @@ export default function CreateServiceModal({ isOpen, onClose, onCreated }) {
   }, [isOpen]);
 
   const onSubmit = (data) => {
+    if (!checkDemoAction("Creating a service")) {
+      return;
+    }
+
     createServiceMutation.mutate({
       ...data,
       description: data.description?.trim() || undefined,

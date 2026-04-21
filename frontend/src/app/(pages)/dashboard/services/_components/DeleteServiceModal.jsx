@@ -5,10 +5,12 @@ import { serviceAPI } from "@/lib/api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect } from "react";
+import { useDemoAction } from "@/contexts/AuthContext";
 
 export default function DeleteServiceModal({ isOpen, service, onClose, onDeleted }) {
   const queryClient = useQueryClient();
 
+  const checkDemoAction = useDemoAction();
   const deleteServiceMutation = useMutation({
     mutationFn: (id) => serviceAPI.deleteService(id),
     onSuccess: () => {
@@ -37,6 +39,10 @@ export default function DeleteServiceModal({ isOpen, service, onClose, onDeleted
   }, [deleteServiceMutation.isPending, isOpen, onClose]);
 
   const handleDelete = () => {
+    if (!checkDemoAction("Deleting a service")) {
+      return;
+    }
+
     const serviceId = service?._id || service?.id;
     if (!serviceId) {
       return;

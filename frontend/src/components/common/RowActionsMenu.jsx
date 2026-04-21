@@ -55,7 +55,7 @@ export default function RowActionsMenu({ actions = [] }) {
                 action.variant === "danger"
                   ? "w-full text-red-300 hover:bg-red-500/10"
                   : "w-full text-body hover:text-primary"
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={action.disabled}
             >
               <div className="flex items-center gap-2">
