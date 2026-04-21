@@ -40,7 +40,10 @@ export default function DashboardNavbar({ onMenuToggle }) {
       return "Overview";
     }
 
-    const segments = pathname.replace("/dashboard/", "").split("/").filter(Boolean);
+    const segments = pathname
+      .replace("/dashboard/", "")
+      .split("/")
+      .filter(Boolean);
     if (!segments.length) {
       return "Overview";
     }
@@ -55,14 +58,20 @@ export default function DashboardNavbar({ onMenuToggle }) {
 
     const secondaryLabel =
       breadcrumbLabels[secondary] ||
-      (/^[0-9a-f]{12,}$/i.test(secondary) ? "Details" : formatSlugLabel(secondary));
+      (/^[0-9a-f]{12,}$/i.test(secondary)
+        ? "Details"
+        : formatSlugLabel(secondary));
 
     return `${primaryLabel} / ${secondaryLabel}`;
   }, [pathname]);
 
   const userInitials = useMemo(() => {
     const source =
-      user?.name || user?.fullName || user?.email || user?.username || "Dashboard User";
+      user?.name ||
+      user?.fullName ||
+      user?.email ||
+      user?.username ||
+      "Dashboard User";
 
     return source
       .split(" ")
@@ -113,45 +122,63 @@ export default function DashboardNavbar({ onMenuToggle }) {
   return (
     <header className="sticky top-0 z-50 border-b border-dashed border-border bg-black/90 backdrop-blur-md">
       <div className="flex h-14 sm:h-16">
+        {/* Logo */}
         <div className="flex min-w-0 flex-1 items-center border-r border-dashed border-border px-4 md:w-64 md:flex-none sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-primary text-xs font-semibold text-black">
               S
             </div>
-            <span className="text-sm font-medium tracking-tight text-heading">SPECTRIX</span>
+            <span className="text-sm font-medium tracking-tight text-heading">
+              SPECTRIX
+            </span>
           </Link>
         </div>
 
+        {/* Breadcrumb */}
         <div className="hidden flex-1 items-center justify-between border-r border-dashed border-border px-4 md:flex">
           <div className="flex items-center gap-2 text-xs text-body">
-            <span className="text-[0.625rem] uppercase tracking-[0.18em] text-white/45">Dashboard</span>
+            <span className="text-[0.625rem] uppercase tracking-[0.18em] text-white/45">
+              Dashboard
+            </span>
             <span className="text-white/25">/</span>
             <span className="text-white/80">{currentSectionLabel}</span>
           </div>
 
-          {user?.role === "demo" && (
+          {/* {user?.role === "demo" && (
              <div className="rounded border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[0.625rem] uppercase tracking-widest text-sky-400">
                 Demo Account
              </div>
-          )}
+          )} */}
         </div>
 
+        {/* Profile Menu & Buttons */}
         <div className="flex shrink-0 items-center justify-end gap-2 px-3 sm:px-6">
-          <button
+          
+          {/* Demo Account Badge */}
+          {user?.role === "demo" && (
+            <div className="rounded border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[0.625rem] uppercase tracking-widest text-sky-400">
+              Demo Account
+            </div>
+          )}
+
+          {/* Alert Button */}
+          {/* <button
             type="button"
             className="inline-flex items-center gap-2 rounded border border-border px-3 py-1.5 text-[0.6875rem] text-body transition-colors hover:bg-white/5"
           >
             <span className="hidden lg:inline">New Alert</span>
             <Bell size={15} />
-          </button>
+          </button> */}
 
-          <button
+          {/* Theme Toggle */}
+          {/* <button
             type="button"
             className="inline-flex items-center gap-2 rounded border border-border px-3 py-1.5 text-[0.6875rem] text-body transition-colors hover:bg-white/5"
           >
             <Moon size={15} />
-          </button>
+          </button> */}
 
+          {/* Menu Button */}
           <button
             type="button"
             onClick={onMenuToggle}
@@ -162,6 +189,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
 
           <div className="mx-1 hidden h-8 w-px bg-border md:block" />
 
+          {/* Profile Modal */}
           <div ref={profileMenuRef} className="relative hidden lg:block">
             <button
               type="button"
@@ -172,7 +200,9 @@ export default function DashboardNavbar({ onMenuToggle }) {
                 {userInitials || "DU"}
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-[0.6875rem] text-heading">{user?.name || "Workspace User"}</span>
+                <span className="text-[0.6875rem] text-heading">
+                  {user?.name || "Workspace User"}
+                </span>
                 <span className="text-[0.625rem] text-body">Workspace</span>
               </div>
               <ChevronDown
@@ -184,8 +214,12 @@ export default function DashboardNavbar({ onMenuToggle }) {
             {isProfileOpen && (
               <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded border border-border bg-surface-2 p-2 shadow-strong">
                 <div className="mb-2 border-b border-border px-2 pb-2">
-                  <p className="text-xs text-heading">{user?.name || "Workspace User"}</p>
-                  <p className="text-[0.6875rem] text-body">{user?.email || "Signed in"}</p>
+                  <p className="text-xs text-heading">
+                    {user?.name || "Workspace User"}
+                  </p>
+                  <p className="text-[0.6875rem] text-body">
+                    {user?.email || "Signed in"}
+                  </p>
                 </div>
 
                 <button

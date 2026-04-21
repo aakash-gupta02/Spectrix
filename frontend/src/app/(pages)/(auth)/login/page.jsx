@@ -24,18 +24,20 @@ export default function LoginPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginFormSchema),
     defaultValues: initialFormState,
   });
 
-
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
     onSuccess: (data) => {
       const payload = applyLoginResponse(data);
-      setSuccessMessage(payload?.message || "Login successful. Redirecting to dashboard...");
+      setSuccessMessage(
+        payload?.message || "Login successful. Redirecting to dashboard...",
+      );
       reset(initialFormState);
       router.push("/dashboard");
     },
@@ -78,7 +80,6 @@ export default function LoginPage() {
         {/* Form Section */}
         <div className="p-7">
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-
             <div className="space-y-2">
               <label className="block text-xs font-medium uppercase tracking-wider text-muted">
                 Email
@@ -105,7 +106,9 @@ export default function LoginPage() {
                 className="w-full border border-border bg-surface-2 px-4 py-3 text-sm text-heading outline-none transition focus:border-primary focus:bg-surface-2"
               />
               {errors.password ? (
-                <p className="text-xs text-red-400">{errors.password.message}</p>
+                <p className="text-xs text-red-400">
+                  {errors.password.message}
+                </p>
               ) : null}
             </div>
 
@@ -120,9 +123,7 @@ export default function LoginPage() {
 
             {successMessage && (
               <div className="border border-primary/40 bg-primary-soft px-3 py-2">
-                <p className="text-sm text-primary">
-                  {successMessage}
-                </p>
+                <p className="text-sm text-primary">{successMessage}</p>
               </div>
             )}
 
@@ -143,7 +144,18 @@ export default function LoginPage() {
                 href="/register"
               >
                 Register
-              </Link>
+              </Link>{" "}
+              or try{" "}
+              <span
+                className="font-medium text-primary transition-colors hover:text-primary-strong cursor-pointer"
+                onClick={() => {
+                  setValue("email", "spectrixdemo@gmail.com");
+                  setValue("password", "spectruxdemo");
+                }}
+              >
+                 Demo Account
+              </span>
+              .
             </p>
           </div>
         </div>
