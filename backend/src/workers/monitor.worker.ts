@@ -6,11 +6,12 @@ import { logger } from "../config/logger.js";
 import { Log } from "../modules/log/log.model.js";
 import { handleIncidentService } from "../modules/incident/incident.service.js";
 import type { EndpointWithService } from "../modules/alert/alert.formatter.js";
+import { env } from "../config/env.js";
 const POLL_INTERVAL = 5000; // 5 seconds - ms value
 
-async function runWorker() {
+export async function runWorker() {
   logger.info("[worker] Monitoring worker started");
-  await connectDB();
+  // await connectDB();
 
   setInterval(async () => {
     try {
@@ -76,7 +77,7 @@ async function runWorker() {
           failedCount += 1;
           const endpointId = populatedEndpoints[index]?._id;
           logger.error(
-            `retryRunCheck failed for endpoint ${endpointId}: ${String(result.reason)}`,
+            `[worker] retryRunCheck failed for endpoint ${endpointId}: ${String(result.reason)}`,
           );
         }
       });
@@ -86,9 +87,20 @@ async function runWorker() {
         `[worker] Poll completed: total=${results.length} rejected=${failedCount} fulfilled=${results.length - failedCount}`,
       );
     } catch (err) {
-      logger.error(`Worker error: ${String(err)}`);
+      logger.error(`[worker] Worker error: ${String(err)}`);
     }
   }, POLL_INTERVAL);
 }
 
-runWorker();
+export function startWorkerIfEnabled() {
+  try {
+    if (env.RUN_WORKERS === "true") {
+      logger.info("[worker] Starting worker...");
+      runWorker();
+    }
+  } catch (err) {
+    logger.error(`[worker] Worker failed to start: ${String(err)}`);
+  }
+}
+
+// startWorkerIfEnabled();

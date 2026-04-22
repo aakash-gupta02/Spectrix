@@ -23,7 +23,7 @@ const envSchema = z.object({
 
   CURRENT_KEY_VERSION: z.string().min(1, "CURRENT_KEY_VERSION is required"),
   KEY_v1: z.string().min(1, "KEY_v1 is required"),
-
+  RUN_WORKERS: z.enum(["true", "false"]).default("false"),
 });
 
 const parsed = envSchema.safeParse(process.env);

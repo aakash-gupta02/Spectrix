@@ -104,7 +104,7 @@ async function apiCheck(endpoint: EndpointCheckable) {
   const baseUrl = endpoint.serviceId?.baseUrl;
 
   if (!baseUrl) {
-    throw new Error("Missing service baseUrl for endpoint check");
+    throw new Error("[worker] Missing service baseUrl for endpoint check");
   }
 
   try {
@@ -140,12 +140,12 @@ async function apiCheck(endpoint: EndpointCheckable) {
       else type = "network";
 
       logger.error(
-        `API Check error for endpoint ${endpoint.name}: ${err.code}`,
+        `[worker] API Check error for endpoint ${endpoint.name}: ${err.code}`,
       );
     } else if (err instanceof Error) {
-      logger.error(`API Check error: ${err.message}`);
+      logger.error(`[worker] API Check error: ${err.message}`);
     } else {
-      logger.error(`API Check error: ${String(err)}`);
+      logger.error(`[worker] API Check error: ${String(err)}`);
     }
 
     return {
