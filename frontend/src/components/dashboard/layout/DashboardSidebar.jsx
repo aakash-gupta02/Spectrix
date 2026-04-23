@@ -76,7 +76,7 @@ export default function DashboardSidebar({ isOpen, onClose }) {
   return (
     <>
       <aside
-        className={`fixed inset-y-14 left-0 z-40 w-64 border-r border-dashed border-border bg-page transition-transform duration-200 sm:inset-y-16 md:static md:inset-auto md:flex md:translate-x-0 md:flex-col ${
+        className={`fixed inset-y-14 left-0 z-40 flex w-64 flex-col border-r border-dashed border-border bg-page transition-transform duration-200 sm:inset-y-16 md:static md:inset-auto md:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

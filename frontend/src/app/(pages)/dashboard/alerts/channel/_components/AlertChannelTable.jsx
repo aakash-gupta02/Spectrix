@@ -17,7 +17,7 @@ export default function AlertChannelTable({
         <span className="text-[0.6875rem] text-body">{channels.length} total</span>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="max-h-[60vh] overflow-auto">
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">

@@ -2,7 +2,7 @@ export default function DashboardAuthSkeleton() {
   return (
     <div
       aria-busy="true"
-      className="flex min-h-screen flex-col overflow-hidden bg-page text-body"
+      className="flex h-screen min-h-0 flex-col overflow-hidden bg-page text-body"
     >
       <header className="sticky top-0 z-50 border-b border-dashed border-border bg-black/90 backdrop-blur-md">
         <div className="flex h-14 sm:h-16">

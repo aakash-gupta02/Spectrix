@@ -10,7 +10,7 @@ export default function DashboardLayoutShell({ children }) {
 
   return (
     <ServiceProvider>
-      <div className="flex min-h-screen flex-col overflow-hidden bg-page text-body">
+      <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-page text-body">
         <DashboardNavbar
           onMenuToggle={() => setIsSidebarOpen((prev) => !prev)}
         />
