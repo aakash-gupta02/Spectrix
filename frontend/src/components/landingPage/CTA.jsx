@@ -39,10 +39,10 @@ export default function CTA() {
                   <ArrowUpRight size={16} strokeWidth={1.8} />
                 </Link>
                 <Link
-                  href="#how-it-works"
+                  href="/login?loginDemo=true"
                   className="flex items-center justify-center gap-2 px-6 py-4 text-xs font-medium tracking-wide text-heading transition-colors hover:bg-surface-2"
                 >
-                  View Setup Steps
+                  Explore Live Dashboard
                   <ArrowUpRight size={16} strokeWidth={1.8} />
                 </Link>
               </div>
