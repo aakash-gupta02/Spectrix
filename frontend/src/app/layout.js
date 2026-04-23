@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
         <ToastProvider />
         <QueryProvider>
           <AuthProvider>
-            <ServiceProvider>{children}</ServiceProvider>
+            {children}
           </AuthProvider>
         </QueryProvider>
       </body>
