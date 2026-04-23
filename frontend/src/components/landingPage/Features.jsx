@@ -17,6 +17,7 @@ export default function Features() {
           eyebrow="01. Features"
           title="Core monitoring features, nothing extra."
           buttonTxt="See Setup Flow"
+          buttonLink="#how-it-works"
           description="Track uptime, latency, and errors with alerting that helps you act fast."
         />
 

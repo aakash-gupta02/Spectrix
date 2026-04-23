@@ -1,6 +1,13 @@
-import React from 'react'
+import React from "react";
+import Link from "next/link";
 
-const SectionHeading = ({ eyebrow, title, description, buttonTxt }) => {
+const SectionHeading = ({
+    eyebrow,
+    title,
+    description,
+    buttonTxt,
+    buttonLink = "#how-it-works",
+}) => {
     return (
         <div className="relative mb-16">
             <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl" />
@@ -13,28 +20,31 @@ const SectionHeading = ({ eyebrow, title, description, buttonTxt }) => {
                         </span>
                     </div>
 
-                    <h2 className="mb-4 text-4xl leading-[1.1] font-light tracking-tighter text-white md:text-5xl lg:text-6xl">
+                    <h2 className="mb-4 text-4xl font-light leading-[1.1] tracking-tighter text-white md:text-5xl lg:text-6xl">
                         {title || "Comprehensive API observability."}
                     </h2>
 
                     <p className="max-w-md text-lg text-white/70">
-                        {description || "From single endpoints to complex microservices, we provide the tools to ensure continuous reliability."}
+                        {description ||
+                            "From single endpoints to complex microservices, we provide the tools to ensure continuous reliability."}
                     </p>
                 </div>
 
-                {buttonTxt &&
+                {buttonTxt ? (
                     <div className="flex flex-col items-center gap-4 sm:flex-row">
-                        <button className="w-full bg-white px-6 py-3 text-center font-normal text-black transition-colors hover:bg-slate-200 sm:w-auto">
+                        <Link
+                            href={buttonLink}
+                            className="w-full cursor-pointer bg-white px-6 py-3 text-center font-normal text-black transition-colors hover:bg-slate-200 sm:w-auto"
+                        >
                             {buttonTxt}
-                        </button>
+                        </Link>
                     </div>
-                }
-
+                ) : null}
             </div>
 
             <div className="mt-12 h-px w-full bg-linear-to-r from-slate-800 via-slate-700 to-transparent" />
         </div>
-    )
-}
+    );
+};
 
-export default SectionHeading
+export default SectionHeading;
