@@ -2,6 +2,7 @@ import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
+import { startCronJobsIfEnabled } from "./cron/cron.start.js";
 import { startWorkerIfEnabled } from "./workers/monitor.worker.js";
 
 const startServer = async (): Promise<void> => {
@@ -10,6 +11,7 @@ const startServer = async (): Promise<void> => {
   app.listen(env.PORT, () => {
     logger.info(`Server running on http://localhost:${env.PORT}`);
     startWorkerIfEnabled();
+    startCronJobsIfEnabled();
   });
 };
 

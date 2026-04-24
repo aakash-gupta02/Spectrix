@@ -1,6 +1,6 @@
 import cron from "node-cron";
-import { logger } from "../../../config/logger.js";
-import { aggregateDailyStats } from "../stats.service.js";
+import { logger } from "../../../../config/logger.js";
+import { aggregateDailyStats } from "../../stats.service.js";
 
 let isRunning = false;
 
