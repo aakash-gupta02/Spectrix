@@ -40,36 +40,7 @@ function isValidExpectedStatusString(value) {
         });
 }
 
-export const createEndpointSchema = z.object({
-    name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
-    serviceId: z.string().min(1, "Service is required"),
-    method: z.enum(HTTP_METHODS),
-    path: endpointPathSchema,
-    query: z.record(z.string(), z.string()).optional(),
-    headers: z.record(z.string(), z.string()).optional(),
-    body: z.any().optional(),
-    interval: z.number().int().min(10, "Interval must be at least 10 seconds").default(300),
-    expectedStatus: z.array(z.number().int().positive()).optional(),
-    active: z.boolean().default(true),
-    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
-}).strict();
-
-export const updateEndpointSchema = z.object({
-    name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters").optional(),
-    serviceId: z.string().min(1, "Service is required").optional(),
-    method: z.enum(HTTP_METHODS).optional(),
-    path: endpointPathSchema.optional(),
-    query: z.record(z.string(), z.string()).optional(),
-    headers: z.record(z.string(), z.string()).optional(),
-    body: z.any().optional(),
-    interval: z.number().int().min(10, "Interval must be at least 10 seconds").optional(),
-    expectedStatus: z.array(z.number().int().positive()).optional(),
-    active: z.boolean().optional(),
-    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
-
-}).strict();
-
-const endpointFormBaseSchema = z.object({
+export const createEndpointFormSchema = z.object({
     name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
     serviceId: z.string().min(1, "Service is required"),
     method: z.enum(HTTP_METHODS),
@@ -78,17 +49,13 @@ const endpointFormBaseSchema = z.object({
     headers: z.string().optional().refine(isValidJsonObjectString, "Headers must be a valid JSON object"),
     body: z.string().optional(),
     interval: z.coerce.number().int().min(10, "Interval must be at least 10 seconds"),
-    expectedStatus: z
-        .string()
-        .optional()
-        .refine(isValidExpectedStatusString, "Expected status codes must be comma-separated HTTP codes"),
+    expectedStatus: z.string().optional().refine(isValidExpectedStatusString, "Expected status codes must be comma-separated HTTP codes"),
     active: z.boolean().default(true),
-    retries: z.coerce.number().int().min(0, "Retries must be 0 or more").max(3, "Retries must be 3 or less").default(0),
-});
+    retries: z.coerce.number().int().min(1, "Retries must be 1 or more").max(3, "Retries must be 3 or less").default(1),
+}).strict();
 
-export const createEndpointFormSchema = endpointFormBaseSchema.strict();
-
-export const updateEndpointFormSchema = endpointFormBaseSchema.partial().strict();
+// For updates, just reuse with .partial()
+export const updateEndpointFormSchema = createEndpointFormSchema.partial().strict();
 
 export const getEndpointsQuerySchema = z.object({
     serviceId: z.string().optional(),

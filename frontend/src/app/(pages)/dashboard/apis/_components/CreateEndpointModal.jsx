@@ -26,7 +26,7 @@ const initialFormState = {
   interval: 300,
   expectedStatus: "200",
   active: true,
-  retries: '0',
+  retries: '1',
 };
 
 function normalizePath(value) {
