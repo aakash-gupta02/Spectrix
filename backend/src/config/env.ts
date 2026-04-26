@@ -23,8 +23,8 @@ const envSchema = z.object({
   CLIENT: z.string().min(1, "CLIENT is required"),
 
   // Webhooks
-  DC_WEBHOOK_URL: z.string().min(1, "DC_WEBHOOK_URL is required"),
-  SLACK_WEBHOOK_URL: z.string().min(1, "SLACK_WEBHOOK_URL is required"),
+  // DC_WEBHOOK_URL: z.string().min(1, "DC_WEBHOOK_URL is required"),
+  // SLACK_WEBHOOK_URL: z.string().min(1, "SLACK_WEBHOOK_URL is required"),
 
   // Encryption
   CURRENT_KEY_VERSION: z.string().min(1, "CURRENT_KEY_VERSION is required"),
