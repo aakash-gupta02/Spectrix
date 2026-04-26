@@ -119,7 +119,7 @@ export default function ApiDetailsPage() {
   const endpointLabel = metrics?.endpoint?.name || "Endpoint details";
   const method = metrics?.endpoint?.method || "-";
   const path = metrics?.endpoint?.path || "-";
-  const healthStatus = kpis?.healthStatus || metrics?.healthStatus || "unknown";
+  const healthStatus = metrics?.kpis?.healthStatus || "unknown";
   const latestCheck = metrics?.latestCheck;
 
   return (
