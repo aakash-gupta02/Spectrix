@@ -54,19 +54,35 @@ export default function DashboardPage() {
         queryFn: () => overviewAPI.getOverviewMetrics({ serviceId: activeServiceFilter }),
     });
 
-    const metrics = overviewQuery.data?.metrics;
-    const errorItems = useMemo(() => metrics?.errorsByApi24h?.items ?? [], [metrics]);
+    const metrics = overviewQuery.data?.metrics ?? overviewQuery.data?.overview;
+    const errorItems = useMemo(() => {
+        if (metrics?.errorsByApi24h?.items) {
+            return metrics.errorsByApi24h.items;
+        }
 
-    const generatedAt = formatDateTime(metrics?.generatedAt);
+        if (metrics?.endpointBreakdown) {
+            return metrics.endpointBreakdown.map((item) => ({
+                endpointId: item.endpointId,
+                endpointName: item.endpointName,
+                method: item.method,
+                path: item.path,
+                count: item.failureChecks,
+            }));
+        }
+
+        return [];
+    }, [metrics]);
+
+    const generatedAt = formatDateTime(metrics?.generatedAt ?? metrics?.timeWindow?.to);
     const totalApis = metrics?.totalApis?.value ?? 0;
     const newThisWeek = metrics?.totalApis?.newThisWeek ?? 0;
     const uptimeValue = metrics?.uptime?.value ?? 0;
     const uptime24h = metrics?.uptime?.last24h ?? uptimeValue;
     const uptime30d = metrics?.uptime?.last30d ?? uptimeValue;
-    const avgResponseTime = metrics?.avgResponseTime?.valueMs ?? 0;
+    const avgResponseTime = metrics?.avgResponseTime?.valueMs ?? metrics?.summary?.avgResponseTime ?? 0;
     const deltaResponseTime = metrics?.avgResponseTime?.deltaMsVsLastWeek ?? 0;
     const openIncidents = metrics?.incidents?.open ?? 0;
-    const errorRate = metrics?.errorRate?.value ?? 0;
+    const errorRate = metrics?.errorRate?.value ?? metrics?.summary?.failureRate ?? 0;
 
     const selectedScopeLabel = activeServiceFilter
         ? selectedService?.name || "Filtered service"
