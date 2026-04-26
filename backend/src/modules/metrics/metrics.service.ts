@@ -10,6 +10,10 @@ import type {
   OverviewQueryInput,
 } from "./metrics.validation.js";
 import { Incident } from "../incident/incident.model.js";
+import {
+  getSummaryUsingDailyStatsAndTodayLogs,
+  getTimeseriesUsingDailyStatsAndTodayLogs,
+} from "../stats/stats.service.js";
 
 type TimeseriesRequest = GetEndpointTimeseriesQueryInput & {
   endpointId: string;
@@ -21,7 +25,7 @@ type TopLevelRequest = GetEndpointTopLevelQueryInput & {
 
 type OverviewRequest = OverviewQueryInput;
 
-type UserContext = {
+export type UserContext = {
   userId: string;
   role: string;
 };
@@ -48,12 +52,25 @@ const safeRound = (value: number, decimals = 2): number => {
   return Math.round(value * factor) / factor;
 };
 
-const formatBucketTime = (date: Date, timezone: string): string => {
-  return new Intl.DateTimeFormat("en-GB", {
+const formatBucketTime = (
+  date: Date,
+  timezone: string,
+  includeDate = false,
+): string => {
+  const options: Intl.DateTimeFormatOptions = {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
     timeZone: timezone,
+  };
+
+  if (includeDate) {
+    options.day = "2-digit";
+    options.month = "2-digit";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    ...options,
   }).format(date);
 };
 
@@ -161,52 +178,18 @@ const calculateRate = (numerator: number, denominator: number): number => {
   return safeRound((numerator / denominator) * 100, 2);
 };
 
-const getLogSummary = async (
-  endpointIds: mongoose.Types.ObjectId[],
-  fromDate: Date,
-  toDate: Date,
-) => {
-  const [summary] = await Log.aggregate<{
-    total: number;
-    successChecks: number;
-    failureChecks: number;
-    avgLatency: number;
-  }>([
-    {
-      $match: {
-        endpointId: { $in: endpointIds },
-        checkedAt: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: 1 },
-        successChecks: {
-          $sum: {
-            $cond: [{ $eq: ["$result", "success"] }, 1, 0],
-          },
-        },
-        failureChecks: {
-          $sum: {
-            $cond: [{ $eq: ["$result", "failure"] }, 1, 0],
-          },
-        },
-        avgLatency: { $avg: "$responseTime" },
-      },
-    },
-  ]);
-
-  return {
-    total: summary?.total ?? 0,
-    successChecks: summary?.successChecks ?? 0,
-    failureChecks: summary?.failureChecks ?? 0,
-    avgLatency: safeRound(summary?.avgLatency ?? 0, 2),
-  };
-};
+const startOfUtcDay = (date: Date) =>
+  new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 
 export const getEndpointTopLevelService = async (
   { endpointId, hours }: TopLevelRequest,
@@ -225,82 +208,25 @@ export const getEndpointTopLevelService = async (
     },
   };
 
-  const [summaryData, latestCheck, sortedLatencyData] = await Promise.all([
-    Log.aggregate<{
-      totalChecks: number;
-      successChecks: number;
-      failureChecks: number;
-      avgLatency: number;
-      successRate: number;
-      failureRate: number;
-    }>([
-      { $match: matchStage },
-      {
-        $group: {
-          _id: null,
-          totalChecks: { $sum: 1 },
-          successChecks: {
-            $sum: {
-              $cond: [{ $eq: ["$result", "success"] }, 1, 0],
-            },
-          },
-          failureChecks: {
-            $sum: {
-              $cond: [{ $eq: ["$result", "failure"] }, 1, 0],
-            },
-          },
-          avgLatency: { $avg: "$responseTime" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalChecks: 1,
-          successChecks: 1,
-          failureChecks: 1,
-          avgLatency: { $round: ["$avgLatency", 2] },
-          successRate: {
-            $cond: [
-              { $eq: ["$totalChecks", 0] },
-              0,
-              {
-                $round: [
-                  {
-                    $multiply: [
-                      { $divide: ["$successChecks", "$totalChecks"] },
-                      100,
-                    ],
-                  },
-                  2,
-                ],
-              },
-            ],
-          },
-          failureRate: {
-            $cond: [
-              { $eq: ["$totalChecks", 0] },
-              0,
-              {
-                $round: [
-                  {
-                    $multiply: [
-                      { $divide: ["$failureChecks", "$totalChecks"] },
-                      100,
-                    ],
-                  },
-                  2,
-                ],
-              },
-            ],
-          },
-        },
-      },
-    ]),
+  const p95FromDate = new Date(
+    Math.max(fromDate.getTime(), startOfUtcDay(now).getTime()),
+  );
+
+  const [summary, latestCheck, sortedLatencyData] = await Promise.all([
+    getSummaryUsingDailyStatsAndTodayLogs([endpoint._id], fromDate, now),
     Log.findOne(matchStage)
       .sort({ checkedAt: -1 })
       .select("result statusCode responseTime checkedAt errorMessage"),
     Log.aggregate<{ responseTime: number }>([
-      { $match: matchStage },
+      {
+        $match: {
+          endpointId: endpoint._id,
+          checkedAt: {
+            $gte: p95FromDate,
+            $lte: now,
+          },
+        },
+      },
       { $sort: { responseTime: 1 } },
       {
         $project: {
@@ -311,24 +237,17 @@ export const getEndpointTopLevelService = async (
     ]),
   ]);
 
-  const summary = summaryData[0] || {
-    totalChecks: 0,
-    successChecks: 0,
-    failureChecks: 0,
-    avgLatency: 0,
-    successRate: 0,
-    failureRate: 0,
-  };
-
   const sortedLatencies = sortedLatencyData.map((entry) => entry.responseTime);
   const p95Latency = safeRound(percentileFromSorted(sortedLatencies, 0.95), 2);
+  const successRate = calculateRate(summary.successChecks, summary.total);
+  const failureRate = calculateRate(summary.failureChecks, summary.total);
 
   const healthStatus =
-    summary.totalChecks === 0
+    summary.total === 0
       ? "unknown"
-      : summary.successRate >= 99
+      : successRate >= 99
         ? "healthy"
-        : summary.successRate >= 95
+        : successRate >= 95
           ? "degraded"
           : "critical";
 
@@ -345,11 +264,11 @@ export const getEndpointTopLevelService = async (
       to: now,
     },
     kpis: {
-      totalChecks: summary.totalChecks,
+      totalChecks: summary.total,
       successChecks: summary.successChecks,
       failureChecks: summary.failureChecks,
-      successRate: summary.successRate,
-      failureRate: summary.failureRate,
+      successRate,
+      failureRate,
       avgLatency: summary.avgLatency,
       p95Latency,
       healthStatus,
@@ -377,89 +296,96 @@ export const getEndpointTimeseriesService = async (
   const now = new Date();
   const fromDate = new Date(now.getTime() - hours * 60 * 60 * 1000);
 
-  const aggregated = await Log.aggregate<{
-    bucketStart: Date;
-    avgLatency: number;
-    total: number;
-    success: number;
-  }>([
-    {
-      $match: {
-        endpointId: endpoint._id,
-        checkedAt: {
-          $gte: fromDate,
-          $lte: now,
-        },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          $dateTrunc: {
-            date: "$checkedAt",
-            unit: "minute",
-            binSize: bucketMinutes,
-          },
-        },
-        avgLatency: { $avg: "$responseTime" },
-        total: { $sum: 1 },
-        successChecks: {
-          $sum: {
-            $cond: [{ $eq: ["$result", "success"] }, 1, 0],
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        bucketStart: "$_id",
-        avgLatency: { $round: ["$avgLatency", 2] },
-        total: 1,
-        success: {
-          $cond: [
-            { $eq: ["$total", 0] },
-            0,
-            {
-              $round: [
-                {
-                  $multiply: [{ $divide: ["$successChecks", "$total"] }, 100],
-                },
-                2,
-              ],
-            },
-          ],
-        },
-      },
-    },
-    { $sort: { bucketStart: 1 } },
-  ]);
-
-  const bucketMap = new Map(
-    aggregated.map((item) => [new Date(item.bucketStart).getTime(), item]),
+  const aggregated = await getTimeseriesUsingDailyStatsAndTodayLogs(
+    endpoint._id,
+    fromDate,
+    now,
+    bucketMinutes,
   );
 
-  const startBucket = floorToBucket(fromDate, bucketMinutes);
-  const endBucket = floorToBucket(now, bucketMinutes);
+  const isMultiDayWindow = fromDate.getTime() < startOfUtcDay(now).getTime();
+  const todayStart = startOfUtcDay(now);
   const bucketMs = bucketMinutes * 60 * 1000;
 
   const points: Point[] = [];
 
-  for (
-    let ts = startBucket.getTime();
-    ts <= endBucket.getTime();
-    ts += bucketMs
-  ) {
-    const item = bucketMap.get(ts);
-    const bucketDate = new Date(ts);
+  if (isMultiDayWindow) {
+    const historicalPoints = aggregated
+      .filter(
+        (item) => new Date(item.bucketStart).getTime() < todayStart.getTime(),
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.bucketStart).getTime() - new Date(b.bucketStart).getTime(),
+      )
+      .map((item) => {
+        const bucketDate = new Date(item.bucketStart);
 
-    points.push({
-      time: formatBucketTime(bucketDate, timezone),
-      bucketStart: bucketDate,
-      avgLatency: item ? safeRound(item.avgLatency, 2) : 0,
-      success: item ? safeRound(item.success, 2) : 0,
-      total: item ? item.total : 0,
-    });
+        return {
+          time: formatBucketTime(bucketDate, timezone, true),
+          bucketStart: bucketDate,
+          avgLatency: safeRound(item.avgLatency, 2),
+          success: safeRound(item.success, 2),
+          total: item.total,
+        };
+      });
+
+    points.push(...historicalPoints);
+
+    const todayMap = new Map(
+      aggregated
+        .filter(
+          (item) => new Date(item.bucketStart).getTime() >= todayStart.getTime(),
+        )
+        .map((item) => [new Date(item.bucketStart).getTime(), item]),
+    );
+
+    const startTodayBucket = floorToBucket(
+      fromDate > todayStart ? fromDate : todayStart,
+      bucketMinutes,
+    );
+    const endTodayBucket = floorToBucket(now, bucketMinutes);
+
+    for (
+      let ts = startTodayBucket.getTime();
+      ts <= endTodayBucket.getTime();
+      ts += bucketMs
+    ) {
+      const item = todayMap.get(ts);
+      const bucketDate = new Date(ts);
+
+      points.push({
+        time: formatBucketTime(bucketDate, timezone, true),
+        bucketStart: bucketDate,
+        avgLatency: item ? safeRound(item.avgLatency, 2) : 0,
+        success: item ? safeRound(item.success, 2) : 0,
+        total: item ? item.total : 0,
+      });
+    }
+  } else {
+    const bucketMap = new Map(
+      aggregated.map((item) => [new Date(item.bucketStart).getTime(), item]),
+    );
+
+    const startBucket = floorToBucket(fromDate, bucketMinutes);
+    const endBucket = floorToBucket(now, bucketMinutes);
+
+    for (
+      let ts = startBucket.getTime();
+      ts <= endBucket.getTime();
+      ts += bucketMs
+    ) {
+      const item = bucketMap.get(ts);
+      const bucketDate = new Date(ts);
+
+      points.push({
+        time: formatBucketTime(bucketDate, timezone, false),
+        bucketStart: bucketDate,
+        avgLatency: item ? safeRound(item.avgLatency, 2) : 0,
+        success: item ? safeRound(item.success, 2) : 0,
+        total: item ? item.total : 0,
+      });
+    }
   }
 
   const midpoint = Math.max(1, Math.floor(points.length / 2));
@@ -558,45 +484,88 @@ export const overviewService = async (
 
   const endpointIds = endpoints.map((endpoint) => endpoint._id);
 
-  const [summary7d, summaryPrevious7d, summary24h, summary30d, topErrorsRaw, openIncidents] =
+  const [summary7d, summaryPrevious7d, summary24h, summary30d, openIncidents] =
     await Promise.all([
-      getLogSummary(endpointIds, sevenDaysAgo, now),
-      getLogSummary(endpointIds, fourteenDaysAgo, sevenDaysAgo),
-      getLogSummary(endpointIds, twentyFourHoursAgo, now),
-      getLogSummary(endpointIds, thirtyDaysAgo, now),
-      Log.aggregate<{ endpointId: mongoose.Types.ObjectId; errorCount: number }>([
-        {
-          $match: {
-            endpointId: { $in: endpointIds },
-            checkedAt: { $gte: twentyFourHoursAgo, $lte: now },
-            result: "failure",
-          },
-        },
-        {
-          $group: {
-            _id: "$endpointId",
-            errorCount: { $sum: 1 },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            endpointId: "$_id",
-            errorCount: 1,
-          },
-        },
-        { $sort: { errorCount: -1 } },
-        { $limit: topErrorsLimit },
-      ]),
+      getSummaryUsingDailyStatsAndTodayLogs(endpointIds, sevenDaysAgo, now),
+      getSummaryUsingDailyStatsAndTodayLogs(
+        endpointIds,
+        fourteenDaysAgo,
+        sevenDaysAgo,
+      ),
+      getSummaryUsingDailyStatsAndTodayLogs(endpointIds, twentyFourHoursAgo, now),
+      getSummaryUsingDailyStatsAndTodayLogs(endpointIds, thirtyDaysAgo, now),
       Incident.countDocuments({
         ...endpointFilter,
         status: "open",
       }),
     ]);
 
+  const failedChecksExpr = {
+    $or: [
+      { $in: ["$result", ["failure", "failed", "error"]] },
+      {
+        $and: [{ $ne: ["$statusCode", null] }, { $gte: ["$statusCode", 400] }],
+      },
+      { $ne: [{ $ifNull: ["$errorMessage", null] }, null] },
+    ],
+  };
+
+  const topErrorDocs =
+    endpointIds.length === 0
+      ? []
+      : await Log.aggregate<{ endpointId: mongoose.Types.ObjectId; count: number }>([
+          {
+            $match: {
+              endpointId: { $in: endpointIds },
+              checkedAt: {
+                $gte: twentyFourHoursAgo,
+                $lte: now,
+              },
+            },
+          },
+          {
+            $match: {
+              $expr: failedChecksExpr,
+            },
+          },
+          {
+            $group: {
+              _id: "$endpointId",
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { count: -1 } },
+          { $limit: topErrorsLimit },
+          {
+            $project: {
+              _id: 0,
+              endpointId: "$_id",
+              count: 1,
+            },
+          },
+        ]);
+
   const endpointMap = new Map(
     endpoints.map((endpoint) => [String(endpoint._id), endpoint]),
   );
+
+  const topErrorItems = topErrorDocs
+    .map((entry) => {
+      const endpoint = endpointMap.get(String(entry.endpointId));
+
+      if (!endpoint) {
+        return null;
+      }
+
+      return {
+        endpointId: String(entry.endpointId),
+        endpointName: endpoint.name,
+        method: endpoint.method,
+        path: endpoint.path,
+        count: entry.count,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   const uptime7d = calculateRate(summary7d.successChecks, summary7d.total);
   const uptime24h = calculateRate(summary24h.successChecks, summary24h.total);
@@ -634,17 +603,7 @@ export const overviewService = async (
     },
     errorsByApi24h: {
       top: topErrorsLimit,
-      items: topErrorsRaw.map((entry) => {
-        const endpoint = endpointMap.get(String(entry.endpointId));
-
-        return {
-          endpointId: String(entry.endpointId),
-          endpointName: endpoint?.name ?? null,
-          method: endpoint?.method ?? null,
-          path: endpoint?.path ?? null,
-          count: entry.errorCount,
-        };
-      }),
+      items: topErrorItems,
     },
   };
 };

@@ -103,9 +103,11 @@ export default function ApiDetailsPage() {
     enabled: Boolean(endpointId),
   });
 
-  const metrics = topLevelQuery.data?.metrics;
-  const series = useMemo(() => timeSeriesQuery.data?.metrics?.timeseries ?? [], [timeSeriesQuery.data?.metrics?.timeseries]);
-  const trends = timeSeriesQuery.data?.metrics?.trends;
+  const metrics = topLevelQuery.data?.metrics ?? topLevelQuery.data?.overview;
+  const kpis = metrics?.kpis ?? metrics?.summary ?? {};
+  const timeseriesMetrics = timeSeriesQuery.data?.metrics ?? timeSeriesQuery.data?.overview;
+  const series = useMemo(() => timeseriesMetrics?.timeseries ?? [], [timeseriesMetrics?.timeseries]);
+  const trends = timeseriesMetrics?.trends;
 
   const derived = useMemo(() => {
     const maxTotal = Math.max(...series.map((item) => Number(item.total || 0)), 1);
@@ -192,22 +194,22 @@ export default function ApiDetailsPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               label="Total checks"
-              value={formatNumber(metrics.kpis?.totalChecks)}
-              subtext={`Success ${formatNumber(metrics.kpis?.successChecks)} / Failure ${formatNumber(metrics.kpis?.failureChecks)}`}
+              value={formatNumber(kpis?.totalChecks)}
+              subtext={`Success ${formatNumber(kpis?.successChecks)} / Failure ${formatNumber(kpis?.failureChecks)}`}
               icon={Activity}
               tone="accent"
             />
             <MetricCard
               label="Success rate"
-              value={`${formatNumber(metrics.kpis?.successRate)}%`}
-              subtext={`Failure rate ${formatNumber(metrics.kpis?.failureRate)}%`}
+              value={`${formatNumber(kpis?.successRate)}%`}
+              subtext={`Failure rate ${formatNumber(kpis?.failureRate)}%`}
               icon={CheckCircle2}
               tone="success"
             />
             <MetricCard
               label="Average latency"
-              value={`${formatNumber(metrics.kpis?.avgLatency)} ms`}
-              subtext={`P95 latency ${formatNumber(metrics.kpis?.p95Latency)} ms`}
+              value={`${formatNumber(kpis?.avgLatency)} ms`}
+              subtext={`P95 latency ${formatNumber(kpis?.p95Latency)} ms`}
               icon={Gauge}
             />
             <MetricCard

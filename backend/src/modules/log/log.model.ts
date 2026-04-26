@@ -69,6 +69,7 @@ const logSchema = new Schema(
 logSchema.index({ userId: 1, checkedAt: -1 });
 logSchema.index({ endpointId: 1, checkedAt: -1 }); // for querying logs of an endpoint sorted by time
 logSchema.index({ serviceId: 1, checkedAt: -1 }); // for querying logs of a service sorted by time
+logSchema.index({ checkedAt: 1, endpointId: 1 }); // for querying logs of an endpoint within a time range for analytics
 
 // TTL index to automatically delete logs older than 30 days
 logSchema.index({ checkedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }); // 30 days
