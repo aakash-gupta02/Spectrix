@@ -1,4 +1,4 @@
-# [Spectrix](https://spectrix.d3labs.tech/)
+# [Spectrix - API Monitoring Tool](https://spectrix.d3labs.tech/)
 
 Lightweight API monitoring with real-time incident alerts (Slack, Discord, Webhooks).
 > 🚀 Live Demo: https://spectrix.d3labs.tech/
