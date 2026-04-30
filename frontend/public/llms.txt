@@ -1,0 +1,26 @@
+# llms.txt v1
+# Last updated: 2026-04-30
+# Site: https://spectrix.d3labs.tech
+# Contact: aakashgupta052004@gmail.com
+
+# Purpose:
+# This file tells crawlers and LLM-powered agents which public pages may be
+# used for discovery, summarization, retrieval, and indexing.
+
+site:
+  name: Spectrix
+  url: https://spectrix.d3labs.tech
+
+allowed_paths:
+  - /
+  - /api-monitoring-tool
+
+disallowed_paths:
+  - /dashboard
+  - /login
+  - /register
+
+notes:
+  - "Public marketing pages are crawlable."
+  - "Private app/auth pages are not for scraping or indexing."
+  - "For reuse or licensing questions, contact aakashgupta052004@gmail.com."

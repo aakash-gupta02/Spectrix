@@ -7,6 +7,7 @@ export const siteConfig = {
   description:
     "Spectrix helps teams monitor API uptime, latency, failures, and incidents with a single operational dashboard.",
   url: "https://spectrix.d3labs.tech",
+  sameAs: ["https://github.com/aakash-gupta02/Spectrix"],
   locale: "en_US",
   type: "website",
   ogImage: "/meta/og-image.png",
@@ -152,12 +153,16 @@ export const createPageMetadata = ({
   twitterImage,
   index = true,
   follow = true,
+  // optional schema object (JSON-LD). If provided it will be injected
+  // into the metadata.other as `script:ld+json` which Next will render
+  // as structured data in the head.
+  schema = null,
 }) => {
   const canonical = absoluteUrl(path);
   const resolvedOgImage = ogImage || siteConfig.ogImage;
   const resolvedTwitterImage = twitterImage || siteConfig.twitterImage;
 
-  return {
+  const meta = {
     title,
     description,
     keywords: keywords.length ? keywords : siteConfig.keywords,
@@ -199,4 +204,30 @@ export const createPageMetadata = ({
       },
     },
   };
+
+  if (schema) {
+    meta.other = {
+      ...(meta.other || {}),
+      "script:ld+json": JSON.stringify(schema),
+    };
+  }
+
+  return meta;
 };
+
+// Helper to build a standard SoftwareApplication JSON-LD object.
+export function getSoftwareSchema(overrides = {}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": `${siteConfig.url}#spectrix-application`,
+    name: siteConfig.name,
+    alternateName: "Spectrix API Monitoring Tool",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    description: siteConfig.description,
+    url: siteConfig.url,
+    sameAs: siteConfig.sameAs,
+    ...overrides,
+  };
+}

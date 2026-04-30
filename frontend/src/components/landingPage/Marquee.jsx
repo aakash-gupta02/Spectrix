@@ -11,7 +11,7 @@ export default function Marquee() {
         <div className="grid grid-cols-1 md:grid-cols-12">
           <div className="relative z-10 col-span-12 flex items-center border-b border-dashed border-white/10 bg-page px-6 py-8 md:col-span-2 md:border-b-0 md:border-r md:px-10">
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-              Trusted Teams
+              Built for teams using tools like
             </span>
           </div>
 

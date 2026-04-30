@@ -23,19 +23,13 @@ export default function Hero() {
           <div className="mb-6 flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-primary" />
             <p className="font-mono text-xs uppercase tracking-widest text-body">
-              Lightweight API monitoring for developers
+              API monitoring tool for developers
             </p>
           </div>
 
           {/* Headline */}
           <h1 className="mb-8 text-5xl font-light leading-[1.1] tracking-tighter text-heading sm:text-6xl lg:text-7xl">
-            Monitor API health
-            <br />
-            without heavyweight
-            <br />
-            <span className="font-light tracking-tighter text-body">
-              observability overhead.
-            </span>
+            Spectrix - API Monitoring Tool for Developers
           </h1>
 
           {/* Description */}

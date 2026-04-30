@@ -166,6 +166,13 @@ export default function Footer() {
                                         {i < pageLinks.length - 1 && <span className="h-4 w-px bg-border" />}
                                     </React.Fragment>
                                 ))}
+                                <span className="h-4 w-px bg-border" />
+                                <Link
+                                    href="/llms.txt"
+                                    className="text-xs text-muted hover:text-heading transition-colors"
+                                >
+                                    LLMs Policy
+                                </Link>
                             </div>
                         </div>
                     </div>

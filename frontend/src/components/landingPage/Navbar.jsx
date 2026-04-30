@@ -8,6 +8,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
+    { name: "API Monitoring Tool", href: "/api-monitoring-tool" },
     { name: "Features", href: "#features" },
     { name: "How It Works", href: "#how-it-works" },
     { name: "Alerts", href: "#alerts" },
