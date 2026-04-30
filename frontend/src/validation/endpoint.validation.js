@@ -2,26 +2,16 @@ import { z } from "zod";
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
+const keyValuePairSchema = z.object({
+    key: z.string().optional().default(""),
+    value: z.string().optional().default(""),
+});
+
 const endpointPathSchema = z
     .string()
     .trim()
     .min(1, "Path is required")
     .regex(/^\/[a-zA-Z0-9\-\/]*$/, "Path must start with / and contain valid characters");
-
-function isValidJsonObjectString(value) {
-    const trimmed = String(value || "").trim();
-
-    if (!trimmed) {
-        return true;
-    }
-
-    try {
-        const parsed = JSON.parse(trimmed);
-        return Boolean(parsed) && !Array.isArray(parsed) && typeof parsed === "object";
-    } catch {
-        return false;
-    }
-}
 
 function isValidExpectedStatusString(value) {
     const trimmed = String(value || "").trim();
@@ -45,9 +35,9 @@ export const createEndpointFormSchema = z.object({
     serviceId: z.string().min(1, "Service is required"),
     method: z.enum(HTTP_METHODS),
     path: endpointPathSchema,
-    query: z.string().optional().refine(isValidJsonObjectString, "Query must be a valid JSON object"),
-    headers: z.string().optional().refine(isValidJsonObjectString, "Headers must be a valid JSON object"),
-    body: z.string().optional(),
+    queryParams: z.array(keyValuePairSchema).default([{ key: "", value: "" }]),
+    headers: z.array(keyValuePairSchema).default([{ key: "", value: "" }]),
+    body: z.string().optional().default(""),
     interval: z.coerce.number().int().min(10, "Interval must be at least 10 seconds"),
     expectedStatus: z.string().optional().refine(isValidExpectedStatusString, "Expected status codes must be comma-separated HTTP codes"),
     active: z.boolean().default(true),
