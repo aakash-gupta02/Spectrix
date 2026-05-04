@@ -5,10 +5,12 @@ dotenv.config({ quiet: true });
 
 const envSchema = z.object({
   // General
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   PORT: z.coerce.number().default(4000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
-  
+
   // Authentication
   JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET is required"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("1d"),
@@ -19,7 +21,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
 
-  // Frontend 
+  // Frontend
   CLIENT: z.string().min(1, "CLIENT is required"),
 
   // Webhooks
@@ -36,12 +38,15 @@ const envSchema = z.object({
 
   // ClearUp Days - number of days after which logs should be cleared up
   CLEANUP_DAYS: z.coerce.number().default(7),
+  CLEANUP_FAILURE_DAYS: z.coerce.number().default(15),
 });
 
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  throw new Error(`Invalid environment variables: ${JSON.stringify(parsed.error.flatten().fieldErrors)}`);
+  throw new Error(
+    `Invalid environment variables: ${JSON.stringify(parsed.error.flatten().fieldErrors)}`,
+  );
 }
 
 export const env = parsed.data;
@@ -52,7 +57,4 @@ const staticOrigins = [
   "https://spectrix.d3labs.tech",
 ];
 
-export const allowedOrigins = [
-  env.CLIENT,
-  ...staticOrigins,
-];
+export const allowedOrigins = [env.CLIENT, ...staticOrigins];

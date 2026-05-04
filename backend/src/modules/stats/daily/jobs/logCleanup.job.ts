@@ -4,6 +4,8 @@ import { logger } from "../../../../config/logger.js";
 import { env } from "../../../../config/env.js";
 
 const days = Number(env.CLEANUP_DAYS) || 7;
+const failureDate = Number(env.CLEANUP_FAILURE_DAYS) || 15;
+
 let isRunning = false;
 
 export function startLogCleanupJob() {
@@ -20,20 +22,34 @@ export function startLogCleanupJob() {
       logger.info("[cron] Log cleanup started");
 
       try {
-        const cutoff = new Date(
-          Date.now() - days * 24 * 60 * 60 * 1000
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+        const failureCutoff = new Date(
+          Date.now() - failureDate * 24 * 60 * 60 * 1000,
         );
 
-        const res = await Log.deleteMany({
+        // Delete successful logs older than cutoff and failed logs older than failureCutoff
+        const successRes = await Log.deleteMany({
           checkedAt: { $lt: cutoff },
+          result: "success",
+        });
+
+        const failureRes = await Log.deleteMany({
+          checkedAt: { $lt: failureCutoff },
+          result: "failure",
         });
 
         logger.info(
-          `[cron] Log cleanup done. Deleted: ${res.deletedCount}`
+          `[cron] Log cleanup done. Deleted: ${successRes.deletedCount} successful, ${failureRes.deletedCount} failed`,
         );
 
-        if (res.deletedCount > 10000) {
-          logger.warn(`[cron] High deletion count: ${res.deletedCount}`);
+        if (
+          successRes.deletedCount > 10000 ||
+          failureRes.deletedCount > 10000
+        ) {
+          logger.warn(
+            `[cron] High deletion count: ${successRes.deletedCount} successful, ${failureRes.deletedCount} failed`,
+          );
         }
       } catch (err) {
         logger.error("[cron] Log cleanup failed", err);
@@ -43,6 +59,6 @@ export function startLogCleanupJob() {
     },
     {
       timezone: "UTC",
-    }
+    },
   );
 }
