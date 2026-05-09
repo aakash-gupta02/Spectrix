@@ -15,6 +15,8 @@ const streamSchema = new Schema(
       minLength: 1,
       maxLength: 50,
     },
+
+    // Stream Keys
     keyHash: {
       type: String,
       required: true,
@@ -25,6 +27,10 @@ const streamSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    keyVersion: {
+      type: String,
+      required: true,
     },
 
     // Owner Detais
@@ -58,7 +64,4 @@ export type StreamEntity = StreamSchemaType & { _id: Types.ObjectId };
 export type StreamDocument = HydratedDocument<StreamSchemaType>;
 
 // Model
-export const Stream = mongoose.model<StreamDocument>(
-  "Stream",
-  streamSchema,
-);
+export const Stream = mongoose.model<StreamDocument>("Stream", streamSchema);

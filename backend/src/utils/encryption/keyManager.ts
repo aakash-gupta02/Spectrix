@@ -6,7 +6,7 @@ export function getKey(version: string) {
   const rawKey = env[key as keyof typeof env];
 
   if (!rawKey) {
-    throw new Error(`Missing encryption key for version ${version}`);
+    throw new Error(`Missing signing key for version ${version}`);
   }
 
   // normalize to 32 bytes
