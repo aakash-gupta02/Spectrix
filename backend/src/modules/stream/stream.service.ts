@@ -16,7 +16,7 @@ export const generateStreamKey = () => {
   const key = getKey(version);
 
   // full key
-  const rawKey = `spx_live_${random}`;
+  const rawKey = `spx_${version}_live_${random}`;
 
   // hash for DB storage
   const keyHash = crypto.createHmac("sha256", key).update(rawKey).digest("hex");
