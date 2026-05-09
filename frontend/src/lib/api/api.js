@@ -59,6 +59,33 @@ export const serviceAPI = {
   },
 };
 
+export const streamAPI = {
+  getStreams: async () => {
+    const response = await apiClient.get("/stream");
+    return response.data;
+  },
+
+  getStream: async (id) => {
+    const response = await apiClient.get(`/stream/${id}`);
+    return response.data;
+  },
+
+  createStream: async (payload) => {
+    const response = await apiClient.post("/stream", payload);
+    return response.data;
+  },
+
+  updateStream: async (id, payload) => {
+    const response = await apiClient.patch(`/stream/${id}`, payload);
+    return response.data;
+  },
+
+  deleteStream: async (id) => {
+    const response = await apiClient.delete(`/stream/${id}`);
+    return response.data;
+  },
+};
+
 const ENDPOINT_MODULE = "endpoint";
 const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 const INCIDENT_MODULE = "incident";
