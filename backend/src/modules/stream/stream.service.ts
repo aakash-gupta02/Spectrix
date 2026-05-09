@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
-import { CreateStreamInput } from "./stream.validation.js";
+import { CreateStreamInput, UpdateStreamInput } from "./stream.validation.js";
 import { Stream } from "./stream.model.js";
 import crypto from "crypto";
 import { env } from "../../config/env.js";
@@ -92,4 +92,53 @@ export const createStreamService = async (
 
     throw error;
   }
+};
+
+// Get Streams Service
+export const getAllStreamService = async (userId: string) => {
+  const streams = await Stream.find({ userId }).lean();
+  return streams;
+};
+
+// Get Stream by ID Service
+export const getStreamByIdService = async (streamId: string, userId: string) => {
+  const stream = await Stream.findOne({
+    _id: streamId,
+    userId,
+  }).lean();
+
+  if (!stream) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Stream not found");
+  }
+
+  return stream;
+};
+
+// Delete Stream Service
+export const deleteStreamService = async (streamId: string, userId: string) => {
+  const stream = await Stream.findOneAndDelete({
+    _id: streamId,
+    userId,
+  });
+  if (!stream) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Stream not found");
+  }
+  return stream;
+};
+
+// Update Stream Service
+export const updateStreamService = async (
+  streamId: string,
+  userId: string,
+  updateData: UpdateStreamInput,
+) => {
+  const stream = await Stream.findOneAndUpdate(
+    { _id: streamId, userId },
+    { $set: updateData },
+    { new: true },
+  ).lean();
+  if (!stream) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Stream not found");
+  }
+  return stream;
 };
