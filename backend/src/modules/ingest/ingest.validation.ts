@@ -1,14 +1,10 @@
 import z from "zod";
 
-export const LogSchema = z
+export const logSchema = z
   .object({
     level: z.enum(["info", "warn", "error", "debug"]),
 
-    message: z
-      .string()
-      .trim()
-      .min(1, "Message is required")
-      .max(5000, "Message is too long"),
+    message: z.string().trim().min(1).max(5000),
 
     timestamp: z.string().datetime().optional(),
 
@@ -24,11 +20,10 @@ export const LogSchema = z
   })
   .strip();
 
-export const ingestLogSchema = z.object({
-  logs: z
-    .array(LogSchema)
-    .min(1, "At least one log entry is required")
-    .max(1000, "Cannot ingest more than 1000 logs at once"),
+export const ingestLogsSchema = z.object({
+  logs: z.array(logSchema).min(1).max(100),
 });
 
-export type IngestLogInput = z.infer<typeof ingestLogSchema>;
+export type LogInput = z.infer<typeof logSchema>;
+
+export type IngestLogsInput = z.infer<typeof ingestLogsSchema>;
