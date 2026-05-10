@@ -1,4 +1,8 @@
 import z from "zod";
+import {
+  objectIdParamsSchema,
+  objectIdSchema,
+} from "../../utils/validation.js";
 
 export const logSchema = z
   .object({
@@ -17,13 +21,16 @@ export const logSchema = z
     method: z.string().trim().max(10).optional(),
 
     statusCode: z.number().int().min(100).max(599).optional(),
-  })
-  .strip();
+  }).strip();
 
 export const ingestLogsSchema = z.object({
   logs: z.array(logSchema).min(1).max(100),
 });
 
-export type LogInput = z.infer<typeof logSchema>;
+export const ingestLogsParamsSchema = objectIdParamsSchema;
 
+
+// Types
+export type LogInput = z.infer<typeof logSchema>;
 export type IngestLogsInput = z.infer<typeof ingestLogsSchema>;
+export type IngestLogsParams = z.infer<typeof ingestLogsParamsSchema>;
