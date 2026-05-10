@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ingestLogsController } from "./ingest.controller.js";
+import { ingestLogsController, streamLogsController } from "./ingest.controller.js";
 import { validateBody } from "../../middlewares/validateRequest.middleware.js";
 import { ingestLogsSchema } from "./ingest.validation.js";
 import { authenticateIngestKey } from "../../middlewares/ingestAuthMiddleware.js";
@@ -13,4 +13,5 @@ router.post(
   ingestLogsController,
 );
 
+router.get("/sse", streamLogsController);
 export default router;
