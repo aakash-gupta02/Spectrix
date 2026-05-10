@@ -91,6 +91,7 @@ const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 const INCIDENT_MODULE = "incident";
 const LOGS_MODULE = "log";
 const ALERT_CHANNEL_MODULE = "alert-channel";
+const INGEST_MODULE = "ingest";
 
 export const endPointsAPI = {
 
@@ -183,4 +184,11 @@ export const alertChannelAPI = {
     const response = await apiClient.delete(`/${ALERT_CHANNEL_MODULE}/${id}`);
     return response.data;
   },
+};
+
+export const ingestAPI = {
+  getIngestStreams: async () => {
+    const response = await apiClient.get(`/${INGEST_MODULE}/sse`);
+    return response.data;
+  }
 };
