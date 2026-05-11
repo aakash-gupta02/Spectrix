@@ -190,5 +190,10 @@ export const ingestAPI = {
   getIngestStreams: async () => {
     const response = await apiClient.get(`/${INGEST_MODULE}/sse`);
     return response.data;
-  }
+  },
+
+  createIngestSession: async (payload) => {
+    const response = await apiClient.post(`/${INGEST_MODULE}/session`, payload);
+    return response.data;
+  },
 };

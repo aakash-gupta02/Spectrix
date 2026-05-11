@@ -13,7 +13,7 @@ import {
   ingestLogsSchema,
   ingestSessionSchema,
 } from "./ingest.validation.js";
-import { authenticateIngestKey } from "../../middlewares/ingestAuthMiddleware.js";
+import { authenticateIngestKey, streamMiddleware } from "../../middlewares/ingestAuthMiddleware.js";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -37,6 +37,7 @@ router.post(
 router.get(
   "/sse/:id",
   authMiddleware,
+  streamMiddleware,
   validateParams(ingestLogsParamsSchema),
   streamLogsController,
 );

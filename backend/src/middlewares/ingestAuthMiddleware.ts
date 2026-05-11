@@ -5,22 +5,9 @@ import { Stream } from "../modules/stream/stream.model.js";
 import ApiError from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import { getKey } from "../utils/encryption/keyManager.js";
+import { verifyStreamToken } from "../utils/Token.js";
 
-declare global {
-  namespace Express {
-    interface Request {
-      stream?: {
-        streamId: any;
-        serviceId: any;
-        userId: any;
-      };
-    }
-  }
-}
-
-export function extractKeyVersion(
-  apiKey: string,
-): string {
+export function extractKeyVersion(apiKey: string): string {
   const parts = apiKey.split("_");
 
   if (parts.length !== 4) {
@@ -44,12 +31,7 @@ export const authenticateIngestKey = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return next(
-      new ApiError(
-        StatusCodes.UNAUTHORIZED,
-        "Missing API key",
-      ),
-    );
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, "Missing API key"));
   }
 
   const apiKey = authHeader.split(" ")[1];
@@ -69,12 +51,7 @@ export const authenticateIngestKey = async (
   }).select("_id serviceId userId");
 
   if (!stream) {
-    return next(
-      new ApiError(
-        StatusCodes.UNAUTHORIZED,
-        "Invalid API key",
-      ),
-    );
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, "Invalid API key"));
   }
 
   req.stream = {
@@ -84,4 +61,26 @@ export const authenticateIngestKey = async (
   };
 
   next();
+};
+
+export const streamMiddleware = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
+  const token = req.cookies.streamToken;
+
+  if (!token) {
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, "Missing stream token"));
+  }
+
+  try {
+    const payload = verifyStreamToken(token);
+
+    req.streamSession = payload;
+
+    next();
+  } catch {
+    next(new ApiError(StatusCodes.UNAUTHORIZED, "Invalid or expired token"));
+  }
 };

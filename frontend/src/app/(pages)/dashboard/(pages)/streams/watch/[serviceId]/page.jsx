@@ -6,7 +6,7 @@ import DashboardButton from "@/components/ui/DashboardButton";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { CircleAlert, RefreshCw, Signal, WifiOff } from "lucide-react";
-import { serviceAPI } from "@/lib/api/api";
+import { ingestAPI, serviceAPI } from "@/lib/api/api";
 import { baseUrl } from "@/lib/api/client";
 
 const Page = () => {
@@ -27,7 +27,7 @@ const Page = () => {
     const connectStream = async () => {
       try {
         // validate service access first
-        await serviceAPI.getService(serviceId);
+        await ingestAPI.createIngestSession({ serviceId });
 
         source = new EventSource(`${baseUrl}/ingest/sse/${serviceId}`, {
           withCredentials: true,
