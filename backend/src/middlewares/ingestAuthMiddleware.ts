@@ -5,7 +5,7 @@ import { Stream } from "../modules/stream/stream.model.js";
 import ApiError from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import { getKey } from "../utils/encryption/keyManager.js";
-import { verifyStreamToken } from "../utils/Token.js";
+import { type StreamTokenPayload, verifyStreamToken } from "../utils/Token.js";
 
 export function extractKeyVersion(apiKey: string): string {
   const parts = apiKey.split("_");
@@ -48,16 +48,18 @@ export const authenticateIngestKey = async (
   const stream = await Stream.findOne({
     keyHash,
     isActive: true,
-  }).select("_id serviceId userId");
+  })
+    .select("_id serviceId userId")
+    .lean();
 
   if (!stream) {
     return next(new ApiError(StatusCodes.UNAUTHORIZED, "Invalid API key"));
   }
 
   req.stream = {
-    streamId: stream._id,
-    serviceId: stream.serviceId,
-    userId: stream.userId,
+    streamId: stream._id.toString(),
+    serviceId: stream.serviceId.toString(),
+    userId: stream.userId.toString(),
   };
 
   next();
@@ -75,7 +77,7 @@ export const streamMiddleware = (
   }
 
   try {
-    const payload = verifyStreamToken(token);
+    const payload: StreamTokenPayload = verifyStreamToken(token);
 
     req.streamSession = payload;
 

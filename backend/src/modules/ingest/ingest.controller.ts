@@ -15,7 +15,7 @@ import { setCookie } from "../../utils/SetCookie.js";
 export const ingestLogsController = CatchAsync(
   async (req: Request, res: Response) => {
     const { logs }: IngestLogsInput = req.body;
-    const serviceId = req.stream?.serviceId;
+    const serviceId = req.stream.serviceId;
 
     await ingestLogsService(logs, serviceId);
 
@@ -25,11 +25,23 @@ export const ingestLogsController = CatchAsync(
 
 // Stream Logs Controller - SSE endpoint for real-time log streaming
 export const streamLogsController = async (req: Request, res: Response) => {
-  const userId = req.user.userId;
   const { id } = req.params as unknown as ObjectIdParams;
 
+  const { userId, serviceId, exp } = req.streamSession!;
+
+  // Ensure token belongs to requested service
+  if (serviceId !== id) {
+    throw new ApiError(StatusCodes.FORBIDDEN, "Invalid stream session");
+  }
+
+  const expiresIn = exp! * 1000 - Date.now();
+
   // Verify service exists and belongs to user
-  const service = await Service.exists({ _id: id, userId });
+  const service = await Service.exists({
+    _id: id,
+    userId,
+  });
+
   if (!service) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Service not found");
   }
@@ -41,16 +53,12 @@ export const streamLogsController = async (req: Request, res: Response) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
-  // Flush headers for immediate browser processing
   res.flushHeaders?.();
 
   // listener
   const listener = (logs: unknown) => {
     try {
       res.write(`data: ${JSON.stringify(logs)}\n\n`);
-      // logger.info(
-      //   `Sent ${Array.isArray(logs) ? logs.length : 1} logs to client`,
-      // );
     } catch (error) {
       logger.error("Error writing to SSE stream:", error);
     }
@@ -59,17 +67,35 @@ export const streamLogsController = async (req: Request, res: Response) => {
   // subscribe
   streamEmitter.on(eventName, listener);
 
+  // auto-expire stream
+  const timeout = setTimeout(() => {
+    logger.info("Stream session expired");
+
+    streamEmitter.off(eventName, listener);
+
+    res.end();
+  }, expiresIn);
+
+  // cleanup
+  const cleanup = () => {
+    clearTimeout(timeout);
+
+    streamEmitter.off(eventName, listener);
+
+    res.end();
+  };
+
   // Handle client disconnect
   res.on("error", (error) => {
     logger.error("SSE stream error:", error);
-    streamEmitter.off(eventName, listener);
-    res.end();
+
+    cleanup();
   });
 
   req.on("close", () => {
     logger.info("Client disconnected from log stream");
-    streamEmitter.off(eventName, listener);
-    res.end();
+
+    cleanup();
   });
 };
 

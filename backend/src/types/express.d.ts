@@ -1,23 +1,21 @@
 import "express-serve-static-core";
 import { Types } from "mongoose";
+import { StreamTokenPayload } from "../utils/Token.ts";
 
 declare module "express-serve-static-core" {
   interface Request {
     user: {
-      userId: string | Types.ObjectId;
+      userId: string;
       email: string;
       role: string;
     };
 
-    stream?: {
-      streamId: string | Types.ObjectId;
-      serviceId: string | Types.ObjectId;
-      userId: string | Types.ObjectId;
+    stream: {
+      streamId: string;
+      serviceId: string;
+      userId: string;
     };
 
-    streamSession?: {
-      serviceId: string | Types.ObjectId;
-      userId: string | Types.ObjectId;
-    };
+    streamSession: StreamTokenPayload;
   }
 }

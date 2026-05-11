@@ -1,14 +1,18 @@
-import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
+import jwt, {
+  type Secret,
+  type SignOptions,
+  type JwtPayload,
+} from "jsonwebtoken";
 
 import { env } from "../config/env.js";
 
-type TokenPayload = {
+export type TokenPayload = JwtPayload & {
   userId: string;
   email: string;
   role: string;
 };
 
-type StreamTokenPayload = {
+export type StreamTokenPayload = JwtPayload & {
   serviceId: string;
   userId: string;
   type: "stream";
@@ -20,7 +24,6 @@ const parseExpiresIn = (value: string): SignOptions["expiresIn"] => {
   }
   return value as SignOptions["expiresIn"];
 };
-
 
 // Access Tokens - Short-lived tokens for authentication
 export const createAccessToken = (payload: TokenPayload): string => {
@@ -41,5 +44,8 @@ export const createStreamToken = (payload: StreamTokenPayload): string => {
 };
 
 export const verifyStreamToken = (token: string): StreamTokenPayload => {
-  return jwt.verify(token, env.JWT_STREAM_SECRET as Secret) as StreamTokenPayload;
+  return jwt.verify(
+    token,
+    env.JWT_STREAM_SECRET as Secret,
+  ) as StreamTokenPayload;
 };
