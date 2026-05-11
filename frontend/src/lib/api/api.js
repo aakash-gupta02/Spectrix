@@ -36,7 +36,7 @@ export const serviceAPI = {
 
   // get a single service by ID
   getService: async (id) => {
-    const response = await apiClient.get(`/services/${id}`);
+    const response = await apiClient.get(`/service/${id}`);
     return response.data;
   },
 

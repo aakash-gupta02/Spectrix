@@ -6,6 +6,8 @@ import DashboardButton from "@/components/ui/DashboardButton";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { CircleAlert, RefreshCw, Signal, WifiOff } from "lucide-react";
+import { serviceAPI } from "@/lib/api/api";
+import { baseUrl } from "@/lib/api/client";
 
 const Page = () => {
   const params = useParams();
@@ -15,48 +17,75 @@ const Page = () => {
   const [events, setEvents] = useState([]);
   const [eventSourceKey, setEventSourceKey] = useState(0);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api/v1";
-
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !serviceId) {
       return undefined;
     }
 
-    const source = new EventSource(`${apiBaseUrl}/ingest/sse/${serviceId}`, {
-      withCredentials: true,
-    });
+    let source = null;
 
-    source.onopen = () => {
-      setIsConnected(true);
-      setConnectionError("");
-    };
-
-    source.onmessage = (event) => {
+    const connectStream = async () => {
       try {
-        const parsed = JSON.parse(event.data);
-        const batch = Array.isArray(parsed) ? parsed : [parsed];
+        // validate service access first
+        await serviceAPI.getService(serviceId);
 
-        setEvents((current) =>
-          [{ id: crypto.randomUUID(), receivedAt: new Date().toISOString(), batch }, ...current].slice(0, 25),
+        source = new EventSource(`${baseUrl}/ingest/sse/${serviceId}`, {
+          withCredentials: true,
+        });
+
+        source.onopen = () => {
+          setIsConnected(true);
+          setConnectionError("");
+        };
+
+        source.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+
+            const batch = Array.isArray(parsed) ? parsed : [parsed];
+
+            setEvents((current) =>
+              [
+                {
+                  id: crypto.randomUUID(),
+                  receivedAt: new Date().toISOString(),
+                  batch,
+                },
+                ...current,
+              ].slice(0, 25),
+            );
+          } catch {
+            setConnectionError("Received malformed stream payload.");
+          }
+        };
+
+        source.onerror = () => {
+          setIsConnected(false);
+
+          setConnectionError(
+            "Live stream disconnected. It will retry automatically.",
+          );
+        };
+      } catch (error) {
+        setIsConnected(false);
+
+        setConnectionError(
+          error?.response?.data?.message || "Unable to connect to live stream.",
         );
-      } catch {
-        setConnectionError("Received malformed stream payload.");
       }
     };
 
-    source.onerror = () => {
-      setIsConnected(false);
-      setConnectionError("Live stream disconnected. It will retry automatically.");
-    };
+    connectStream();
 
     return () => {
-      source.close();
+      source?.close();
     };
-  }, [apiBaseUrl, serviceId, eventSourceKey]);
+  }, [serviceId, eventSourceKey]);
 
   const latestBatch = events[0]?.batch ?? [];
   const totalLogs = useMemo(
-    () => events.reduce((count, event) => count + (event.batch?.length ?? 0), 0),
+    () =>
+      events.reduce((count, event) => count + (event.batch?.length ?? 0), 0),
     [events],
   );
 
@@ -146,10 +175,16 @@ const Page = () => {
           Connection
         </span>
         <span className="inline-flex items-center gap-1 rounded border border-border bg-surface-1 px-2 py-1 text-heading">
-          {isConnected ? <Signal size={12} className="text-emerald-300" /> : <WifiOff size={12} className="text-rose-300" />}
+          {isConnected ? (
+            <Signal size={12} className="text-emerald-300" />
+          ) : (
+            <WifiOff size={12} className="text-rose-300" />
+          )}
           {isConnected ? "Live" : "Disconnected"}
         </span>
-        <span className="text-white/35">{events.length} batches · {totalLogs} logs · {apiBaseUrl}/ingest/sse</span>
+        <span className="text-white/35">
+          {events.length} batches · {totalLogs} logs
+        </span>
       </div>
 
       {connectionError ? (
@@ -157,15 +192,21 @@ const Page = () => {
           <CircleAlert size={16} className="mt-0.5 shrink-0" />
           <div>
             <p className="text-sm">{connectionError}</p>
-            <p className="mt-1 text-xs text-rose-100/80">The browser will retry, or you can reconnect manually.</p>
+            <p className="mt-1 text-xs text-rose-100/80">
+              The browser will retry, or you can reconnect manually.
+            </p>
           </div>
         </div>
       ) : null}
 
       <div className="overflow-hidden border border-dashed border-border bg-surface-1">
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <h2 className="text-sm uppercase tracking-[0.12em] text-heading">Live Logs</h2>
-          <span className="text-[0.6875rem] text-body">{rows.length} shown · {events.length} batches</span>
+          <h2 className="text-sm uppercase tracking-[0.12em] text-heading">
+            Live Logs
+          </h2>
+          <span className="text-[0.6875rem] text-body">
+            {rows.length} shown · {events.length} batches
+          </span>
         </div>
 
         <div className="max-h-[68vh] overflow-auto">
@@ -193,21 +234,35 @@ const Page = () => {
               ) : null}
 
               {rows.map((log) => (
-                <tr key={log.id} className="border-b border-border/60 last:border-b-0">
-                  <td className="px-4 py-3 text-body">{formatTime(log.receivedAt)}</td>
-                  <td className="px-4 py-3 text-body">{formatTimestamp(log.timestamp)}</td>
+                <tr
+                  key={log.id}
+                  className="border-b border-border/60 last:border-b-0"
+                >
+                  <td className="px-4 py-3 text-body">
+                    {formatTime(log.receivedAt)}
+                  </td>
+                  <td className="px-4 py-3 text-body">
+                    {formatTimestamp(log.timestamp)}
+                  </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase tracking-[0.12em] ${getLevelTone(log.level)}`}>
+                    <span
+                      className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase tracking-[0.12em] ${getLevelTone(log.level)}`}
+                    >
                       {log.level || "info"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-body">{log.source || "-"}</td>
                   <td className="px-4 py-3 text-heading">
-                    <p className="max-w-[28rem] truncate" title={log.message || ""}>
+                    <p
+                      className="max-w-[28rem] truncate"
+                      title={log.message || ""}
+                    >
                       {log.message || "No message"}
                     </p>
                     {log.metadata && Object.keys(log.metadata).length > 0 ? (
-                      <p className="mt-1 text-[0.6875rem] text-body">Metadata attached</p>
+                      <p className="mt-1 text-[0.6875rem] text-body">
+                        Metadata attached
+                      </p>
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-body">
@@ -216,7 +271,9 @@ const Page = () => {
                     </p>
                   </td>
                   <td className="px-4 py-3 text-body">{log.method || "-"}</td>
-                  <td className="px-4 py-3 text-body">{log.statusCode ?? "-"}</td>
+                  <td className="px-4 py-3 text-body">
+                    {log.statusCode ?? "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
