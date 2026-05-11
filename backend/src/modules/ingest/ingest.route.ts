@@ -24,7 +24,7 @@ router.post(
 );
 
 router.get(
-  "/sse",
+  "/sse/:id",
   authMiddleware,
   validateParams(ingestLogsParamsSchema),
   streamLogsController,

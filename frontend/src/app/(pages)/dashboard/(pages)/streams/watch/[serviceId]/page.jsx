@@ -4,9 +4,12 @@ import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
 import DashboardButton from "@/components/ui/DashboardButton";
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { CircleAlert, RefreshCw, Signal, WifiOff } from "lucide-react";
 
 const Page = () => {
+  const params = useParams();
+  const serviceId = params.serviceId;
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState("");
   const [events, setEvents] = useState([]);
@@ -19,7 +22,7 @@ const Page = () => {
       return undefined;
     }
 
-    const source = new EventSource(`${apiBaseUrl}/ingest/sse`, {
+    const source = new EventSource(`${apiBaseUrl}/ingest/sse/${serviceId}`, {
       withCredentials: true,
     });
 
@@ -49,7 +52,7 @@ const Page = () => {
     return () => {
       source.close();
     };
-  }, [apiBaseUrl, eventSourceKey]);
+  }, [apiBaseUrl, serviceId, eventSourceKey]);
 
   const latestBatch = events[0]?.batch ?? [];
   const totalLogs = useMemo(

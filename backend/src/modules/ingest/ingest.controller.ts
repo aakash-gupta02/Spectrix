@@ -13,8 +13,9 @@ import ApiError from "../../utils/ApiError.js";
 export const ingestLogsController = CatchAsync(
   async (req: Request, res: Response) => {
     const { logs }: IngestLogsInput = req.body;
+    const serviceId = req.stream?.serviceId;
 
-    await ingestLogsService(logs);
+    await ingestLogsService(logs, serviceId);
 
     sendResponse(res, StatusCodes.OK, "Logs ingested successfully");
   },
@@ -44,9 +45,9 @@ export const streamLogsController = async (req: Request, res: Response) => {
   const listener = (logs: unknown) => {
     try {
       res.write(`data: ${JSON.stringify(logs)}\n\n`);
-      logger.info(
-        `Sent ${Array.isArray(logs) ? logs.length : 1} logs to client`,
-      );
+      // logger.info(
+      //   `Sent ${Array.isArray(logs) ? logs.length : 1} logs to client`,
+      // );
     } catch (error) {
       logger.error("Error writing to SSE stream:", error);
     }

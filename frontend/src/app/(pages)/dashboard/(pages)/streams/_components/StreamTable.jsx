@@ -1,6 +1,6 @@
 import DashboardButton from "@/components/ui/DashboardButton";
 import RowActionsMenu from "@/components/common/RowActionsMenu";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "../page";
 
 export default function StreamTable({
@@ -103,14 +103,20 @@ export default function StreamTable({
                         type="button"
                         variant="secondary"
                         className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
-                        onClick={() => onEdit?.(stream)}
+                        href={`/dashboard/streams/watch/${serviceId}`}
                       >
-                        <Pencil size={13} />
-                        Edit
+                        <Eye size={13} />
+                        Watch
                       </DashboardButton>
 
                       <RowActionsMenu
                         actions={[
+                          {
+                            label: "Edit",
+                            icon: <Pencil size={14} />,
+                            variant: "default",
+                            onClick: () => onEdit?.(stream),
+                          },
                           {
                             label: "Delete",
                             icon: <Trash2 size={14} />,
