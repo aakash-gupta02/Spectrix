@@ -21,16 +21,21 @@ export const logSchema = z
     method: z.string().trim().max(10).optional(),
 
     statusCode: z.number().int().min(100).max(599).optional(),
-  }).strip();
+  })
+  .strip();
 
 export const ingestLogsSchema = z.object({
   logs: z.array(logSchema).min(1).max(100),
 });
 
-export const ingestLogsParamsSchema = objectIdParamsSchema;
+export const ingestSessionSchema = z.object({
+  serviceId: objectIdSchema,
+});
 
+export const ingestLogsParamsSchema = objectIdParamsSchema;
 
 // Types
 export type LogInput = z.infer<typeof logSchema>;
 export type IngestLogsInput = z.infer<typeof ingestLogsSchema>;
 export type IngestLogsParams = z.infer<typeof ingestLogsParamsSchema>;
+export type IngestSessionInput = z.infer<typeof ingestSessionSchema>;

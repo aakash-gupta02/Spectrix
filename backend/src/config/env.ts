@@ -17,6 +17,10 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(1, "JWT_REFRESH_SECRET is required"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
 
+  // Stream Tokens
+  JWT_STREAM_SECRET: z.string().min(1, "JWT_STREAM_SECRET is required"),
+  JWT_STREAM_EXPIRES_IN: z.string().default("10m"),
+
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
