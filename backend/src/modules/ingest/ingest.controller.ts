@@ -5,6 +5,7 @@ import CatchAsync from "../../utils/CatchAsync.js";
 import {
   ingestLogsService,
   ingestSessionService,
+  STREAM_EVENT_MESSAGES,
   STREAM_EVENTS,
 } from "./ingest.service.js";
 import { IngestLogsInput, IngestSessionInput } from "./ingest.validation.js";
@@ -30,7 +31,6 @@ export const ingestLogsController = CatchAsync(
 // Stream Logs Controller - SSE endpoint for real-time log streaming
 export const streamLogsController = async (req: Request, res: Response) => {
   const { id } = req.params as unknown as ObjectIdParams;
-
   const { userId, serviceId, exp } = req.streamSession!;
 
   // Ensure token belongs to requested service
@@ -39,6 +39,7 @@ export const streamLogsController = async (req: Request, res: Response) => {
   }
 
   const expiresIn = Math.max(exp! * 1000 - Date.now(), 0);
+  const expiryTime = Date.now() + expiresIn;
 
   // Verify service exists and belongs to user
   const service = await Service.exists({
@@ -60,20 +61,34 @@ export const streamLogsController = async (req: Request, res: Response) => {
   // immediately flush headers
   res.flushHeaders?.();
 
-  // session started event
+  // Session started event with expiry info
   res.write(`event: ${STREAM_EVENTS.SESSION_STARTED}\n`);
-
-  res.write(`data: connected\n\n`);
+  res.write(
+    `data: ${JSON.stringify({
+      message: STREAM_EVENT_MESSAGES[STREAM_EVENTS.SESSION_STARTED],
+      expiresAt: expiryTime,
+      expiresIn: expiresIn,
+      timestamp: new Date().toISOString(),
+    })}\n\n`,
+  );
 
   let closed = false;
+  let lastHeartbeat = Date.now();
 
-  // listener
+  // listener for logs
   const listener = (logs: unknown) => {
+    if (closed) return;
     try {
-      res.write(`data: ${JSON.stringify(logs)}\n\n`);
+      res.write(`event: ${STREAM_EVENTS.LOG_BATCH}\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          batch: logs,
+          timestamp: new Date().toISOString(),
+          count: Array.isArray(logs) ? logs.length : 1,
+        })}\n\n`,
+      );
     } catch (error) {
       logger.error("Error writing to SSE stream:", error);
-
       cleanup();
     }
   };
@@ -81,33 +96,84 @@ export const streamLogsController = async (req: Request, res: Response) => {
   // subscribe
   streamEmitter.on(eventName, listener);
 
-  // heartbeat to keep connection alive
+  // Enhanced heartbeat with status
   const heartbeat = setInterval(() => {
-    res.write(": ping\n\n");
-  }, 30000);
+    if (closed) return;
+
+    const now = Date.now();
+    const timeUntilExpiry = expiryTime - now;
+
+    res.write(`event: ${STREAM_EVENTS.HEARTBEAT}\n`);
+    res.write(
+      `data: ${JSON.stringify({
+        timestamp: now,
+        timeUntilExpiry: timeUntilExpiry,
+        isHealthy: true,
+      })}\n\n`,
+    );
+
+    lastHeartbeat = now;
+  }, 15000); // Send heartbeat every 15 seconds
+
+  // Add expiry warnings (in streamLogsController, before the auto-expire timeout)
+  const expiryWarnings = [
+    { time: 60000, message: "Stream will expire in 1 minute" },
+    { time: 30000, message: "Stream will expire in 30 seconds" },
+    { time: 10000, message: "Stream will expire in 10 seconds" },
+  ];
+
+  expiryWarnings.forEach(({ time, message }) => {
+    const delay = expiresIn - time;
+    if (delay > 0) {
+      setTimeout(() => {
+        if (!closed) {
+          res.write(`event: ${STREAM_EVENTS.EXPIRY_WARNING}\n`);
+          res.write(
+            `data: ${JSON.stringify({ message, expiresIn: time })}\n\n`,
+          );
+        }
+      }, delay);
+    }
+  });
 
   // auto-expire stream
   const timeout = setTimeout(() => {
-    logger.info("Stream session expired");
-
-    res.write(`event: ${STREAM_EVENTS.SESSION_EXPIRED}\n`);
-
-    res.write(`data: expired\n\n`);
-
-    cleanup();
+    if (!closed) {
+      logger.info("Stream session expired");
+      res.write(`event: ${STREAM_EVENTS.SESSION_EXPIRED}\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          message: STREAM_EVENT_MESSAGES[STREAM_EVENTS.SESSION_EXPIRED],
+          expiredAt: new Date().toISOString(),
+          duration: expiresIn,
+        })}\n\n`,
+      );
+      cleanup();
+    }
   }, expiresIn);
 
-  // cleanup
+  // cleanup function
   const cleanup = () => {
     if (closed) return;
-
     closed = true;
 
     clearTimeout(timeout);
-
     clearInterval(heartbeat);
-
+    // warningTimeouts.forEach(timeout => clearTimeout(timeout!));
     streamEmitter.off(eventName, listener);
+
+    // Send stream ended event
+    try {
+      res.write(`event: ${STREAM_EVENTS.STREAM_ENDED}\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          message: STREAM_EVENT_MESSAGES[STREAM_EVENTS.STREAM_ENDED],
+          endedAt: new Date().toISOString(),
+        })}\n\n`,
+      );
+    } catch (error) {
+      // Ignore write errors during cleanup
+    }
 
     res.end();
   };
@@ -115,14 +181,12 @@ export const streamLogsController = async (req: Request, res: Response) => {
   // Handle stream errors
   res.on("error", (error) => {
     logger.error("SSE stream error:", error);
-
     cleanup();
   });
 
   // Handle client disconnect
   req.on("close", () => {
     logger.info("Client disconnected from log stream");
-
     cleanup();
   });
 };

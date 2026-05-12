@@ -39,8 +39,8 @@ export const verifyAccessToken = (token: string): TokenPayload => {
 // Stream Tokens - Used for real-time communication
 export const createStreamToken = (payload: StreamTokenPayload): string => {
   return jwt.sign(payload, env.JWT_STREAM_SECRET as Secret, {
-    expiresIn: "1m"
-    // expiresIn: parseExpiresIn(env.JWT_STREAM_EXPIRES_IN),
+    // expiresIn: "1m"
+    expiresIn: parseExpiresIn(env.JWT_STREAM_EXPIRES_IN),
   });
 };
 
