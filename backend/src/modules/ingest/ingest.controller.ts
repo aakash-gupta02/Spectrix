@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import sendResponse from "../../utils/ApiResponse.js";
 import CatchAsync from "../../utils/CatchAsync.js";
-import { ingestLogsService, ingestSessionService } from "./ingest.service.js";
+import {
+  ingestLogsService,
+  ingestSessionService,
+  STREAM_EVENTS,
+} from "./ingest.service.js";
 import { IngestLogsInput, IngestSessionInput } from "./ingest.validation.js";
 import { streamEmitter } from "./emitter.js";
 import { logger } from "../../config/logger.js";
@@ -34,7 +38,7 @@ export const streamLogsController = async (req: Request, res: Response) => {
     throw new ApiError(StatusCodes.FORBIDDEN, "Invalid stream session");
   }
 
-  const expiresIn = exp! * 1000 - Date.now();
+  const expiresIn = Math.max(exp! * 1000 - Date.now(), 0);
 
   // Verify service exists and belongs to user
   const service = await Service.exists({
@@ -53,7 +57,15 @@ export const streamLogsController = async (req: Request, res: Response) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  // immediately flush headers
   res.flushHeaders?.();
+
+  // session started event
+  res.write(`event: ${STREAM_EVENTS.SESSION_STARTED}\n`);
+
+  res.write(`data: connected\n\n`);
+
+  let closed = false;
 
   // listener
   const listener = (logs: unknown) => {
@@ -61,37 +73,53 @@ export const streamLogsController = async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify(logs)}\n\n`);
     } catch (error) {
       logger.error("Error writing to SSE stream:", error);
+
+      cleanup();
     }
   };
 
   // subscribe
   streamEmitter.on(eventName, listener);
 
+  // heartbeat to keep connection alive
+  const heartbeat = setInterval(() => {
+    res.write(": ping\n\n");
+  }, 30000);
+
   // auto-expire stream
   const timeout = setTimeout(() => {
     logger.info("Stream session expired");
 
-    streamEmitter.off(eventName, listener);
+    res.write(`event: ${STREAM_EVENTS.SESSION_EXPIRED}\n`);
 
-    res.end();
+    res.write(`data: expired\n\n`);
+
+    cleanup();
   }, expiresIn);
 
   // cleanup
   const cleanup = () => {
+    if (closed) return;
+
+    closed = true;
+
     clearTimeout(timeout);
+
+    clearInterval(heartbeat);
 
     streamEmitter.off(eventName, listener);
 
     res.end();
   };
 
-  // Handle client disconnect
+  // Handle stream errors
   res.on("error", (error) => {
     logger.error("SSE stream error:", error);
 
     cleanup();
   });
 
+  // Handle client disconnect
   req.on("close", () => {
     logger.info("Client disconnected from log stream");
 

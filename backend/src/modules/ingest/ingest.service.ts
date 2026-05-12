@@ -6,6 +6,16 @@ import { streamEmitter } from "./emitter.js";
 import { Service } from "../service/service.model.js";
 import { createStreamToken } from "../../utils/Token.js";
 
+// Stream event types for SSE communication
+export const STREAM_EVENTS = {
+  SESSION_STARTED: "session-started", 
+  SESSION_EXPIRED: "session-expired",
+  STREAM_ENDED: "stream-ended",
+  UNAUTHORIZED: "unauthorized",
+  HEARTBEAT_TIMEOUT: "heartbeat-timeout",
+  INTERNAL_ERROR: "internal-error",
+} as const;
+
 // Emit logs to SSE stream and handle log ingestion logic
 export const ingestLogsService = async (
   logs: LogInput[],

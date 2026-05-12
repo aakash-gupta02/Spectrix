@@ -1,0 +1,31 @@
+// Stream event types for SSE communication
+export const STREAM_EVENTS = {
+    SESSION_STARTED: "session-started",
+    SESSION_EXPIRED: "session-expired",
+    STREAM_ENDED: "stream-ended",
+    UNAUTHORIZED: "unauthorized",
+    HEARTBEAT_TIMEOUT: "heartbeat-timeout",
+    INTERNAL_ERROR: "internal-error",
+};
+
+export const STREAM_EVENT_MESSAGES = {
+
+    [STREAM_EVENTS.SESSION_STARTED]:
+        "Your stream session has started.",
+
+    [STREAM_EVENTS.SESSION_EXPIRED]:
+        "Your stream session expired.",
+
+    [STREAM_EVENTS.STREAM_ENDED]:
+        "Live stream ended.",
+
+    [STREAM_EVENTS.UNAUTHORIZED]:
+        "Unauthorized stream access.",
+
+    [STREAM_EVENTS.HEARTBEAT_TIMEOUT]:
+        "Connection timeout occurred.",
+
+    [STREAM_EVENTS.INTERNAL_ERROR]:
+        "Internal stream error occurred.",
+};
+

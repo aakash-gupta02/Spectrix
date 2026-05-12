@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { CircleAlert, RefreshCw, Signal, WifiOff } from "lucide-react";
 import { ingestAPI, serviceAPI } from "@/lib/api/api";
 import { baseUrl } from "@/lib/api/client";
+import { STREAM_EVENT_MESSAGES, STREAM_EVENTS } from "@/lib/SseEvents";
 
 const Page = () => {
   const params = useParams();
@@ -24,10 +25,14 @@ const Page = () => {
 
     let source = null;
 
+    let sessionExpired = false;
+
     const connectStream = async () => {
       try {
-        // validate service access first
-        await ingestAPI.createIngestSession({ serviceId });
+        // create stream session
+        await ingestAPI.createIngestSession({
+          serviceId,
+        });
 
         source = new EventSource(`${baseUrl}/ingest/sse/${serviceId}`, {
           withCredentials: true,
@@ -35,9 +40,28 @@ const Page = () => {
 
         source.onopen = () => {
           setIsConnected(true);
+
           setConnectionError("");
         };
 
+        // lifecycle events
+        source.addEventListener(STREAM_EVENTS.SESSION_STARTED, () => {
+          console.log(STREAM_EVENT_MESSAGES[STREAM_EVENTS.SESSION_STARTED]);
+        });
+
+        source.addEventListener(STREAM_EVENTS.SESSION_EXPIRED, () => {
+          sessionExpired = true;
+
+          setIsConnected(false);
+
+          setConnectionError(
+            STREAM_EVENT_MESSAGES[STREAM_EVENTS.SESSION_EXPIRED],
+          );
+
+          source?.close();
+        });
+
+        // log batches
         source.onmessage = (event) => {
           try {
             const parsed = JSON.parse(event.data);
@@ -59,12 +83,13 @@ const Page = () => {
           }
         };
 
+        // network/server errors
         source.onerror = () => {
           setIsConnected(false);
 
-          setConnectionError(
-            "Live stream disconnected. It will retry automatically.",
-          );
+          if (!sessionExpired) {
+            setConnectionError("Live stream disconnected.");
+          }
         };
       } catch (error) {
         setIsConnected(false);
