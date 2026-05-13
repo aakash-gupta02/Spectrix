@@ -1,5 +1,5 @@
-import { CodeBlock } from "@/components/docs/CodeBlock";
 import { StepSection } from "@/components/docs/StepSection";
+import { DocsPageHeader } from "@/components/docs/DocsPageHeader";
 
 export const metadata = {
   title: "Documentation - Spectrix",
@@ -9,45 +9,94 @@ export const metadata = {
 export default function DocsPage() {
   const steps = [
     {
-      title: "Install the SDK",
+      title: "Add Your Service",
       content: (
         <>
-          <p className="mb-4 text-body">
-            Get started by installing the Spectrix SDK via npm, yarn, or pnpm.
+          <p className="text-body mb-4">
+            Start by defining your target service in Spectrix. This acts as the
+            root configuration for a specific application.
           </p>
-          <CodeBlock
-            language="bash"
-            code="npm install @spectrix/node-sdk"
-          />
+          <ul className="list-disc pl-5 space-y-2 text-body">
+            <li>
+              <strong>Service Name:</strong> A unique recognizable identifier
+              for your application.
+            </li>
+            <li>
+              <strong>Base URL:</strong> The root URL where your service is
+              hosted.
+            </li>
+            <li>
+              <strong>Representation:</strong> Think of a service as your core
+              backend, microservice, or main app instance.
+            </li>
+          </ul>
         </>
       ),
     },
     {
-      title: "Initialize the Client",
+      title: "Add API Endpoints",
       content: (
         <>
-          <p className="mb-4 text-body">
-            Import and configure the SDK with your API key. You can find this in your dashboard settings.
+          <p className="text-body mb-4">
+            Once your service is created, attach specific endpoints that you
+            want to monitor closely.
           </p>
-          <CodeBlock
-            title="src/lib/spectrix.js"
-            language="javascript"
-            code={`import { Spectrix } from '@spectrix/node-sdk';\n\nconst spectrix = new Spectrix({\n  apiKey: process.env.SPECTRIX_API_KEY,\n  environment: 'production'\n});\n\nexport default spectrix;`}
-          />
+          <ul className="list-disc pl-5 space-y-2 text-body">
+            <li>
+              <strong>Monitoring Routes:</strong> Define the exact paths (e.g.,{" "}
+              <code>/api/v1/checkout</code>) you want tracked.
+            </li>
+            <li>
+              <strong>Path-based Tracking:</strong> Gain granular insights into
+              response times, error rates, and traffic per route.
+            </li>
+          </ul>
         </>
       ),
     },
     {
-      title: "Send Your First Event",
+      title: "Connect Alert Channels",
       content: (
         <>
-          <p className="mb-4 text-body">
-            Use the client to capture important metrics, logs, or traces in your application lifecycle.
+          <p className="text-body mb-4">
+            Ensure you never miss a critical failure by integrating with your
+            team`&apos;`s communication tools.
           </p>
-          <CodeBlock
-            language="javascript"
-            code={`await spectrix.capture('user_signup', {\n  userId: '123',\n  plan: 'pro',\n  timestamp: new Date().toISOString()\n});`}
-          />
+          <ul className="list-disc pl-5 space-y-2 text-body">
+            <li>
+              <strong>Integrations:</strong> Send automated alerts via Slack,
+              Discord, or Custom Webhooks.
+            </li>
+            <li>
+              <strong>Incident Notifications:</strong> Get instantly alerted
+              when an endpoint acts up, breaches latency limits, or goes down.
+            </li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      title: "Monitor and Respond",
+      content: (
+        <>
+          <p className="text-body mb-4">
+            Use the Spectrix platform to keep a constant pulse on your entire
+            infrastructure.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-body">
+            <li>
+              <strong>Dashboard Monitoring:</strong> Visualize your health
+              metrics and uptime in real-time.
+            </li>
+            <li>
+              <strong>Logs & Streams:</strong> Inspect structured logs and live
+              request streams for quick debugging.
+            </li>
+            <li>
+              <strong>Realtime Alerts & Incidents:</strong> View, acknowledge,
+              and resolve ongoing incidents quickly.
+            </li>
+          </ul>
         </>
       ),
     },
@@ -55,40 +104,19 @@ export default function DocsPage() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-heading sm:text-4xl mb-4">
-          Introduction
-        </h1>
-        <p className="text-lg text-body">
-          Welcome to the Spectrix documentation. Learn how to quickly integrate our telemetry parsing, logging, and metrics processing into your infrastructure.
-        </p>
-      </div>
+      <DocsPageHeader
+        title="Introduction"
+        description="Welcome to the Spectrix documentation. Learn how to quickly set up your monitoring infrastructure to track your applications and receive critical alerts anytime an issue arises."
+      />
 
-      <div className="my-10 border-t border-dashed border-border" />
-
-      <h2 className="text-2xl font-medium text-heading mb-6">Quick Start</h2>
+      <h2 className="text-2xl font-medium text-heading mb-6">How It Works</h2>
       <p className="mb-6 text-body">
-        Follow these steps to set up the Spectrix Node.js SDK and start streaming your data to the dashboard in under 5 minutes.
+        Spectrix operates heavily on a streamlined configuration structure for
+        ease of use. Follow these core workflow steps to get everything running
+        in minutes.
       </p>
 
       <StepSection steps={steps} />
-
-      <div className="my-10 border-t border-dashed border-border" />
-
-      <div className="p-6 bg-surface-2 border border-border rounded-lg">
-        <h3 className="text-lg font-medium text-heading mb-2">Need Help?</h3>
-        <p className="text-body text-sm mb-4">
-          If you encounter any issues while setting up, please reach out to our support team or check our extensive troubleshooting guides.
-        </p>
-        <div className="flex gap-4">
-          <a
-            href="mailto:support@spectrix.com"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-primary-strong"
-          >
-            Contact Support
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

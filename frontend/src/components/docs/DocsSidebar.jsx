@@ -10,24 +10,22 @@ const navigation = [
     icon: Book,
     links: [
       { href: "/docs", label: "Introduction" },
-      { href: "/docs/quickstart", label: "Quickstart" },
     ],
   },
   {
-    title: "Guides",
+    title: "Core Concepts",
     icon: AlignLeft,
     links: [
-      { href: "/docs/guides/authentication", label: "Authentication" },
-      { href: "/docs/guides/logging", label: "Logging" },
-      { href: "/docs/guides/tracing", label: "Tracing" },
+      { href: "/docs/services", label: "Services" },
+      { href: "/docs/endpoints", label: "Endpoints" },
+      { href: "/docs/alert-channels", label: "Alert Channels" },
     ],
   },
   {
-    title: "API Reference",
+    title: "Platform",
     icon: Code,
     links: [
-      { href: "/docs/api/endpoints", label: "Endpoints" },
-      { href: "/docs/api/webhooks", label: "Webhooks" },
+      { href: "/docs/dashboard", label: "Dashboard Monitoring" },
     ],
   },
 ];
