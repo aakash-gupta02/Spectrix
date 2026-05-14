@@ -19,6 +19,7 @@ const navigation = [
       { href: "/docs/services", label: "Services" },
       { href: "/docs/endpoints", label: "Endpoints" },
       { href: "/docs/alert-channels", label: "Alert Channels" },
+      { href: "/docs/realtime-streaming", label: "Real-Time Log Streaming" },
     ],
   },
   {
