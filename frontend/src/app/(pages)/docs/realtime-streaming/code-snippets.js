@@ -1,6 +1,8 @@
+import { baseUrl } from "@/lib/api/client";
+
 export const typescriptCode = `import { Request, Response, NextFunction } from "express";
 
-const API_BASE_URL = "http://localhost:4000/api/v1";
+const API_BASE_URL = "${baseUrl}";
 
 interface SpectrixOptions {
     apiKey?: string;
@@ -155,7 +157,7 @@ function spectrix(options: SpectrixOptions = {}) {
 
 export default spectrix;`;
 
-export const javascriptCode = `const API_BASE_URL = "http://localhost:4000/api/v1";
+export const javascriptCode = `const API_BASE_URL = "${baseUrl}";
 
 class SpectrixClient {
     constructor(options = {}) {
