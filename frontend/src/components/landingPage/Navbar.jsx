@@ -44,6 +44,15 @@ export default function Navbar() {
 
         {/* RIGHT */}
         <div className="flex h-full items-center">
+          {/* DOCS LINK */}
+          <Link
+            href="/docs"
+            className="hidden sm:flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide transition-all hover:bg-primary hover:text-black sm:px-10"
+          >
+            Docs
+          </Link>
+
+          {/* GO TO APP LINK */}
           <Link
             href="/dashboard"
             className="group flex h-full items-center gap-2 border-x border-dashed border-border px-6 text-xs font-semibold uppercase tracking-wide text-primary transition-all hover:bg-primary hover:text-black sm:px-10"
@@ -82,6 +91,17 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+
+          {/* DOCS LINK */}
+          <Link
+            href="/docs"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between border-b border-border p-8 text-sm font-medium uppercase tracking-wide  hover:bg-white/5"
+          >
+            Docs
+          </Link>
+          
+          {/* GO TO APP LINK */}
           <Link
             href="/dashboard"
             onClick={() => setIsOpen(false)}
