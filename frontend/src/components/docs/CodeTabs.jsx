@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { CopyButton } from "./CopyButton";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export function CodeTabs({ tabs }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -27,12 +29,17 @@ export function CodeTabs({ tabs }) {
           ))}
         </div>
         <div className="pb-2 pr-2">
-          <CopyButton text={activeCode} className="p-1" />
+          <CopyButton text={activeCode} className="p-1 z-10 relative" />
         </div>
       </div>
-      <pre className="p-4 overflow-x-auto text-sm font-mono text-heading">
-        <code className={`language-${activeLanguage}`}>{activeCode}</code>
-      </pre>
+      <SyntaxHighlighter 
+        language={activeLanguage} 
+        style={vscDarkPlus}
+        customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
+        className="text-sm font-mono text-heading"
+      >
+        {activeCode}
+      </SyntaxHighlighter>
     </div>
   );
 }

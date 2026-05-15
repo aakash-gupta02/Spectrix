@@ -1,3 +1,5 @@
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from "./CopyButton";
 
 export function CodeBlock({ code, language = "javascript", title }) {
@@ -10,13 +12,18 @@ export function CodeBlock({ code, language = "javascript", title }) {
         </div>
       )}
       {!title && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <CopyButton text={code} className="bg-surface-3 border border-border" />
         </div>
       )}
-      <pre className="p-4 overflow-x-auto text-sm font-mono text-heading">
-        <code className={`language-${language}`}>{code}</code>
-      </pre>
+      <SyntaxHighlighter 
+        language={language} 
+        style={vscDarkPlus}
+        customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
+        className="text-sm font-mono text-heading"
+      >
+        {code}
+      </SyntaxHighlighter>
     </div>
   );
 }

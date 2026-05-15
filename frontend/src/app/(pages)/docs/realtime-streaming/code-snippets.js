@@ -114,19 +114,23 @@ class SpectrixClient {
 function spectrix(options: SpectrixOptions = {}) {
     const client = new SpectrixClient(options);
 
+    // This is the actual Express middleware function that wraps requests
     const middleware = (req: Request, res: Response, next: NextFunction) => {
-        const start = Date.now();
+        const start = Date.now(); // Track when the request starts
 
+        // Wait for the request to finish before logging it
         res.on("finish", () => {
             const duration = Date.now() - start;
             let level = "info";
 
+            // Determine log level based on HTTP status code
             if (res.statusCode >= 500) {
                 level = "error";
             } else if (res.statusCode >= 400) {
                 level = "warn";
             }
 
+            // Push the request data as a log to the client buffer
             client.push({
                 level,
                 message: \`\${req.method} \${req.originalUrl}\`,
@@ -141,7 +145,7 @@ function spectrix(options: SpectrixOptions = {}) {
             });
         });
 
-        next();
+        next(); // Proceed to the next middleware or route handler
     };
 
     // manual logger access
@@ -240,19 +244,23 @@ class SpectrixClient {
 function spectrix(options = {}) {
     const client = new SpectrixClient(options);
 
+    // This is the actual Express middleware function that wraps requests
     const middleware = (req, res, next) => {
-        const start = Date.now();
+        const start = Date.now(); // Track when the request starts
 
+        // Wait for the request to finish before logging it
         res.on("finish", () => {
             const duration = Date.now() - start;
             let level = "info";
 
+            // Determine log level based on HTTP status code
             if (res.statusCode >= 500) {
                 level = "error";
             } else if (res.statusCode >= 400) {
                 level = "warn";
             }
 
+            // Push the request data as a log to the client buffer
             client.push({
                 level,
                 message: \`\${req.method} \${req.originalUrl}\`,
@@ -267,7 +275,7 @@ function spectrix(options = {}) {
             });
         });
 
-        next();
+        next(); // Proceed to the next middleware or route handler
     };
 
     // manual logger access
@@ -275,19 +283,26 @@ function spectrix(options = {}) {
     return middleware;
 }
 
-module.exports = spectrix;`;
+export default spectrix;`;
 
-export const expressMiddlewareCode = `const express = require("express");
-const spectrix = require("./spectrix");
+export const expressMiddlewareCode = `import express from "express";
+import spectrix from "./spectrix.js";
 
 const app = express();
 
-app.use(
-  spectrix({
-    apiKey: process.env.SPECTRIX_API_KEY,
-    source: "auth-service",
-  })
-);`;
+// Initialize Spectrix with your Stream Key from the dashboard
+const spectrixMiddleware = spectrix({
+  apiKey: process.env.SPECTRIX_API_KEY,
+});
+
+// Option 1: Global monitoring (Applying to all routes)
+app.use(spectrixMiddleware);
+
+// Option 2: Route-specific monitoring (Only monitor particular endpoints)
+app.get("/api/users", spectrixMiddleware, (req, res) => {
+  // Your application logic here
+  res.json({ users: [] });
+});`;
 
 export const jsonLogCode = `{
   "level": "info",
