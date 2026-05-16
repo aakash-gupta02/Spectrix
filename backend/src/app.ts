@@ -11,6 +11,8 @@ import { globalRateLimiter } from "./middlewares/rateLimiter.middleware.js";
 import { requestLogger } from "./middlewares/requestLogger.js";
 import apiRoutes from "./routes/index.route.js";
 import sendResponse from "./utils/ApiResponse.js";
+import { authenticateIngestKey } from "./middlewares/ingestAuthMiddleware.js";
+import spectrix from "./middlewares/spectrix.middleware.js";
 
 // Initialize Express app
 const app = express();
@@ -20,23 +22,46 @@ app.set("trust proxy", 1);
 
 // Middleware setup
 app.use(helmet());
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 app.use(globalRateLimiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestLogger);
 
+if (env.SPECTRIX_API_KEY) {
+  const spectrixClient = spectrix({
+    apiKey: env.SPECTRIX_API_KEY,
+  });
+
+  app.use(spectrixClient);
+}
+
 // Health check endpoint
 app.get("/", (_req: Request, res: Response) => {
-  sendResponse(res, StatusCodes.OK, "Spectrix is Watching", { env: env.NODE_ENV });
+  sendResponse(res, StatusCodes.OK, "Spectrix is Watching", {
+    env: env.NODE_ENV,
+  });
 });
 
 // API routes
 app.use("/api/v1", apiRoutes);
+
+app.get(
+  "/api/v1/test-apiKey",
+  authenticateIngestKey,
+  (req: Request, res: Response) => {
+    console.log(req.stream);
+    sendResponse(res, StatusCodes.OK, "Ingest key is valid", {
+      stream: req.stream,
+    });
+  },
+);
 
 // Handle 404 Not Found and other errors
 app.use(notFoundMiddleware);

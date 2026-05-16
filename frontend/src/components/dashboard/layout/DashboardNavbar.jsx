@@ -13,6 +13,7 @@ const breadcrumbLabels = {
   apis: "APIs",
   incidents: "Incidents",
   logs: "Logs",
+  streams: "Streams",
   analytics: "Analytics",
   "status-page": "Status Page",
   team: "Team & Access",

@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   LogOut,
   Logs,
+  Server,
   Settings,
   Terminal,
   TriangleAlert,
@@ -27,6 +28,7 @@ const sideNavGroups = [
     items: [
       { label: "Overview", href: "/dashboard", icon: LayoutGrid },
       { label: "API's", href: "/dashboard/apis", icon: Terminal },
+      { label: "Streams", href: "/dashboard/streams", icon: Server },
       { label: "Incidents", href: "/dashboard/incidents", icon: TriangleAlert },
       { label: "Logs", href: "/dashboard/logs", icon: Logs },
       {

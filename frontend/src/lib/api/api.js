@@ -36,7 +36,7 @@ export const serviceAPI = {
 
   // get a single service by ID
   getService: async (id) => {
-    const response = await apiClient.get(`/services/${id}`);
+    const response = await apiClient.get(`/service/${id}`);
     return response.data;
   },
 
@@ -59,11 +59,39 @@ export const serviceAPI = {
   },
 };
 
+export const streamAPI = {
+  getStreams: async () => {
+    const response = await apiClient.get("/stream");
+    return response.data;
+  },
+
+  getStream: async (id) => {
+    const response = await apiClient.get(`/stream/${id}`);
+    return response.data;
+  },
+
+  createStream: async (payload) => {
+    const response = await apiClient.post("/stream", payload);
+    return response.data;
+  },
+
+  updateStream: async (id, payload) => {
+    const response = await apiClient.patch(`/stream/${id}`, payload);
+    return response.data;
+  },
+
+  deleteStream: async (id) => {
+    const response = await apiClient.delete(`/stream/${id}`);
+    return response.data;
+  },
+};
+
 const ENDPOINT_MODULE = "endpoint";
 const ENDPOINT_METRICS_MODULE = "metrics/endpoint";
 const INCIDENT_MODULE = "incident";
 const LOGS_MODULE = "log";
 const ALERT_CHANNEL_MODULE = "alert-channel";
+const INGEST_MODULE = "ingest";
 
 export const endPointsAPI = {
 
@@ -154,6 +182,18 @@ export const alertChannelAPI = {
 
   deleteAlertChannel: async (id) => {
     const response = await apiClient.delete(`/${ALERT_CHANNEL_MODULE}/${id}`);
+    return response.data;
+  },
+};
+
+export const ingestAPI = {
+  getIngestStreams: async () => {
+    const response = await apiClient.get(`/${INGEST_MODULE}/sse`);
+    return response.data;
+  },
+
+  createIngestSession: async (payload) => {
+    const response = await apiClient.post(`/${INGEST_MODULE}/session`, payload);
     return response.data;
   },
 };
