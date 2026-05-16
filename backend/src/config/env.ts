@@ -43,6 +43,9 @@ const envSchema = z.object({
   // ClearUp Days - number of days after which logs should be cleared up
   CLEANUP_DAYS: z.coerce.number().default(7),
   CLEANUP_FAILURE_DAYS: z.coerce.number().default(15),
+
+  // Spectrix API Key
+  SPECTRIX_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

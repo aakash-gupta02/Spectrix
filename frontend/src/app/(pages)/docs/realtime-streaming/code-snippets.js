@@ -1,6 +1,8 @@
 import { baseUrl } from "@/lib/api/client";
 
-export const typescriptCode = `import { Request, Response, NextFunction } from "express";
+export const typescriptCode = ` //spectrix.middleware.ts
+
+import { Request, Response, NextFunction } from "express";
 
 const API_BASE_URL = "${baseUrl}";
 
@@ -157,7 +159,9 @@ function spectrix(options: SpectrixOptions = {}) {
 
 export default spectrix;`;
 
-export const javascriptCode = `const API_BASE_URL = "${baseUrl}";
+export const javascriptCode = `// spectrix.middleware.js
+
+const API_BASE_URL = "${baseUrl}";
 
 class SpectrixClient {
     constructor(options = {}) {

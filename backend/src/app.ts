@@ -12,14 +12,10 @@ import { requestLogger } from "./middlewares/requestLogger.js";
 import apiRoutes from "./routes/index.route.js";
 import sendResponse from "./utils/ApiResponse.js";
 import { authenticateIngestKey } from "./middlewares/ingestAuthMiddleware.js";
-// import spectrix from "./middlewares/spectrix.middleware.js";
+import spectrix from "./middlewares/spectrix.middleware.js";
 
 // Initialize Express app
 const app = express();
-
-// const spectrixClient = spectrix({
-//   apiKey: "",
-// });
 
 // Trust the first proxy (if behind a reverse proxy like Nginx or render)
 app.set("trust proxy", 1);
@@ -37,7 +33,14 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestLogger);
-// app.use(spectrixClient);
+
+if (env.SPECTRIX_API_KEY) {
+  const spectrixClient = spectrix({
+    apiKey: env.SPECTRIX_API_KEY,
+  });
+
+  app.use(spectrixClient);
+}
 
 // Health check endpoint
 app.get("/", (_req: Request, res: Response) => {
