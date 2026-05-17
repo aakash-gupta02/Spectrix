@@ -1,26 +1,51 @@
 # llms.txt v1
-# Last updated: 2026-04-30
+# Last updated: 2026-05-17
 # Site: https://spectrix.d3labs.tech
 # Contact: aakashgupta052004@gmail.com
 
-# Purpose:
-# This file tells crawlers and LLM-powered agents which public pages may be
-# used for discovery, summarization, retrieval, and indexing.
+## About
+Spectrix helps backend teams monitor endpoint uptime, latency, and errors, then sends real-time alerts to Slack, Discord, or webhooks when something breaks. Setup in under 10 minutes. No credit card required.
 
-site:
-  name: Spectrix
-  url: https://spectrix.d3labs.tech
+## Quick Stats
+- **Total Requests Monitored:** 245M+
+- **Uptime SLA:** 99.99%
+- **Avg Response Time:** 42ms
 
-allowed_paths:
-  - /
-  - /api-monitoring-tool
+## Core Features
+- **Endpoint Monitoring** – Health checks for critical routes
+- **Latency Tracking** – Response-time trends and regressions
+- **Error Tracking** – Failed checks and error spikes
+- **Real-Time Alerts** – Slack, Discord, webhook notifications
+- **Multi-Region Checks** – Run checks from multiple locations
+- **Alert Rules** – Custom thresholds for downtime and latency
 
-disallowed_paths:
-  - /dashboard
-  - /login
-  - /register
+## Documentation Pages
+- [Getting Started](https://spectrix.d3labs.tech/docs)
+- [Services Guide](https://spectrix.d3labs.tech/docs/services)
+- [Endpoints Guide](https://spectrix.d3labs.tech/docs/endpoints)
+- [Alert Channels](https://spectrix.d3labs.tech/docs/alert-channels)
+- [Realtime Streaming](https://spectrix.d3labs.tech/docs/realtime-streaming)
+- [Dashboard Overview](https://spectrix.d3labs.tech/docs/dashboard)
 
-notes:
-  - "Public marketing pages are crawlable."
-  - "Private app/auth pages are not for scraping or indexing."
-  - "For reuse or licensing questions, contact aakashgupta052004@gmail.com."
+## Public Pages (Crawlable)
+- Home: https://spectrix.d3labs.tech
+- API Monitoring Tool: https://spectrix.d3labs.tech/api-monitoring-tool
+- Documentation: https://spectrix.d3labs.tech/docs
+- This file: https://spectrix.d3labs.tech/llms.txt
+
+## Private Pages (Not for Crawling)
+- /dashboard/*
+- /login
+- /register
+- /api/* (internal endpoints)
+
+## Use Cases
+- Small SaaS teams monitoring auth, billing, and webhook endpoints
+- Backend engineers tracking API regressions before customers report them
+- DevOps teams needing lightweight alerting without heavy setup
+
+## Contact
+- Creator: Aakash Gupta
+- Email: aakashgupta052004@gmail.com
+- GitHub: https://github.com/aakash-gupta02
+- Linkedin: https://www.linkedin.com/in/aakash-gupta02

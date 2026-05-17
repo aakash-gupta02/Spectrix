@@ -1,6 +1,6 @@
 export default function manifest() {
   return {
-    name: "Spectrix API Monitoring Platform",
+    name: "Spectrix API Monitoring Tool",
     short_name: "Spectrix",
     description:
       "Monitor API uptime, response times, incidents, and service health from a single dashboard.",
