@@ -133,6 +133,8 @@ export const defaultMetadata = {
     : {}),
 };
 
+
+
 export const defaultViewport = {
   width: "device-width",
   initialScale: 1,
@@ -231,3 +233,33 @@ export function getSoftwareSchema(overrides = {}) {
     ...overrides,
   };
 }
+
+// Build additional JSON-LD for Organization and WebSite and attach to the
+// default metadata. We stringify an array to render multiple JSON-LD objects
+// in a single <script type="application/ld+json"> tag.
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteConfig.name,
+  url: siteConfig.url,
+  logo: absoluteUrl(siteConfig.ogImage),
+  sameAs: siteConfig.sameAs,
+};
+
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  url: siteConfig.url,
+  name: siteConfig.name,
+  description: siteConfig.description,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${siteConfig.url}/search?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
+
+defaultMetadata.other = {
+  ...(defaultMetadata.other || {}),
+  "script:ld+json": JSON.stringify([getSoftwareSchema(), organizationSchema, webSiteSchema]),
+};
