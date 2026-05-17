@@ -17,21 +17,32 @@ import {
   blockDemoWrites,
 } from "../middlewares/auth.middleware.js";
 
+import {
+  authRateLimiter,
+  globalRateLimiter,
+  ingestRateLimiter,
+} from "../middlewares/rateLimiter.middleware.js";
+
 const router = Router();
 
-router.use("/auth", authRoutes);
-router.use("/ingest", ingestRoutes);
+// Auth APIs
+router.use("/auth", authRateLimiter, authRoutes);
 
-router.use(authMiddleware); // Apply authentication middleware to all routes below
-router.use(blockDemoWrites); // Block write operations in demo mode
+// Log ingestion APIs
+router.use("/ingest", ingestRateLimiter, ingestRoutes);
 
-router.use("/service", serviceRoutes);
-router.use("/stream", streamRoutes);
-router.use("/endpoint", endpointRoutes);
-router.use("/log", logRoutes);
-router.use("/metrics", metricsRoutes);
-router.use("/incident", incidentRoutes);
-router.use("/alert-channel", alertChannelRoutes);
+// Require authenticated user
+router.use(authMiddleware);
 
+// Block write operations in demo mode
+router.use(blockDemoWrites);
+
+router.use("/service", globalRateLimiter, serviceRoutes);
+router.use("/stream", globalRateLimiter, streamRoutes);
+router.use("/endpoint", globalRateLimiter, endpointRoutes);
+router.use("/log", globalRateLimiter, logRoutes);
+router.use("/metrics", globalRateLimiter, metricsRoutes);
+router.use("/incident", globalRateLimiter, incidentRoutes);
+router.use("/alert-channel", globalRateLimiter, alertChannelRoutes);
 
 export default router;
