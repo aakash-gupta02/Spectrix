@@ -26,9 +26,6 @@ export async function runWorker() {
       const populatedEndpoints = endpoints;
 
       // Run checks in parallel but still observe each failure.
-      logger.info(
-        `[worker] Poll started with ${endpoints.length} active endpoints`,
-      );
 
       // Process each endpoint check with retry logic and log results
       const results = await Promise.allSettled(
@@ -82,10 +79,6 @@ export async function runWorker() {
         }
       });
 
-      // Log summary of the poll results
-      logger.info(
-        `[worker] Poll completed: total=${results.length} rejected=${failedCount} fulfilled=${results.length - failedCount}`,
-      );
     } catch (err) {
       logger.error(`[worker] Worker error: ${String(err)}`);
     }

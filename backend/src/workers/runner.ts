@@ -166,9 +166,6 @@ export async function retryApiCheck(endpoint: EndpointCheckable) {
   let finalResult;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
-    logger.info(
-      `[worker] Attempt ${attempt}/${retries} endpointId=${endpointId}`,
-    );
 
     const res = await apiCheck(endpoint);
 
