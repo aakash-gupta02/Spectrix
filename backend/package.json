@@ -8,7 +8,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "worker": "tsx watch src/workers/monitor.worker.ts"
+    "worker": "tsx watch src/workers/monitor.worker.ts",
+    "demo-traffic": "node demo-traffic.js"
   },
   "keywords": [
     "express",

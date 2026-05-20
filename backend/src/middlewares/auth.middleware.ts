@@ -9,7 +9,11 @@ export const authMiddleware = (
   _res: Response,
   next: NextFunction,
 ): void => {
-  const token = req.cookies.token || req.headers.authorization;
+  let token = req.cookies.token || req.headers.authorization;
+
+  if (token && token.startsWith("Bearer ")) {
+    token = token.split(" ")[1];
+  }
 
   if (!token) {
     next(new ApiError(StatusCodes.UNAUTHORIZED, "Authorization token missing"));
