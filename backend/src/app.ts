@@ -33,9 +33,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestLogger);
 
-if (env.SPECTRIX_API_KEY) {
+if (env.SPECTRIX_SERVICE_ID) {
   const spectrixClient = spectrix({
-    apiKey: env.SPECTRIX_API_KEY,
+    serviceId: env.SPECTRIX_SERVICE_ID,
   });
 
   app.use(spectrixClient);

@@ -44,8 +44,8 @@ const envSchema = z.object({
   CLEANUP_DAYS: z.coerce.number().default(7),
   CLEANUP_FAILURE_DAYS: z.coerce.number().default(15),
 
-  // Spectrix API Key
-  SPECTRIX_API_KEY: z.string().optional(),
+  // Spectrix Service ID
+  SPECTRIX_SERVICE_ID: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
