@@ -49,6 +49,7 @@ export default function ServicePage() {
             <SectionHeading
                 title="Services"
                 description="Add and manage service base URLs. Define endpoints as path-only routes, not full URLs."
+                docLink="/docs/services"
             >
                 <DashboardButton variant="secondary">
                     <Download size={14} />

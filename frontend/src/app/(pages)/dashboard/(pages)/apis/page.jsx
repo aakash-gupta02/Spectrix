@@ -57,6 +57,7 @@ const APIsPage = () => {
             <SectionHeading
                 title="APIs"
                 description="Manage your API endpoints and configurations."
+                docLink="http://localhost:3001/docs/endpoints"
             >
                 <LocalServiceFilterDropdown
                     value={localServiceId}

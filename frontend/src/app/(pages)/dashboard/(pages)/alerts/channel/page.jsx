@@ -50,6 +50,7 @@ export default function AlertChannelPage() {
       <SectionHeading
         title="Alert Channels"
         description="Manage webhook channels used for alert delivery."
+        docLink="/docs/alert-channels"
       >
         <DashboardButton
           variant="primary"

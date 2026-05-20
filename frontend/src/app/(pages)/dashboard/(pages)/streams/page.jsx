@@ -66,6 +66,7 @@ export default function StreamsPage() {
       <SectionHeading
         title="Streams"
         description="Generate and manage stream keys for the services in your workspace."
+        docLink="/docs/realtime-streaming"
       >
         <DashboardButton
           variant="primary"
