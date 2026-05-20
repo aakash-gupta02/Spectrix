@@ -3,6 +3,7 @@
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
 import DashboardButton from "@/components/ui/DashboardButton";
+import LogTable from "@/components/dashboard/streams/LogTable";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { RefreshCw, Signal, WifiOff, Clock } from "lucide-react";
@@ -222,43 +223,6 @@ const Page = () => {
     [events],
   );
 
-  const formatTime = (value) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(date);
-  };
-
-  const formatTimestamp = (value) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return value;
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "2-digit",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(date);
-  };
-
-  const getLevelTone = (level) => {
-    switch (level) {
-      case "error":
-        return "border-rose-500/30 bg-rose-500/10 text-rose-200";
-      case "warn":
-        return "border-amber-500/30 bg-amber-500/10 text-amber-200";
-      case "debug":
-        return "border-sky-500/30 bg-sky-500/10 text-sky-200";
-      default:
-        return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
-    }
-  };
-
   const handleReconnect = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -325,97 +289,7 @@ const Page = () => {
         </div>
       )}
 
-      <div className="overflow-hidden border border-dashed border-border bg-surface-1">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <h2 className="text-sm uppercase tracking-[0.12em] text-heading">
-            Live Logs
-          </h2>
-          <span className="text-[0.6875rem] text-body">
-            {rows.length} logs shown
-          </span>
-        </div>
-
-        <div className="max-h-[68vh] overflow-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
-                <th className="px-4 py-3 font-normal">Received</th>
-                <th className="px-4 py-3 font-normal">Timestamp</th>
-                <th className="px-4 py-3 font-normal">Level</th>
-                <th className="px-4 py-3 font-normal">Source</th>
-                <th className="px-4 py-3 font-normal">Message</th>
-                <th className="px-4 py-3 font-normal">Endpoint</th>
-                <th className="px-4 py-3 font-normal">Method</th>
-                <th className="px-4 py-3 font-normal">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-12 text-center text-body" colSpan={8}>
-                    <div className="flex flex-col items-center gap-2">
-                      <Signal size={32} className="text-muted" />
-                      <p>Waiting for logs...</p>
-                      <p className="text-xs text-muted">
-                        {isConnected
-                          ? "Connected - waiting for data"
-                          : "Not connected"}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                rows.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-b border-border/60 last:border-b-0 hover:bg-surface-2/30"
-                  >
-                    <td className="px-4 py-3 text-body text-xs">
-                      {formatTime(log.receivedAt)}
-                    </td>
-                    <td className="px-4 py-3 text-body text-xs">
-                      {formatTimestamp(log.timestamp)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase tracking-[0.12em] ${getLevelTone(log.level)}`}
-                      >
-                        {log.level || "info"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-body text-xs">
-                      {log.source || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-heading">
-                      <p
-                        className="max-w-[28rem] truncate text-sm"
-                        title={log.message || ""}
-                      >
-                        {log.message || "No message"}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-body text-xs">
-                      <p
-                        className="max-w-56 truncate"
-                        title={log.endpoint || ""}
-                      >
-                        {log.endpoint || "-"}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-body text-xs">
-                      {log.method || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-body text-xs">
-                      {log.statusCode ?? "-"}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <LogTable rows={rows} isConnected={isConnected} />
     </Container>
   );
 };
