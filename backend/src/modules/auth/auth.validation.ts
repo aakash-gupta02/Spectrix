@@ -15,5 +15,13 @@ export const loginSchema = z
   })
   .strict();
 
+export const googleOAuthSchema = z
+  .object({
+    code: z.string(),
+    state: z.string(),
+  })
+.strip();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleOAuthInput = z.infer<typeof googleOAuthSchema>;

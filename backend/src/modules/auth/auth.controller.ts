@@ -13,6 +13,7 @@ import { clearCookie, setCookie } from "../../utils/SetCookie.js";
 import { generateGoogleAuthUrl } from "../../utils/google.js";
 import { logger } from "../../config/logger.js";
 import { env } from "../../config/env.js";
+import { GoogleOAuthInput } from "./auth.validation.js";
 
 // Register a new user
 export const register = CatchAsync(async (req: Request, res: Response) => {
@@ -46,6 +47,7 @@ export const logout = CatchAsync(async (_req: Request, res: Response) => {
   sendResponse(res, StatusCodes.OK, "Logout successful");
 });
 
+// Initiate Google OAuth login flow
 export const googleLogin = CatchAsync(async (req: Request, res: Response) => {
   const { state, url } = generateGoogleAuthUrl();
 
@@ -54,16 +56,18 @@ export const googleLogin = CatchAsync(async (req: Request, res: Response) => {
   return res.redirect(url);
 });
 
+// Handle Google OAuth callback
 export const googleCallback = CatchAsync(
   async (req: Request, res: Response) => {
-    const { code, state } = req.query;
+    const { code, state } = req.query as unknown as GoogleOAuthInput;
     const storedState = req.cookies.oauth_state;
 
     const { token, user } = await googleCallbackService(
-      code as string,
-      state as string,
+      code,
+      state,
       storedState,
     );
+
     clearCookie(res, "oauth_state");
     setCookie(res, "token", token);
 
