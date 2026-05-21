@@ -5,6 +5,15 @@ import { createAccessToken } from "../../utils/Token.js";
 import type { LoginInput, RegisterInput } from "./auth.validation.js";
 import { User } from "./user.model.js";
 
+import { OAuth2Client } from "google-auth-library";
+import { env } from "../../config/env.js";
+
+const client = new OAuth2Client(
+  env.GOOGLE_CLIENT_ID,
+  env.GOOGLE_CLIENT_SECRET,
+  env.GOOGLE_REDIRECT_URI,
+);
+
 type SafeUser = {
   id: string;
   name: string;
@@ -72,4 +81,42 @@ export const meService = async (userId: string) => {
     email: user.email,
     role: user.role,
   };
+};
+
+export const googleCallbackService = async (code: string, state: string, storedState: string) => {
+
+  if (state !== storedState) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid OAuth state");
+  };
+
+  const { tokens } = await client.getToken(code);
+
+  const ticket = await client.verifyIdToken({
+    idToken: tokens.id_token || "",
+    audience: env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  if (!payload || !payload.email || !payload.name) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid Google token payload");
+  }
+
+  let user = await User.findOne({ email: payload.email });
+
+  if (!user) {
+    user = await User.create({
+      name: payload.name,
+      email: payload.email,
+      password: Math.random().toString(36).slice(-8), // Random password for OAuth users
+    });
+  }
+
+  const token = createAccessToken({
+    userId: user._id.toString(),
+    email: user.email,
+    role: user.role,
+  });
+
+  return { token, user: sanitizeUser(user) };
+
 };
