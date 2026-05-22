@@ -2,13 +2,11 @@ import Link from "next/link";
 import React from "react";
 
 const baseClassName =
-  "group inline-flex items-center justify-center gap-2 border px-6 py-4 text-xs font-medium uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "group inline-flex items-center justify-center gap-2 border px-6 py-4 text-xs font-medium uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
 const variants = {
-  primary:
-    "border-border bg-primary text-black hover:bg-primary-strong",
-  ghost:
-    "border-border bg-transparent text-heading hover:bg-surface-2",
+  primary: "border-border bg-primary text-black hover:bg-primary-strong",
+  ghost: "border-border bg-transparent text-heading hover:bg-surface-2",
 };
 
 export default function LandingButton({
@@ -25,14 +23,30 @@ export default function LandingButton({
 
   if (href) {
     return (
-      <Link href={href} onClick={onClick} className={classes} aria-disabled={disabled}>
+      <Link
+        href={disabled ? "#" : href}
+        onClick={(e) => {
+          if (disabled) {
+            e.preventDefault();
+            return;
+          }
+          onClick?.(e);
+        }}
+        className={classes}
+        aria-disabled={disabled}
+      >
         {children}
       </Link>
     );
   }
 
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={classes}
+    >
       {children}
     </button>
   );

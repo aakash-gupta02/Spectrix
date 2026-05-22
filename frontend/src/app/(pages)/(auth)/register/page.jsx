@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import GoogleLoginButton from "@/components/common/GoogleLoginButton";
 
 const initialFormState = {
   name: "",
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { applyLoginResponse } = useAuth();
 
+  // Initialize the form with react-hook-form and zod validation
   const {
     register,
     handleSubmit,
@@ -31,6 +33,7 @@ export default function RegisterPage() {
     defaultValues: initialFormState,
   });
 
+  // Define the registration mutation using react-query
   const registerMutation = useMutation({
     mutationFn: authAPI.register,
     onSuccess: (data) => {
@@ -44,6 +47,7 @@ export default function RegisterPage() {
     },
   });
 
+  // Callback to handle form submission
   const onSubmit = (data) => {
     setSuccessMessage("");
     registerMutation.mutate({
@@ -78,6 +82,7 @@ export default function RegisterPage() {
 
         {/* Form Section */}
         <div className="p-7">
+          {/* Actual form */}
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <label className="block text-xs font-medium uppercase tracking-wider text-muted">
@@ -150,6 +155,9 @@ export default function RegisterPage() {
             </button>
           </form>
 
+          <GoogleLoginButton />
+
+          {/* Login Link */}
           <div className="mt-6 border-t border-border pt-6 text-center">
             <p className="text-sm text-muted">
               Already have an account?{" "}
