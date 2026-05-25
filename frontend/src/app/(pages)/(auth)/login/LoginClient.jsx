@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useCallback, useEffect, useRef, useState } from "react";
+import LandingButton from "@/components/ui/LandingButton";
+import GoogleLoginButton from "@/components/common/GoogleLoginButton";
 
 const initialFormState = {
   email: "",
@@ -25,6 +27,7 @@ export default function LoginClient({
   const router = useRouter();
   const { applyLoginResponse } = useAuth();
 
+  // Initialize the form with react-hook-form and zod validation
   const {
     register,
     handleSubmit,
@@ -36,6 +39,7 @@ export default function LoginClient({
     defaultValues: initialFormState,
   });
 
+  // Define the login mutation using react-query
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
     onSuccess: (data) => {
@@ -51,6 +55,7 @@ export default function LoginClient({
     },
   });
 
+  // Callback to handle form submission
   const onSubmit = useCallback(
     (data) => {
       setSuccessMessage("");
@@ -62,6 +67,7 @@ export default function LoginClient({
     [loginMutation],
   );
 
+  // Callback to auto-fill demo credentials
   const demoFormFill = useCallback(() => {
     setValue("email", "spectrixdemo@gmail.com");
     setValue("password", "spectruxdemo");
@@ -120,6 +126,7 @@ export default function LoginClient({
 
         {/* Form Section */}
         <div className="p-7">
+          {/* Actual Form */}
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <label className="block text-xs font-medium uppercase tracking-wider text-muted">
@@ -168,14 +175,17 @@ export default function LoginClient({
               </div>
             )}
 
-            <button
+            {/* Login Button */}
+            <LandingButton
               type="submit"
               disabled={loginMutation.isPending}
-              className="mt-4 w-full border border-border bg-primary px-4 py-3 text-sm font-semibold uppercase tracking-wide text-black transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-4 w-full py-3 text-sm font-semibold"
             >
               {loginMutation.isPending ? "Logging in..." : "Login"}
-            </button>
+            </LandingButton>
           </form>
+
+          <GoogleLoginButton />
 
           <div className="mt-6 border-t border-border pt-6 text-center">
             <p className="text-sm text-muted">

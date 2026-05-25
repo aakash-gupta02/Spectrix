@@ -17,7 +17,6 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
       minlength: 6,
       select: true,
     },
@@ -26,21 +25,20 @@ const userSchema = new Schema(
       enum: ["user", "admin", "demo"],
       default: "user",
     },
+    provider: {
+      type: String,
+      enum: ["local", "google", "github"],
+      default: "local",
+    },
+    providerId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
     versionKey: false,
   },
 );
-
-userSchema.pre("save", async function hashPassword(next) {
-  if (!this.isModified("password")) {
-    next();
-    return;
-  }
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
 
 type UserMethods = {
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -49,9 +47,4 @@ type UserMethods = {
 type UserDocument = InferSchemaType<typeof userSchema> & UserMethods;
 type UserModel = Model<UserDocument>;
 
-userSchema.methods.comparePassword = async function comparePassword(candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
-};
-
-export const User =
-  (mongoose.models.User as UserModel | undefined) ?? mongoose.model<UserDocument, UserModel>("User", userSchema);
+export const User = mongoose.model<UserDocument, UserModel>("User", userSchema);

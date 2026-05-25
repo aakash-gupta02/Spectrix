@@ -1,5 +1,6 @@
 "use client";
 
+import { authAPI } from "@/lib/api/api";
 import {
   createContext,
   useCallback,
@@ -8,69 +9,49 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import toast from "react-hot-toast";
 
-const AUTH_STORAGE_KEY = "spectrix.auth.user";
 const AuthContext = createContext(null);
-
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredUser(user) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (!user) {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
-    return;
-  }
-
-  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
 
-    queueMicrotask(() => {
-      if (cancelled) {
-        return;
+  // fetch current user on initial load to determine auth state
+  const fetchMe = useCallback(async () => {
+
+    try {
+      const payload = await authAPI.getMe();
+
+      if (payload?.success && payload?.user) {
+        setUser(payload.user);
+      } else {
+        setUser(null);
       }
-
-      setUser(readStoredUser());
+    } catch {
+      setUser(null);
+    } finally {
       setIsInitialized(true);
-    });
+    }
 
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
 
   const clearAuth = useCallback(() => {
     setUser(null);
-    writeStoredUser(null);
   }, []);
 
   const setAuthenticatedUser = useCallback((nextUser) => {
-    const normalizedUser = nextUser || null;
-    setUser(normalizedUser);
-    writeStoredUser(normalizedUser);
+    setUser(nextUser || null);
   }, []);
 
+  // optional immediate hydration
+  // after login response
   const applyLoginResponse = useCallback(
     (responsePayload) => {
       const payload = responsePayload?.data ?? responsePayload;
@@ -81,6 +62,7 @@ export function AuthProvider({ children }) {
 
       return payload;
     },
+
     [setAuthenticatedUser],
   );
 
@@ -105,8 +87,17 @@ export function AuthProvider({ children }) {
       setAuthenticatedUser,
       applyLoginResponse,
       clearAuth,
+      refetchUser: fetchMe,
     }),
-    [applyLoginResponse, clearAuth, isInitialized, setAuthenticatedUser, user],
+
+    [
+      user,
+      isInitialized,
+      setAuthenticatedUser,
+      applyLoginResponse,
+      clearAuth,
+      fetchMe,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -124,14 +115,20 @@ export function useAuth() {
 
 export function useDemoAction() {
   const { isDemoUser } = useAuth();
-  
-  return useCallback((actionName = "This action") => {
-    if (isDemoUser) {
-      toast.error(
-        `${actionName} is blocked in demo account. Demo accounts are read-only.`
-      );
-      return false;
-    }
-    return true;
-  }, [isDemoUser]);
+
+  return useCallback(
+    (actionName = "This action") => {
+      if (isDemoUser) {
+        toast.error(
+          `${actionName} is blocked in demo account. Demo accounts are read-only.`,
+        );
+
+        return false;
+      }
+
+      return true;
+    },
+
+    [isDemoUser],
+  );
 }
