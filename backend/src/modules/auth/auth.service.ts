@@ -136,7 +136,7 @@ export const googleCallbackService = async (
   }
 
   const serviceExist = await Service.findOne({ userId: user._id });
-  if (!serviceExist) RedirectPath = "/dashboard/service";
+  if (!serviceExist) RedirectPath = "/dashboard/services";
 
   const token = createAccessToken({
     userId: user._id.toString(),
