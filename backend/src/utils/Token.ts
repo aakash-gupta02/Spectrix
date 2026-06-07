@@ -10,6 +10,7 @@ export type TokenPayload = JwtPayload & {
   userId: string;
   email: string;
   role: string;
+  type: "access" | "refresh";
 };
 
 export type StreamTokenPayload = JwtPayload & {
@@ -23,6 +24,17 @@ const parseExpiresIn = (value: string): SignOptions["expiresIn"] => {
     return Number(value);
   }
   return value as SignOptions["expiresIn"];
+};
+
+// Regular Access Tokens - Used for authentication and API access
+export const createRefreshToken = (payload: TokenPayload): string => {
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET as Secret, {
+    expiresIn: parseExpiresIn(env.JWT_REFRESH_EXPIRES_IN),
+  });
+};
+
+export const verifyRefreshToken = (token: string): TokenPayload => {
+  return jwt.verify(token, env.JWT_REFRESH_SECRET as Secret) as TokenPayload;
 };
 
 // Access Tokens - Short-lived tokens for authentication
