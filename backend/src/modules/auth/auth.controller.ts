@@ -62,7 +62,7 @@ export const googleCallback = CatchAsync(
     const { code, state } = req.query as unknown as GoogleOAuthInput;
     const storedState = req.cookies.oauth_state;
 
-    const { token, user } = await googleCallbackService(
+    const { token, redirectPath } = await googleCallbackService(
       code,
       state,
       storedState,
@@ -71,6 +71,6 @@ export const googleCallback = CatchAsync(
     clearCookie(res, "oauth_state");
     setCookie(res, "token", token);
 
-    res.redirect(`${env.CLIENT}/dashboard`);
+    res.redirect(`${env.CLIENT}${redirectPath}`);
   },
 );

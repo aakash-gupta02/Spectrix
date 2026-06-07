@@ -8,6 +8,7 @@ import { User } from "./user.model.js";
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../../config/env.js";
 import bcrypt from "bcryptjs";
+import { Service } from "../service/service.model.js";
 
 const client = new OAuth2Client(
   env.GOOGLE_CLIENT_ID,
@@ -110,7 +111,7 @@ export const googleCallbackService = async (
   if (state !== storedState) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid OAuth state");
   }
-
+  let RedirectPath = "/dashboard";
   const { tokens } = await client.getToken(code);
 
   const ticket = await client.verifyIdToken({
@@ -134,11 +135,14 @@ export const googleCallbackService = async (
     });
   }
 
+  const serviceExist = await Service.findOne({ userId: user._id });
+  if (!serviceExist) RedirectPath = "/dashboard/service";
+
   const token = createAccessToken({
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
   });
 
-  return { token, user: sanitizeUser(user) };
+  return { token, redirectPath: RedirectPath };
 };
