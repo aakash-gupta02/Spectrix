@@ -33,6 +33,11 @@ const userSchema = new Schema(
     providerId: {
       type: String,
     },
+
+    refreshToken: {
+      type: String,
+      select: false,
+    },
   },
   {
     timestamps: true,
