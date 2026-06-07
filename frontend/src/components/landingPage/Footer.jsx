@@ -28,10 +28,9 @@ const navLinks = [
 ];
 
 const pageLinks = [
-    { name: "Status", href: "#" },
-    { name: "Privacy", href: "#" },
-    { name: "Terms", href: "#" },
-    { name: "Security", href: "#" },
+    { name: "Home", href: "/" },
+    { name: "Privacy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
 ];
 
 export default function Footer() {
