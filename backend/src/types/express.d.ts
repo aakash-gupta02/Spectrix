@@ -16,6 +16,8 @@ declare module "express-serve-static-core" {
       userId: string;
     };
 
+    refreshToken: string;
+
     streamSession: StreamTokenPayload;
   }
 }

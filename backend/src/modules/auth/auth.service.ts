@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 
 import ApiError from "../../utils/ApiError.js";
-import { createAccessToken } from "../../utils/Token.js";
+import { createAccessToken, createRefreshToken } from "../../utils/Token.js";
 import type { LoginInput, RegisterInput } from "./auth.validation.js";
 import { User } from "./user.model.js";
 
@@ -47,20 +47,30 @@ export const registerService = async (payload: RegisterInput) => {
 
   const user = await User.create(payload);
 
-  const token = createAccessToken({
+  const accessToken = createAccessToken({
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    type: "access",
   });
 
-  return { token, user: sanitizeUser(user) };
+  const refreshToken = createRefreshToken({
+    userId: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    type: "refresh",
+  });
+
+  const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+  user.refreshToken = hashedRefreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken, user: sanitizeUser(user) };
 };
 
 // Login user with email and password
 export const loginService = async (payload: LoginInput) => {
-  const user = await User.findOne({ email: payload.email })
-    .select("+password")
-    .lean();
+  const user = await User.findOne({ email: payload.email }).select("+password");
 
   if (!user) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid Email or password");
@@ -79,13 +89,25 @@ export const loginService = async (payload: LoginInput) => {
     throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid email or Password");
   }
 
-  const token = createAccessToken({
+  const accessToken = createAccessToken({
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    type: "access",
   });
 
-  return { token, user: sanitizeUser(user) };
+  const refreshToken = createRefreshToken({
+    userId: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    type: "refresh",
+  });
+
+  const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+  user.refreshToken = hashedRefreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken, user: sanitizeUser(user) };
 };
 
 // Get current user profile
@@ -138,11 +160,66 @@ export const googleCallbackService = async (
   const serviceExist = await Service.findOne({ userId: user._id });
   if (!serviceExist) RedirectPath = "/dashboard/services";
 
-  const token = createAccessToken({
+  const accessToken = createAccessToken({
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    type: "access",
   });
 
-  return { token, redirectPath: RedirectPath };
+  const refreshToken = createRefreshToken({
+    userId: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    type: "refresh",
+  });
+
+  const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+  user.refreshToken = hashedRefreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken, redirectPath: RedirectPath };
+};
+
+// Logout the user by clearing the authentication cookie
+export const logoutService = async (userId: string) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $unset: { refreshToken: "" } },
+    { new: true },
+  );
+
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+  }
+};
+
+// Refresh access token using refresh token
+export const refreshTokensService = async (
+  userId: string,
+  refreshToken: string,
+) => {
+  const user = await User.findById(userId).select("+refreshToken");
+
+  if (!user || !user.refreshToken) {
+    throw new ApiError(
+      StatusCodes.UNAUTHORIZED,
+      "User not found or not logged in",
+    );
+  }
+
+  const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
+
+  if (!isValid) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid refresh token");
+  }
+
+  const newAccessToken = createAccessToken({
+    userId: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    type: "access",
+  });
+
+  return { accessToken: newAccessToken };
 };

@@ -6,7 +6,9 @@ import CatchAsync from "../../utils/CatchAsync.js";
 import {
   googleCallbackService,
   loginService,
+  logoutService,
   meService,
+  refreshTokensService,
   registerService,
 } from "./auth.service.js";
 import { clearCookie, setCookie } from "../../utils/SetCookie.js";
@@ -15,11 +17,15 @@ import { logger } from "../../config/logger.js";
 import { env } from "../../config/env.js";
 import { GoogleOAuthInput } from "./auth.validation.js";
 
+const fifteenMinutes = 15 * 60 * 1000;
+const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
 // Register a new user
 export const register = CatchAsync(async (req: Request, res: Response) => {
-  const { token, user } = await registerService(req.body);
+  const { accessToken, refreshToken, user } = await registerService(req.body);
 
-  setCookie(res, "token", token);
+  setCookie(res, "accessToken", accessToken, { maxAge: fifteenMinutes });
+  setCookie(res, "refreshToken", refreshToken, { maxAge: sevenDays });
 
   sendResponse(res, StatusCodes.CREATED, "User registered successfully", {
     user,
@@ -28,9 +34,10 @@ export const register = CatchAsync(async (req: Request, res: Response) => {
 
 // Login an existing user
 export const login = CatchAsync(async (req: Request, res: Response) => {
-  const { token, user } = await loginService(req.body);
+  const { accessToken, refreshToken, user } = await loginService(req.body);
 
-  setCookie(res, "token", token);
+  setCookie(res, "accessToken", accessToken, { maxAge: fifteenMinutes });
+  setCookie(res, "refreshToken", refreshToken, { maxAge: sevenDays });
 
   sendResponse(res, StatusCodes.OK, "Login successful", { user });
 });
@@ -42,8 +49,11 @@ export const me = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // Logout the user by clearing the authentication cookie
-export const logout = CatchAsync(async (_req: Request, res: Response) => {
-  clearCookie(res, "token");
+export const logout = CatchAsync(async (req: Request, res: Response) => {
+  await logoutService(req.user.userId);
+
+  clearCookie(res, "accessToken");
+  clearCookie(res, "refreshToken");
   sendResponse(res, StatusCodes.OK, "Logout successful");
 });
 
@@ -62,15 +72,25 @@ export const googleCallback = CatchAsync(
     const { code, state } = req.query as unknown as GoogleOAuthInput;
     const storedState = req.cookies.oauth_state;
 
-    const { token, redirectPath } = await googleCallbackService(
-      code,
-      state,
-      storedState,
-    );
+    const { accessToken, refreshToken, redirectPath } =
+      await googleCallbackService(code, state, storedState);
 
     clearCookie(res, "oauth_state");
-    setCookie(res, "token", token);
+    setCookie(res, "accessToken", accessToken, { maxAge: fifteenMinutes });
+    setCookie(res, "refreshToken", refreshToken, { maxAge: sevenDays });
 
     res.redirect(`${env.CLIENT}${redirectPath}`);
   },
 );
+
+export const refreshToken = CatchAsync(async (req: Request, res: Response) => {
+  const refreshToken = req.refreshToken;
+  const userId = req.user.userId;
+
+  const { accessToken } = await refreshTokensService(userId, refreshToken);
+  setCookie(res, "accessToken", accessToken, { maxAge: fifteenMinutes });
+
+  sendResponse(res, StatusCodes.OK, "Access token refreshed", {
+    accessToken,
+  });
+});
