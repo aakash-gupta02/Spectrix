@@ -3,9 +3,8 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 import DashboardButton from '@/components/ui/DashboardButton';
 import { formatDate } from '../page';
 import RowActionsMenu from '@/components/common/RowActionsMenu';
-import { useAuth } from '@/contexts/AuthContext';
 
-const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
+const ServiceTable = ({ services, servicesQuery, onMonitor, onEdit, onDelete }) => {
     return (
         <div className="overflow-hidden border border-dashed border-border bg-surface-1">
             <div className="flex items-center justify-between border-b border-border px-5 py-3">
@@ -91,6 +90,7 @@ const ServiceTable = ({ services, servicesQuery, onEdit, onDelete }) => {
                                             type="button"
                                             variant="secondary"
                                             className="hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                                            onClick={() => onMonitor?.(service)}
                                         >
                                             <Eye size={13} />
                                             Monitor
