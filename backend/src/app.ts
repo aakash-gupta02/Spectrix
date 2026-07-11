@@ -5,13 +5,12 @@ import { StatusCodes } from "http-status-codes";
 import cookieParser from "cookie-parser";
 
 import { allowedOrigins, env } from "./core/config/env.js";
-import { errorMiddleware } from "./middlewares/error.middleware.js";
-import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
-import { globalRateLimiter } from "./middlewares/rateLimiter.middleware.js";
-import { requestLogger } from "./middlewares/requestLogger.js";
+import { errorMiddleware } from "./core/middlewares/error.middleware.js";
+import { notFoundMiddleware } from "./core/middlewares/notFound.middleware.js";
+import { requestLogger } from "./core/middlewares/requestLogger.js";
+import spectrix from "./core/middlewares/spectrix.middleware.js";
+import sendResponse from "./shared/utils/ApiResponse.js";
 import apiRoutes from "./routes/index.route.js";
-import sendResponse from "./utils/ApiResponse.js";
-import spectrix from "./middlewares/spectrix.middleware.js";
 
 // Initialize Express app
 const app = express();
