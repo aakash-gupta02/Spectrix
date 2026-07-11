@@ -11,7 +11,7 @@ import {
 import { IngestLogsInput, IngestSessionInput } from "./ingest.validation.js";
 import { streamEmitter } from "./emitter.js";
 import { logger } from "../../core/config/logger.js";
-import { ObjectIdParams } from "../../shared/utils/validation.js";
+import { ObjectIdParams } from "../../shared/validations/idParams.js";
 import { Service } from "../service/service.model.js";
 import ApiError from "../../shared/utils/ApiError.js";
 import { setCookie } from "../../shared/utils/SetCookie.js";
