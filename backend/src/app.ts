@@ -4,7 +4,7 @@ import helmet from "helmet";
 import { StatusCodes } from "http-status-codes";
 import cookieParser from "cookie-parser";
 
-import { allowedOrigins, env } from "./config/env.js";
+import { allowedOrigins, env } from "./core/config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { globalRateLimiter } from "./middlewares/rateLimiter.middleware.js";

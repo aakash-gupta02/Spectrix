@@ -1,5 +1,5 @@
-import { env } from "../config/env.js";
-import { logger } from "../config/logger.js";
+import { env } from "../core/config/env.js";
+import { logger } from "../core/config/logger.js";
 import { startDailyStatsJob } from "../modules/stats/daily/jobs/dailyStats.job.js";
 import { startLogCleanupJob } from "../modules/stats/daily/jobs/logCleanup.job.js";
 

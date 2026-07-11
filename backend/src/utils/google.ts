@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { env } from "../config/env.js";
+import { env } from "../core/config/env.js";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 

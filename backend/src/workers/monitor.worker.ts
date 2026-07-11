@@ -1,12 +1,12 @@
 import { Endpoint } from "../modules/endpoint/endpoint.model.js";
 import "../modules/service/service.model.js";
 import { calculateNextCheckAt, retryApiCheck } from "./runner.js";
-import { connectDB } from "../config/db.js";
-import { logger } from "../config/logger.js";
+import { connectDB } from "../core/config/db.js";
+import { logger } from "../core/config/logger.js";
 import { Log } from "../modules/log/log.model.js";
 import { handleIncidentService } from "../modules/incident/incident.service.js";
 import type { EndpointWithService } from "../modules/alert/alert.formatter.js";
-import { env } from "../config/env.js";
+import { env } from "../core/config/env.js";
 const POLL_INTERVAL = 5000; // 5 seconds - ms value
 
 export async function runWorker() {

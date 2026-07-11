@@ -13,8 +13,8 @@ import {
 } from "./auth.service.js";
 import { clearCookie, setCookie } from "../../utils/SetCookie.js";
 import { generateGoogleAuthUrl } from "../../utils/google.js";
-import { logger } from "../../config/logger.js";
-import { env } from "../../config/env.js";
+import { logger } from "../../core/config/logger.js";
+import { env } from "../../core/config/env.js";
 import { GoogleOAuthInput } from "./auth.validation.js";
 
 const fifteenMinutes = 15 * 60 * 1000;

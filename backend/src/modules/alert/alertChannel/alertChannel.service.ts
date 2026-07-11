@@ -4,7 +4,7 @@ import type { Types } from "mongoose";
 import AlertChannel from "./alertChannel.model.js";
 import { CreateAlertChannelInput } from "./alertChannel.validation.js";
 import { decrypt, encrypt } from "../../../utils/encryption/encryption.js";
-import { env } from "../../../config/env.js";
+import { env } from "../../../core/config/env.js";
 import { sendByType } from "../alert.service.js";
 
 // version for encryption & decryption

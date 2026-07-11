@@ -3,7 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import { CreateStreamInput, UpdateStreamInput } from "./stream.validation.js";
 import { Stream } from "./stream.model.js";
 import crypto from "crypto";
-import { env } from "../../config/env.js";
+import { env } from "../../core/config/env.js";
 import { getKey } from "../../utils/encryption/keyManager.js";
 import { Service } from "../service/service.model.js";
 

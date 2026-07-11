@@ -1,5 +1,5 @@
 import type { CookieOptions, Response } from "express";
-import { env } from "../config/env.js";
+import { env } from "../core/config/env.js";
 
 const expiresInToMs = (expiresIn: string): number => {
     if (/^\d+$/.test(expiresIn)) {

@@ -4,7 +4,7 @@ import jwt, {
   type JwtPayload,
 } from "jsonwebtoken";
 
-import { env } from "../config/env.js";
+import { env } from "../core/config/env.js";
 
 export type TokenPayload = JwtPayload & {
   userId: string;

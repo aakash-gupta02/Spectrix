@@ -10,7 +10,7 @@ import {
 } from "./ingest.service.js";
 import { IngestLogsInput, IngestSessionInput } from "./ingest.validation.js";
 import { streamEmitter } from "./emitter.js";
-import { logger } from "../../config/logger.js";
+import { logger } from "../../core/config/logger.js";
 import { ObjectIdParams } from "../../utils/validation.js";
 import { Service } from "../service/service.model.js";
 import ApiError from "../../utils/ApiError.js";

@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { EndpointEntity } from "../modules/endpoint/endpoint.model.js";
-import { logger } from "../config/logger.js";
+import { logger } from "../core/config/logger.js";
 
 type ServiceWithBaseUrl = {
   baseUrl: string;
