@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { type ObjectIdParams, objectIdParamsSchema } from "../../shared/utils/validation.js";
+import { type ObjectIdParams, objectIdParamsSchema } from "../../shared/validations/idParams.js";
 
 const baseUrlSchema = z
   .string()

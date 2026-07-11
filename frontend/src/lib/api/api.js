@@ -158,6 +158,11 @@ export const incidentAPI = {
     return response.data;
   },
 
+  updateIncident: async (id, payload) => {
+    const response = await apiClient.patch(`/${INCIDENT_MODULE}/${id}`, payload);
+    return response.data;
+  },
+
 };
 
 export const logsAPI = {

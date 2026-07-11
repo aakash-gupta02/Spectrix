@@ -1,5 +1,5 @@
 import z from "zod";
-import { type ObjectIdParams, objectIdParamsSchema } from "../../shared/utils/validation.js";
+import { type ObjectIdParams, objectIdParamsSchema } from "../../shared/validations/idParams.js";
 
 export const endpointIdParamsSchema = objectIdParamsSchema;
 export const serviceIdQuerySchema = z
