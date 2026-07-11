@@ -5,7 +5,7 @@ import { EndpointDocument } from "../endpoint/endpoint.model.js";
 import { IncidentDocument } from "../incident/incident.model.js";
 import sendWebhook from "./channels/webhook.js";
 import AlertChannel from "./alertChannel/alertChannel.model.js";
-import { decrypt } from "../../utils/encryption/encryption.js";
+import { decrypt } from "../../shared/utils/encryption/encryption.js";
 
 export async function triggerAlert({
   type,

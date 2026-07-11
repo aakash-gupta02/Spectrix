@@ -3,12 +3,12 @@ import { Router } from "express";
 import {
   authMiddleware,
   refreshTokenMiddleware,
-} from "../../middlewares/auth.middleware.js";
-import { authRateLimiter } from "../../middlewares/rateLimiter.middleware.js";
+} from "../../core/middlewares/auth.middleware.js";
+import { authRateLimiter } from "../../core/middlewares/rateLimiter.middleware.js";
 import {
   validateBody,
   validateQuery,
-} from "../../middlewares/validateRequest.middleware.js";
+} from "../../core/middlewares/validateRequest.middleware.js";
 import {
   googleCallback,
   googleLogin,

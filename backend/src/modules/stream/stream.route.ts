@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
-import { validateBody, validateParams } from "../../middlewares/validateRequest.middleware.js";
+import { authMiddleware } from "../../core/middlewares/auth.middleware.js";
+import { validateBody, validateParams } from "../../core/middlewares/validateRequest.middleware.js";
 import { createStream, deleteStream, getStreamById, getStreams, updateStream } from "./stream.controller.js";
 import { createStreamSchema, deleteStreamSchema, getStreamSchema, updateStreamSchema } from "./stream.validation.js";
 

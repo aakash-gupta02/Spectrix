@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../shared/utils/ApiError.js";
 import { Incident } from "./incident.model.js";
 import { Log } from "../log/log.model.js";
 import { triggerAlert } from "../alert/alert.service.js";

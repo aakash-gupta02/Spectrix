@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 
-import ApiError from "../utils/ApiError.js";
-import { verifyAccessToken, verifyRefreshToken } from "../utils/Token.js";
+import ApiError from "../../shared/utils/ApiError.js";
+import { verifyAccessToken, verifyRefreshToken } from "../../shared/utils/Token.js";
 
 export const authMiddleware = (
   req: Request,

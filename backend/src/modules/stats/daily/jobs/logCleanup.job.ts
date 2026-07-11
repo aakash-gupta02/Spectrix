@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { Log } from "../../../log/log.model.js";
-import { logger } from "../../../../config/logger.js";
-import { env } from "../../../../config/env.js";
+import { logger } from "../../../../core/config/logger.js";
+import { env } from "../../../../core/config/env.js";
 
 const days = Number(env.CLEANUP_DAYS) || 7;
 const failureDate = Number(env.CLEANUP_FAILURE_DAYS) || 15;

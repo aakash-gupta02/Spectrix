@@ -2,7 +2,7 @@ import z from "zod";
 import {
   objectIdParamsSchema,
   objectIdSchema,
-} from "../../utils/validation.js";
+} from "../../shared/utils/validation.js";
 
 export const logSchema = z
   .object({

@@ -15,13 +15,13 @@ import ingestRoutes from "../modules/ingest/ingest.route.js";
 import {
   authMiddleware,
   blockDemoWrites,
-} from "../middlewares/auth.middleware.js";
+} from "../core/middlewares/auth.middleware.js";
 
 import {
   authRateLimiter,
   globalRateLimiter,
   ingestRateLimiter,
-} from "../middlewares/rateLimiter.middleware.js";
+} from "../core/middlewares/rateLimiter.middleware.js";
 
 const router = Router();
 

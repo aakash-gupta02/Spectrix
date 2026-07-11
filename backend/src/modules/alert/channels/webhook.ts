@@ -1,7 +1,7 @@
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 
-import ApiError from "../../../utils/ApiError.js";
+import ApiError from "../../../shared/utils/ApiError.js";
 
 async function sendWebhook(url: string, message: string) {
   if (!url) return;

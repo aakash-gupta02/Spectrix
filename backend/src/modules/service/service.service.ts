@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../shared/utils/ApiError.js";
 import type { CreateServiceInput, UpdateServiceInput } from "./service.validation.js";
 import { Service } from "./service.model.js";
 

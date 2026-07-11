@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../../utils/ApiError.js";
+import ApiError from "../../../shared/utils/ApiError.js";
 import type { Types } from "mongoose";
 import AlertChannel from "./alertChannel.model.js";
 import { CreateAlertChannelInput } from "./alertChannel.validation.js";
-import { decrypt, encrypt } from "../../../utils/encryption/encryption.js";
-import { env } from "../../../config/env.js";
+import { decrypt, encrypt } from "../../../shared/utils/encryption/encryption.js";
+import { env } from "../../../core/config/env.js";
 import { sendByType } from "../alert.service.js";
 
 // version for encryption & decryption

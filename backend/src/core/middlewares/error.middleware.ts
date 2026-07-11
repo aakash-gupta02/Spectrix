@@ -2,9 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ZodError } from "zod";
 
-import { env } from "../config/env.js";
+import ApiError from "../../shared/utils/ApiError.js";
 import { logger } from "../config/logger.js";
-import ApiError from "../utils/ApiError.js";
+import { env } from "../config/env.js";
 
 type MongoError = Error & { code?: number; keyValue?: Record<string, unknown> };
 type MongooseValidationError = Error & {

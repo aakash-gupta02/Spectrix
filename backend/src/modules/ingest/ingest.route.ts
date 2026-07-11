@@ -7,14 +7,14 @@ import {
 import {
   validateBody,
   validateParams,
-} from "../../middlewares/validateRequest.middleware.js";
+} from "../../core/middlewares/validateRequest.middleware.js";
 import {
   ingestLogsParamsSchema,
   ingestLogsSchema,
   ingestSessionSchema,
 } from "./ingest.validation.js";
-import { authenticateIngestKey, streamMiddleware } from "../../middlewares/ingestAuthMiddleware.js";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
+import { authenticateIngestKey, streamMiddleware } from "../../core/middlewares/ingestAuthMiddleware.js";
+import { authMiddleware } from "../../core/middlewares/auth.middleware.js";
 
 const router = Router();
 

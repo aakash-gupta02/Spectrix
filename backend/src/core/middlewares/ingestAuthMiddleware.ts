@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-
-import { Stream } from "../modules/stream/stream.model.js";
-import ApiError from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
-import { getKey } from "../utils/encryption/keyManager.js";
-import { type StreamTokenPayload, verifyStreamToken } from "../utils/Token.js";
+
+import ApiError from "../../shared/utils/ApiError.js";
+import { getKey } from "../../shared/utils/encryption/keyManager.js";
+import {
+  StreamTokenPayload,
+  verifyStreamToken,
+} from "../../shared/utils/Token.js";
+import { Stream } from "../../modules/stream/stream.model.js";
 
 export function extractKeyVersion(apiKey: string): string {
   const parts = apiKey.split("_");

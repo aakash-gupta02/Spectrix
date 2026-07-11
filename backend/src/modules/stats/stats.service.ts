@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { logger } from "../../config/logger.js";
+import { logger } from "../../core/config/logger.js";
 import { Log } from "../log/log.model.js";
 import { DailyStats } from "./daily/endpointStats.model.js";
 

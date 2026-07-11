@@ -2,8 +2,8 @@
 // if you are user & looking a middleware this middleware is not for you, since here i am doing a service call instead of api call to send logs to spectrix, so if you want to use spectrix as a user you can directly call the spectrix client in your code and send logs without worrying about the middleware part. check middleware implementation here https://spectrix.d3labs.tech/docs/realtime-streaming
 
 import { Request, Response, NextFunction } from "express";
-import { ingestLogsService } from "../modules/ingest/ingest.service.js";
-import { IngestLogsInput } from "../modules/ingest/ingest.validation.js";
+import { ingestLogsService } from "../../modules/ingest/ingest.service.js";
+import { IngestLogsInput } from "../../modules/ingest/ingest.validation.js";
 
 interface SpectrixOptions {
   serviceId: string;
