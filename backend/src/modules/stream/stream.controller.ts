@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 
 import sendResponse from "../../shared/utils/ApiResponse.js";
 import CatchAsync from "../../shared/utils/CatchAsync.js";
-import type { ObjectIdParams } from "../../shared/utils/validation.js";
+import type { ObjectIdParams } from "../../shared/validations/idParams.js";
 import {
   createStreamService,
   deleteStreamService,
