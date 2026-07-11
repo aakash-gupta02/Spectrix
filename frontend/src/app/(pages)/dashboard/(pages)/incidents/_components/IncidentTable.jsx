@@ -1,8 +1,10 @@
 "use client";
 
+import RowActionsMenu from "@/components/common/RowActionsMenu";
+import { Pencil } from "lucide-react";
 import React from "react";
 
-const IncidentTable = ({ incidents, incidentsQuery }) => {
+const IncidentTable = ({ incidents, incidentsQuery, onEdit }) => {
   const formatDateTime = (value) => {
     if (!value) return "-";
 
@@ -292,10 +294,24 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
                   </td>
 
                   {/* Resolved At */}
-                  <td className="px-4 py-3 text-body">
-                    {incident.status === "resolved"
-                      ? formatDateTime(incident.resolvedAt)
-                      : "-"}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-body">
+                        {incident.status === "resolved"
+                          ? formatDateTime(incident.resolvedAt)
+                          : "-"}
+                      </div>
+
+                      <RowActionsMenu
+                        actions={[
+                          {
+                            label: "Edit",
+                            icon: <Pencil size={14} />,
+                            onClick: () => onEdit(incident),
+                          },
+                        ]}
+                      />
+                    </div>
                   </td>
                 </tr>
               );
