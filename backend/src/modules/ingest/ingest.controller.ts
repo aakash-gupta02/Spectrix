@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import sendResponse from "../../utils/ApiResponse.js";
-import CatchAsync from "../../utils/CatchAsync.js";
+import sendResponse from "../../shared/utils/ApiResponse.js";
+import CatchAsync from "../../shared/utils/CatchAsync.js";
 import {
   ingestLogsService,
   ingestSessionService,
@@ -11,10 +11,10 @@ import {
 import { IngestLogsInput, IngestSessionInput } from "./ingest.validation.js";
 import { streamEmitter } from "./emitter.js";
 import { logger } from "../../core/config/logger.js";
-import { ObjectIdParams } from "../../utils/validation.js";
+import { ObjectIdParams } from "../../shared/utils/validation.js";
 import { Service } from "../service/service.model.js";
-import ApiError from "../../utils/ApiError.js";
-import { setCookie } from "../../utils/SetCookie.js";
+import ApiError from "../../shared/utils/ApiError.js";
+import { setCookie } from "../../shared/utils/SetCookie.js";
 
 // Ingest Logs Controller - Handles log ingestion requests
 export const ingestLogsController = CatchAsync(

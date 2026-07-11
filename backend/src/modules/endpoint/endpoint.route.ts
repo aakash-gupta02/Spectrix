@@ -1,11 +1,9 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
-import { validateBody, validateParams, validateQuery } from "../../middlewares/validateRequest.middleware.js";
+import { validateBody, validateParams, validateQuery } from "../../core/middlewares/validateRequest.middleware.js";
 import { createEndpoint, deleteEndpoint, getEndpointById, getEndpoints, updateEndpoint } from "./endpoint.controller.js";
 import { createEndpointSchema, endpointIdParamsSchema, getEndpointsQuerySchema, updateEndpointSchema } from "./endpoint.validation.js";
 
 const router = Router();
-// router.use(authMiddleware);
 
 // Create
 router.post("/", validateBody(createEndpointSchema), createEndpoint);

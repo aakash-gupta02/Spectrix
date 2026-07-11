@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { StatusCodes } from "http-status-codes";
 
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../shared/utils/ApiError.js";
 import { Endpoint } from "../endpoint/endpoint.model.js";
 import { Log } from "../log/log.model.js";
 import type {

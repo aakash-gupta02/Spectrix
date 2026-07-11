@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
-import sendResponse from "../../utils/ApiResponse.js";
-import CatchAsync from "../../utils/CatchAsync.js";
+import sendResponse from "../../shared/utils/ApiResponse.js";
+import CatchAsync from "../../shared/utils/CatchAsync.js";
 import { createEndpointService, deleteEndpointService, getEndpointBYIdService, getEndpointsService, updateEndpointService } from "./endpoint.service.js";
 import type { CreateEndpointInput, EndpointIdParams, GetEndpointsQueryInput, UpdateEndpointInput } from "./endpoint.validation.js";
 

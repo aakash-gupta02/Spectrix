@@ -1,5 +1,5 @@
 import z from "zod";
-import { objectIdParamsSchema, objectIdSchema } from "../../utils/validation.js";
+import { objectIdParamsSchema, objectIdSchema } from "../../shared/utils/validation.js";
 
 export const getIncidentsQuerySchema = z.object({
     endpointId: objectIdSchema.optional(),

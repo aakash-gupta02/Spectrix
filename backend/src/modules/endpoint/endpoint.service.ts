@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../shared/utils/ApiError.js";
 import { CreateEndpointInput, GetEndpointsQueryInput, UpdateEndpointInput } from "./endpoint.validation.js";
 import { Endpoint } from "./endpoint.model.js";
 import { Service } from "../service/service.model.js";

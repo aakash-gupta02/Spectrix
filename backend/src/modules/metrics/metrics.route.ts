@@ -1,10 +1,9 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import {
   validateParams,
   validateQuery,
-} from "../../middlewares/validateRequest.middleware.js";
+} from "../../core/middlewares/validateRequest.middleware.js";
 import {
   getEndpointTimeseries,
   getEndpointTopLevel,
@@ -19,7 +18,6 @@ import {
 
 const router = Router();
 
-// router.use(authMiddleware);
 
 router.get(
   "/endpoint/:id/top-level",
