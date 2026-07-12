@@ -3,12 +3,14 @@ import { StatusCodes } from "http-status-codes";
 import { getStatuspageService } from "./statuspage.service.js";
 import sendResponse from "../../shared/utils/ApiResponse.js";
 import CatchAsync from "../../shared/utils/CatchAsync.js";
+import { StatuspageParamsInput } from "./statuspage.validation.js";
 
 export const getStatuspage = CatchAsync(async (req: Request, res: Response) => {
-    const statuspage = await getStatuspageService(req.params.id);
+  const { id } = req.params as unknown as StatuspageParamsInput;
 
-    sendResponse(res, StatusCodes.OK, "Statuspage fetched successfully",
-        statuspage,
-    );
+  const statuspage = await getStatuspageService(id);
 
+  sendResponse(res, StatusCodes.OK, "Statuspage fetched successfully", {
+    statuspage,
+  });
 });
