@@ -7,6 +7,10 @@ import {
   UpdateStatuspageInput,
 } from "./statuspage.validation.js";
 import { Service } from "../service/service.model.js";
+import { ServiceHistoryStatus } from "./statuspage.enum.js";
+import { DailyStats } from "../stats/daily/endpointStats.model.js";
+import { Types } from "mongoose";
+import { Incident } from "../incident/incident.model.js";
 
 //#region Helper Functions
 const slugifyText = async (text: string) => {
@@ -45,6 +49,198 @@ const verifyServiceIdsExist = async (
     );
   }
 };
+
+const getIncidentHistoryLookup = async (serviceIds: Types.ObjectId[]) => {
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setHours(0, 0, 0, 0);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+
+  const incidents = await Incident.find({
+    serviceId: { $in: serviceIds },
+    startedAt: { $gte: ninetyDaysAgo },
+    $or: [
+      {
+        resolvedAt: { $gte: ninetyDaysAgo },
+      },
+      {
+        status: "open",
+      },
+    ],
+  })
+    .select("_id serviceId startedAt resolvedAt publicStatus")
+    .lean();
+
+  const lookup = new Map<
+    string,
+    {
+      id: string;
+      publicStatus: string;
+      startedAt: Date;
+      resolvedAt: Date | null;
+    }
+  >();
+
+  for (const incident of incidents) {
+    const current = new Date(incident.startedAt);
+    current.setHours(0, 0, 0, 0);
+
+    const end = incident.resolvedAt
+      ? new Date(incident.resolvedAt)
+      : new Date();
+
+    end.setHours(0, 0, 0, 0);
+
+    while (current <= end) {
+      const key = `${incident.serviceId?.toString() ?? ""}-${current
+        .toISOString()
+        .slice(0, 10)}`;
+
+      lookup.set(key, {
+        id: incident._id.toString(),
+        publicStatus: incident.publicStatus,
+        startedAt: incident.startedAt,
+        resolvedAt: incident.resolvedAt ?? null,
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+  }
+
+  return lookup;
+};
+
+const getServiceHistoryStatus = (
+  uptime: number | null,
+): ServiceHistoryStatus => {
+  if (uptime === null) {
+    return ServiceHistoryStatus.NO_DATA;
+  }
+
+  if (uptime === 100) {
+    return ServiceHistoryStatus.OPERATIONAL;
+  }
+
+  if (uptime >= 99) {
+    return ServiceHistoryStatus.DEGRADED;
+  }
+
+  if (uptime >= 95) {
+    return ServiceHistoryStatus.PARTIAL_OUTAGE;
+  }
+
+  return ServiceHistoryStatus.MAJOR_OUTAGE;
+};
+
+const getServiceStatusHistory = async (serviceIds: Types.ObjectId[]) => {
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setHours(0, 0, 0, 0);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+
+  const dailyStats = await DailyStats.aggregate([
+    {
+      $match: {
+        serviceId: {
+          $in: serviceIds,
+        },
+        date: {
+          $gte: ninetyDaysAgo,
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: {
+          serviceId: "$serviceId",
+          date: "$date",
+        },
+
+        totalRequests: {
+          $sum: "$totalRequests",
+        },
+
+        successRequests: {
+          $sum: "$successRequests",
+        },
+      },
+    },
+
+    {
+      $project: {
+        _id: 0,
+        serviceId: "$_id.serviceId",
+        date: "$_id.date",
+
+        uptime: {
+          $cond: [
+            {
+              $eq: ["$totalRequests", 0],
+            },
+            null,
+            {
+              $multiply: [
+                {
+                  $divide: ["$successRequests", "$totalRequests"],
+                },
+                100,
+              ],
+            },
+          ],
+        },
+      },
+    },
+  ]);
+
+  const lookup = new Map();
+
+  for (const stat of dailyStats) {
+    lookup.set(
+      `${stat.serviceId.toString()}-${stat.date.toISOString().slice(0, 10)}`,
+      stat.uptime,
+    );
+  }
+
+  const incidentLookup = await getIncidentHistoryLookup(serviceIds);
+
+  return serviceIds.map((serviceId) => {
+    const history = [];
+
+    for (let i = 89; i >= 0; i--) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - i);
+
+      const key = `${serviceId.toString()}-${date.toISOString().slice(0, 10)}`;
+
+      const uptime = lookup.get(key) ?? null;
+
+      history.push({
+        date,
+        uptime,
+        status: getServiceHistoryStatus(uptime),
+        incident: incidentLookup.get(key) ?? null,
+      });
+    }
+
+    return {
+      serviceId,
+      history,
+    };
+  });
+};
+
+const getActiveIncidents = async (serviceIds: Types.ObjectId[]) => {
+  const incidents = await Incident.find({
+    serviceId: { $in: serviceIds },
+    status: "open",
+  })
+    .populate("serviceId", "name")
+    .populate("endpointId", "name path")
+    .sort({ startedAt: -1 })
+    .lean();
+
+  return incidents;
+};
 // #endregion
 
 // get statuspage by User ID
@@ -60,13 +256,28 @@ export const getStatuspageService = async (userId: string) => {
 
 // get statuspage by slug
 export const getStatuspageBySlugService = async (slug: string) => {
-  const statuspage = await Statuspage.findOne({ slug, isPublic: true });
+  const statuspage = await Statuspage.findOne({
+    slug,
+    isPublic: true,
+  }).populate("serviceIds.serviceId");
 
   if (!statuspage) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Statuspage not found");
+    throw new ApiError(StatusCodes.NOT_FOUND, "Status page not found");
   }
 
-  return statuspage;
+  const history = await getServiceStatusHistory(
+    statuspage.serviceIds.map((s) => s.serviceId._id),
+  );
+
+  const activeIncidents = await getActiveIncidents(
+    statuspage.serviceIds.map((s) => s.serviceId._id),
+  );
+
+  return {
+    ...statuspage.toObject(),
+    history,
+    activeIncidents,
+  };
 };
 
 // create a  statuspage

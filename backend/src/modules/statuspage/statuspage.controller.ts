@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import {
   createStatuspageService,
   deleteStatuspageService,
+  getStatuspageBySlugService,
   getStatuspageService,
   updateStatuspageService,
 } from "./statuspage.service.js";
@@ -66,7 +67,7 @@ export const getStatuspageBySlug = CatchAsync(
   async (req: Request, res: Response) => {
     const { slug } = req.params as StatuspageSlugParamsInput;
 
-    const statuspage = await getStatuspageService(slug);
+    const statuspage = await getStatuspageBySlugService(slug);
 
     sendResponse(res, StatusCodes.OK, "Statuspage fetched successfully", {
       statuspage,
