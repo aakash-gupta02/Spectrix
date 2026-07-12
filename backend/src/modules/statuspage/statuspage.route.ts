@@ -23,7 +23,11 @@ import {
 
 const router = Router();
 
-router.get("/:slug", getStatuspageBySlug);
+router.get(
+  "/slug/:slug",
+  validateParams(statuspageSlugParamsSchema),
+  getStatuspageBySlug,
+);
 
 // Require authenticated user
 router.use(authMiddleware);
@@ -31,7 +35,7 @@ router.use(authMiddleware);
 // Block write operations in demo mode
 router.use(blockDemoWrites);
 
-router.get("/", validateParams(statuspageSlugParamsSchema), getStatuspage);
+router.get("/", getStatuspage);
 router.post("/", validateBody(createStatuspageSchema), createStatuspage);
 router.patch("/me", validateBody(updateStatuspageSchema), updateStatuspage);
 router.delete("/me", deleteStatuspage);
