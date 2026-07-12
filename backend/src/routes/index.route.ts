@@ -33,6 +33,9 @@ router.use("/auth", authRateLimiter, authRoutes);
 // Log ingestion APIs
 router.use("/ingest", ingestRateLimiter, ingestRoutes);
 
+// Statuspage APIs
+router.use("/status-page", globalRateLimiter, statuspageRoute);
+
 // Require authenticated user
 router.use(authMiddleware);
 
@@ -46,7 +49,6 @@ router.use("/log", globalRateLimiter, logRoutes);
 router.use("/metrics", globalRateLimiter, metricsRoutes);
 router.use("/incident", globalRateLimiter, incidentRoutes);
 router.use("/alert-channel", globalRateLimiter, alertChannelRoutes);
-router.use("/status-page", globalRateLimiter, statuspageRoute);
 /* <NEATNODE_ROUTES> */
 
 export default router;

@@ -6,11 +6,27 @@ import {
 } from "../../shared/validations/idParams.js";
 import { atLeastOneFieldRequired } from "../../shared/validations/atLeastOneField.js";
 
-// serviceID Schema 
+// serviceID Schema
 const statusPageServiceSchema = z.object({
   serviceId: objectIdSchema,
-  order: z.number().int().min(0).default(0).optional(),
+  order: z.number().int().min(0).optional(),
 });
+
+const statusPageServicesSchema = z
+  .array(statusPageServiceSchema)
+  .min(1, "Select at least one service.")
+  .refine(
+    (services) => {
+      const uniqueServiceIds = new Set(
+        services.map((service) => service.serviceId),
+      );
+
+      return uniqueServiceIds.size === services.length;
+    },
+    {
+      message: "Duplicate services are not allowed.",
+    },
+  );
 
 // Base statuspage Schema
 export const baseStatuspageSchema = z.object({
@@ -28,9 +44,7 @@ export const baseStatuspageSchema = z.object({
 
   logoUrl: z.string().trim().url("Please provide a valid logo URL.").optional(),
 
-  serviceIds: z
-    .array(statusPageServiceSchema)
-    .min(1, "Select at least one service."),
+  serviceIds: statusPageServicesSchema,
 
   isPublic: z.boolean().default(true),
 });
@@ -59,8 +73,22 @@ export const updateStatuspageSchema = atLeastOneFieldRequired(
 
 // Params Schema
 export const statuspageParamsSchema = objectIdParamsSchema;
+export const statuspageSlugParamsSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .min(1, "Slug is required.")
+    .max(100)
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug can only contain lowercase letters, numbers, and hyphens.",
+    ),
+});
 
 // Types
 export type CreateStatuspageInput = z.infer<typeof createStatuspageSchema>;
-export type StatuspageParamsInput = ObjectIdParams;
 export type UpdateStatuspageInput = z.infer<typeof updateStatuspageSchema>;
+export type StatuspageParamsInput = ObjectIdParams;
+export type StatuspageSlugParamsInput = z.infer<
+  typeof statuspageSlugParamsSchema
+>;
