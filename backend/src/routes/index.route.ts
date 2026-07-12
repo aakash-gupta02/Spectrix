@@ -10,6 +10,7 @@ import incidentRoutes from "../modules/incident/incident.route.js";
 import alertChannelRoutes from "../modules/alert/alertChannel/alertChannel.route.js";
 import streamRoutes from "../modules/stream/stream.route.js";
 import ingestRoutes from "../modules/ingest/ingest.route.js";
+import statuspageRoute from "../modules/statuspage/statuspage.route.js";
 /* <NEATNODE_IMPORTS> */
 
 // Middleware
@@ -45,6 +46,7 @@ router.use("/log", globalRateLimiter, logRoutes);
 router.use("/metrics", globalRateLimiter, metricsRoutes);
 router.use("/incident", globalRateLimiter, incidentRoutes);
 router.use("/alert-channel", globalRateLimiter, alertChannelRoutes);
+router.use("/status-page", globalRateLimiter, statuspageRoute);
 /* <NEATNODE_ROUTES> */
 
 export default router;
