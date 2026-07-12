@@ -2,38 +2,62 @@ import { z } from "zod";
 import {
   type ObjectIdParams,
   objectIdParamsSchema,
-} from "../../shared/utils/validation.js";
+  objectIdSchema,
+} from "../../shared/validations/idParams.js";
+import { atLeastOneFieldRequired } from "../../shared/validations/atLeastOneField.js";
 
-export const createStatuspageSchema = z
-  .object({
-    name: z
-      .string()
-      .trim()
-      .min(1, "Name is required.")
-      .max(100, "Name cannot exceed 100 characters."),
+// serviceID Schema 
+const statusPageServiceSchema = z.object({
+  serviceId: objectIdSchema,
+  order: z.number().int().min(0).default(0).optional(),
+});
 
-    description: z
-      .string()
-      .trim()
-      .max(300, "Description cannot exceed 300 characters.")
-      .optional(),
+// Base statuspage Schema
+export const baseStatuspageSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required.")
+    .max(100, "Name cannot exceed 100 characters."),
 
-    logoUrl: z
-      .string()
-      .trim()
-      .url("Please provide a valid logo URL.")
-      .optional(),
+  description: z
+    .string()
+    .trim()
+    .max(300, "Description cannot exceed 300 characters.")
+    .optional(),
 
-    serviceIds: z
-      .array(z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid service ID."))
-      .min(1, "Select at least one service."),
+  logoUrl: z.string().trim().url("Please provide a valid logo URL.").optional(),
 
-    isPublic: z.boolean().default(true),
-  })
-  .strict();
+  serviceIds: z
+    .array(statusPageServiceSchema)
+    .min(1, "Select at least one service."),
 
-export const updateStatuspageSchema = createStatuspageSchema.partial().strict();
+  isPublic: z.boolean().default(true),
+});
 
+// Create Schema
+export const createStatuspageSchema = baseStatuspageSchema.strict();
+
+// Update Schema
+export const updateStatuspageSchema = atLeastOneFieldRequired(
+  baseStatuspageSchema
+    .extend({
+      slug: z
+        .string()
+        .trim()
+        .min(1, "Slug is required.")
+        .max(100)
+        .regex(
+          /^[a-z0-9-]+$/,
+          "Slug can only contain lowercase letters, numbers, and hyphens.",
+        )
+        .optional(),
+    })
+    .partial()
+    .strict(),
+);
+
+// Params Schema
 export const statuspageParamsSchema = objectIdParamsSchema;
 
 // Types
