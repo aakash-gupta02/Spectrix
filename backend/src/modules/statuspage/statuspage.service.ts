@@ -259,24 +259,50 @@ export const getStatuspageBySlugService = async (slug: string) => {
   const statuspage = await Statuspage.findOne({
     slug,
     isPublic: true,
-  }).populate("serviceIds.serviceId");
+  })
+    .populate("serviceIds.serviceId")
+    .lean();
 
   if (!statuspage) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Status page not found");
   }
 
+  // get service status history
   const history = await getServiceStatusHistory(
     statuspage.serviceIds.map((s) => s.serviceId._id),
   );
 
+  // get active incidents
   const activeIncidents = await getActiveIncidents(
     statuspage.serviceIds.map((s) => s.serviceId._id),
   );
 
+  // get services with status history and active incident
+  const services = statuspage.serviceIds.map((service) => {
+    const serviceId = service.serviceId._id.toString();
+
+    return {
+      ...service.serviceId,
+      order: service.order,
+
+      history:
+        history.find((h) => h.serviceId.toString() === serviceId)?.history ??
+        [],
+
+      activeIncident:
+        activeIncidents.find(
+          (incident) => incident.serviceId?.toString() ?? "" === serviceId,
+        ) ?? null,
+    };
+  });
+
+  // return statuspage without serviceIds
+  const statuspageObject = statuspage;
+  const { serviceIds, ...statuspageData } = statuspageObject;
+
   return {
-    ...statuspage.toObject(),
-    history,
-    activeIncidents,
+    ...statuspageData,
+    services,
   };
 };
 
