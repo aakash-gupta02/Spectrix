@@ -239,4 +239,9 @@ export const statuspageAPI = {
     const response = await apiClient.delete(`/${STATUSPAGE_MODULE}/me`);
     return response.data;
   },
+
+  getStatusPageBySlug: async (slug) => {
+    const response = await apiClient.get(`/${STATUSPAGE_MODULE}/slug/${slug}`);
+    return response.data;
+  },
 };

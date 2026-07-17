@@ -241,6 +241,16 @@ const getActiveIncidents = async (serviceIds: Types.ObjectId[]) => {
 
   return incidents;
 };
+
+const getIncidentServiceId = (serviceId: unknown): string => {
+  if (!serviceId) return "";
+
+  if (typeof serviceId === "object" && serviceId !== null && "_id" in serviceId) {
+    return String((serviceId as { _id: Types.ObjectId })._id);
+  }
+
+  return String(serviceId);
+};
 // #endregion
 
 // get statuspage by User ID
@@ -291,7 +301,7 @@ export const getStatuspageBySlugService = async (slug: string) => {
 
       activeIncident:
         activeIncidents.find(
-          (incident) => incident.serviceId?.toString() ?? "" === serviceId,
+          (incident) => getIncidentServiceId(incident.serviceId) === serviceId,
         ) ?? null,
     };
   });
