@@ -2,7 +2,7 @@ import DashboardButton from '@/components/ui/DashboardButton'
 import RowActionsMenu from '@/components/common/RowActionsMenu'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import React from 'react'
-import { formatDate } from '../../services/page'
+
 const getMethodBadgeClass = (method) => {
   switch ((method || '').toUpperCase()) {
     case 'GET':
@@ -18,6 +18,24 @@ const getMethodBadgeClass = (method) => {
     default:
       return 'border-slate-500/35 bg-slate-500/10 text-slate-300'
   }
+}
+
+const healthToneClasses = {
+  healthy: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300',
+  degraded: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+  down: 'border-rose-500/35 bg-rose-500/10 text-rose-300',
+  paused: 'border-slate-500/35 bg-slate-500/10 text-slate-300',
+  unknown: 'border-border bg-white/5 text-body',
+}
+
+const formatNumber = (value, fallback = '-') => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return fallback
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 2,
+  }).format(Number(value))
 }
 
 const EndpointTable = ({
@@ -37,74 +55,85 @@ const EndpointTable = ({
         <span className="text-[0.6875rem] text-body">{apis.length} total</span>
       </div>
 
-      <div className="max-h-[60vh] overflow-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
-              <th className="px-4 py-3 font-normal">Name</th>
-              <th className="px-4 py-3 font-normal">Method</th>
-              <th className="px-4 py-3 font-normal">Path</th>
-              <th className="px-4 py-3 font-normal">Expected</th>
-              <th className="px-4 py-3 font-normal">Status</th>
-              <th className="px-4 py-3 font-normal">Created</th>
-              <th className="px-4 py-3 font-normal">Actions</th>
+      <table className="min-w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
+            <th className="px-4 py-3 font-normal">API</th>
+            <th className="px-4 py-3 font-normal">Method</th>
+            <th className="px-4 py-3 font-normal">Uptime</th>
+            <th className="px-4 py-3 font-normal">Avg latency</th>
+            <th className="px-4 py-3 font-normal">Status</th>
+            <th className="px-4 py-3 font-normal">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            <tr>
+              <td className="px-4 py-6 text-body" colSpan={6}>
+                Loading apis...
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td className="px-4 py-6 text-body" colSpan={7}>
-                  Loading apis...
-                </td>
-              </tr>
-            ) : null}
+          ) : null}
 
-            {isError ? (
-              <tr>
-                <td className="px-4 py-6 text-red-300" colSpan={7}>
-                  {errorMessage || 'Could not load apis.'}
-                </td>
-              </tr>
-            ) : null}
+          {isError ? (
+            <tr>
+              <td className="px-4 py-6 text-red-300" colSpan={6}>
+                {errorMessage || 'Could not load apis.'}
+              </td>
+            </tr>
+          ) : null}
 
-            {!isLoading && !isError && apis.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-body" colSpan={7}>
-                  {hasActiveFilter
-                    ? 'No apis found for the selected service.'
-                    : 'No apis yet. Create your first api above.'}
-                </td>
-              </tr>
-            ) : null}
+          {!isLoading && !isError && apis.length === 0 ? (
+            <tr>
+              <td className="px-4 py-6 text-body" colSpan={6}>
+                {hasActiveFilter
+                  ? 'No apis found for the selected service.'
+                  : 'No apis yet. Create your first api above.'}
+              </td>
+            </tr>
+          ) : null}
 
-            {apis.map((api) => (
-              <tr key={api._id || api.id || `${api.method}-${api.path}`} className="border-b border-border/60 last:border-b-0">
-                <td className="px-4 py-3 text-heading">
-                  <p>{api.name || '-'}</p>
+          {apis.map((api) => {
+            const healthStatus = api?.metrics?.healthStatus || 'unknown'
+            const serviceName = api?.service?.name || '-'
+
+            return (
+              <tr
+                key={api._id || api.id || `${api.method}-${api.path}`}
+                className="border-b border-border/60 last:border-b-0"
+              >
+                <td className="px-4 py-3">
+                  <p className="truncate text-heading">{api.name || '-'}</p>
+                  <p className="mt-1 truncate text-[0.6875rem] text-body">{serviceName}</p>
                 </td>
 
                 <td className="px-4 py-3">
-                  <span className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] font-mono uppercase ${getMethodBadgeClass(api.method)}`}>
+                  <span
+                    className={`inline-flex border px-2 py-1 text-[0.6875rem] font-mono uppercase ${getMethodBadgeClass(api.method)}`}
+                  >
                     {api.method || '-'}
                   </span>
                 </td>
 
-                <td className="px-4 py-3 font-mono text-xs text-body">{api.path || '-'}</td>
+                <td className="px-4 py-3 text-heading">
+                  {api?.metrics?.totalChecks
+                    ? `${formatNumber(api.metrics.uptime)}%`
+                    : '-'}
+                </td>
 
-                <td className="px-4 py-3 text-body">{Array.isArray(api.expectedStatus) ? api.expectedStatus.join(', ') : '-'}</td>
+                <td className="px-4 py-3 text-heading">
+                  {api?.metrics?.totalChecks
+                    ? `${formatNumber(api.metrics.avgLatency)} ms`
+                    : '-'}
+                </td>
 
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] ${api.active
-                      ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300'
-                      : 'border-rose-500/35 bg-rose-500/10 text-rose-300'
-                      }`}
+                    className={`inline-flex border px-2 py-1 text-[0.6875rem] capitalize ${healthToneClasses[healthStatus] || healthToneClasses.unknown}`}
                   >
-                    {api.active ? 'Active' : 'Inactive'}
+                    {healthStatus}
                   </span>
                 </td>
-
-                <td className="px-4 py-3 text-body">{formatDate(api.createdAt)}</td>
 
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -135,10 +164,10 @@ const EndpointTable = ({
                   </div>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }
