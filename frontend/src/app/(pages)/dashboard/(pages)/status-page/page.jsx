@@ -191,6 +191,7 @@ export default function StatusPagePage() {
       <SectionHeading
         title="Status Page"
         description="Manage the workspace status page settings, services, and public URL."
+        docLink="/docs/status-page"
       >
         {!selectedStatusPage ? (
           <DashboardButton

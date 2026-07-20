@@ -44,6 +44,12 @@ export default function sitemap() {
       priority: 0.7,
     },
     {
+      url: `${siteConfig.url}/docs/status-page`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
       url: `${siteConfig.url}/docs/realtime-streaming`,
       lastModified: now,
       changeFrequency: "monthly",
