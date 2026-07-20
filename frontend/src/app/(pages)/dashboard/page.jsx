@@ -10,6 +10,10 @@ import { overviewAPI } from "@/lib/api/api";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, Clock3, RefreshCw, Server } from "lucide-react";
 import { useMemo } from "react";
+import {
+    OverviewErrorsChart,
+    OverviewUptimeChart,
+} from "./_components/overview/OverviewCharts";
 import OverviewMetricCard from "./_components/overview/OverviewMetricCard";
 import OverviewSectionCard from "./_components/overview/OverviewSectionCard";
 import OverviewTopErrors from "./_components/overview/OverviewTopErrors";
@@ -169,23 +173,26 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                         <OverviewSectionCard
                             title="Service Health"
-                            description="A compact view of the current reliability posture for the selected scope."
+                            description="Uptime across windows and the current reliability posture for the selected scope."
                             className="lg:col-span-2"
                         >
                             <div className="grid gap-4 md:grid-cols-2">
-                                <div className="rounded border border-border bg-surface-2 p-4">
-                                    <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-muted">Windowed uptime</p>
-                                    <div className="mt-2 text-3xl font-light tracking-tight text-heading">{formatNumber(uptimeValue, 0, 2)}%</div>
-                                    <p className="mt-2 text-[0.6875rem] text-body">Last 7 days · updated {generatedAt}</p>
+                                <OverviewUptimeChart
+                                    uptime24h={uptime24h}
+                                    uptime7d={uptimeValue}
+                                    uptime30d={uptime30d}
+                                />
 
-                                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-                                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-primary" style={{ width: `${Math.max(0, Math.min(100, uptimeValue))}%` }} />
-                                    </div>
-                                </div>
-
-                                <div className="rounded border border-border bg-surface-2 p-4">
+                                <div className="border border-border bg-surface-2 p-4">
                                     <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-muted">Reliability snapshot</p>
-                                    <div className="mt-3 space-y-3 text-xs text-body">
+                                    <div className="mt-2 text-3xl font-light tracking-tight text-heading">
+                                        {formatNumber(uptimeValue, 0, 2)}%
+                                    </div>
+                                    <p className="mt-1 text-[0.6875rem] text-body">
+                                        7d uptime · updated {generatedAt}
+                                    </p>
+
+                                    <div className="mt-5 space-y-3 text-xs text-body">
                                         <div className="flex items-center justify-between gap-3">
                                             <span>Open incidents</span>
                                             <span className="text-heading">{formatNumber(openIncidents, 0, 0)}</span>
@@ -209,7 +216,10 @@ export default function DashboardPage() {
                             title="Top Error Endpoints"
                             description="The endpoints generating the most errors over the last 24 hours."
                         >
-                            <OverviewTopErrors items={errorItems} />
+                            <div className="space-y-4">
+                                <OverviewErrorsChart items={errorItems} />
+                                <OverviewTopErrors items={errorItems} />
+                            </div>
                         </OverviewSectionCard>
                     </div>
                 </>
