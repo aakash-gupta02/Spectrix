@@ -42,7 +42,12 @@ export const baseStatuspageSchema = z.object({
     .max(300, "Description cannot exceed 300 characters.")
     .optional(),
 
-  logoUrl: z.string().trim().url("Please provide a valid logo URL.").optional(),
+  logoUrl: z
+    .union([
+      z.literal(""),
+      z.string().trim().url("Please provide a valid logo URL."),
+    ])
+    .optional(),
 
   serviceIds: statusPageServicesSchema,
 

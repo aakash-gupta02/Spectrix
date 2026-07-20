@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
 import Container from "@/components/dashboard/common/Container";
 import SectionHeading from "@/components/dashboard/common/SectionHeading";
@@ -84,7 +84,8 @@ function buildUpdatePayload(values, currentStatusPage) {
     nextPayload.description = nextDescription;
   }
 
-  if (nextLogoUrl && nextLogoUrl !== (currentStatusPage?.logoUrl || "")) {
+  // Allow clearing logoUrl by sending an empty string when it changed.
+  if (nextLogoUrl !== (currentStatusPage?.logoUrl || "")) {
     nextPayload.logoUrl = nextLogoUrl;
   }
 
@@ -112,6 +113,7 @@ function buildUpdatePayload(values, currentStatusPage) {
 }
 
 export default function StatusPagePage() {
+  const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [statusPage, setStatusPage] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -120,12 +122,6 @@ export default function StatusPagePage() {
   const statusPageQuery = useQuery({
     queryKey: ["statuspage", "me"],
     queryFn: statuspageAPI.getMyStatusPage,
-    onSuccess: (data) => {
-      setStatusPage(normalizeStatusPage(data));
-    },
-    onError: (error) => {
-      setErrorMessage(error?.response?.data?.message || error?.message || "Failed to load status page");
-    },
   });
 
   const servicesQuery = useQuery({
@@ -142,6 +138,13 @@ export default function StatusPagePage() {
 
   const selectedStatusPage = statusPage || normalizeStatusPage(statusPageQuery.data);
   const isLoading = statusPageQuery.isLoading || servicesQuery.isLoading;
+  const loadError =
+    errorMessage ||
+    (statusPageQuery.isError
+      ? statusPageQuery.error?.response?.data?.message ||
+        statusPageQuery.error?.message ||
+        "Failed to load status page"
+      : "");
   const publicUrl = useMemo(() => {
     if (!selectedStatusPage?.slug) return "";
     return `https://status.spectrix.app/${selectedStatusPage.slug}`;
@@ -153,7 +156,9 @@ export default function StatusPagePage() {
 
     try {
       const response = await statuspageAPI.createStatusPage(buildCreatePayload(values));
-      setStatusPage(normalizeStatusPage(response));
+      const normalized = normalizeStatusPage(response);
+      setStatusPage(normalized);
+      queryClient.setQueryData(["statuspage", "me"], response);
       setShowCreateForm(false);
     } catch (error) {
       setErrorMessage(error?.response?.data?.message || error?.message || "Failed to create status page");
@@ -176,7 +181,9 @@ export default function StatusPagePage() {
 
     try {
       const response = await statuspageAPI.updateStatusPage(updatePayload);
-      setStatusPage(normalizeStatusPage(response));
+      const normalized = normalizeStatusPage(response);
+      setStatusPage(normalized);
+      queryClient.setQueryData(["statuspage", "me"], response);
     } catch (error) {
       setErrorMessage(error?.response?.data?.message || error?.message || "Failed to update status page");
     } finally {
@@ -204,9 +211,9 @@ export default function StatusPagePage() {
         ) : null}
       </SectionHeading>
 
-      {errorMessage ? (
+      {loadError ? (
         <div className="mb-6 border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-300">
-          {errorMessage}
+          {loadError}
         </div>
       ) : null}
 

@@ -13,7 +13,10 @@ import { Types } from "mongoose";
 import { Incident } from "../incident/incident.model.js";
 
 //#region Helper Functions
-const slugifyText = async (text: string) => {
+const slugifyText = async (
+  text: string,
+  options: { excludeUserId?: string } = {},
+) => {
   const baseSlug = slugify(text, {
     lower: true,
     strict: true,
@@ -23,7 +26,14 @@ const slugifyText = async (text: string) => {
   let slug = baseSlug;
   let counter = 2;
 
-  while (await Statuspage.exists({ slug })) {
+  while (
+    await Statuspage.exists({
+      slug,
+      ...(options.excludeUserId
+        ? { userId: { $ne: options.excludeUserId } }
+        : {}),
+    })
+  ) {
     slug = `${baseSlug}-${counter}`;
     counter++;
   }
@@ -340,7 +350,9 @@ export const updateStatuspageService = async (
   userId: string,
 ) => {
   if (statuspageData.slug) {
-    const slug = await slugifyText(statuspageData.slug);
+    const slug = await slugifyText(statuspageData.slug, {
+      excludeUserId: userId,
+    });
     statuspageData.slug = slug;
   }
 
