@@ -11,6 +11,8 @@ import { ServiceHistoryStatus } from "./statuspage.enum.js";
 import { DailyStats } from "../stats/daily/endpointStats.model.js";
 import { Types } from "mongoose";
 import { Incident } from "../incident/incident.model.js";
+import { CacheKeys, CacheTTL, cache } from "../../core/cache/index.js";
+import { logger } from "../../core/config/logger.js";
 
 //#region Helper Functions
 const slugifyText = async (
@@ -255,7 +257,11 @@ const getActiveIncidents = async (serviceIds: Types.ObjectId[]) => {
 const getIncidentServiceId = (serviceId: unknown): string => {
   if (!serviceId) return "";
 
-  if (typeof serviceId === "object" && serviceId !== null && "_id" in serviceId) {
+  if (
+    typeof serviceId === "object" &&
+    serviceId !== null &&
+    "_id" in serviceId
+  ) {
     return String((serviceId as { _id: Types.ObjectId })._id);
   }
 
@@ -276,6 +282,16 @@ export const getStatuspageService = async (userId: string) => {
 
 // get statuspage by slug
 export const getStatuspageBySlugService = async (slug: string) => {
+  const cacheKey = CacheKeys.statusPage(slug);
+
+  // Check cache
+  const cached = await cache.get<unknown>(cacheKey);
+
+  if (cached) {
+    logger.info(`Cache hit for status page: ${slug}`);
+    return cached;
+  }
+
   const statuspage = await Statuspage.findOne({
     slug,
     isPublic: true,
@@ -287,17 +303,17 @@ export const getStatuspageBySlugService = async (slug: string) => {
     throw new ApiError(StatusCodes.NOT_FOUND, "Status page not found");
   }
 
-  // get service status history
+  // Get service status history
   const history = await getServiceStatusHistory(
     statuspage.serviceIds.map((s) => s.serviceId._id),
   );
 
-  // get active incidents
+  // Get active incidents
   const activeIncidents = await getActiveIncidents(
     statuspage.serviceIds.map((s) => s.serviceId._id),
   );
 
-  // get services with status history and active incident
+  // Build services
   const services = statuspage.serviceIds.map((service) => {
     const serviceId = service.serviceId._id.toString();
 
@@ -316,14 +332,18 @@ export const getStatuspageBySlugService = async (slug: string) => {
     };
   });
 
-  // return statuspage without serviceIds
-  const statuspageObject = statuspage;
-  const { serviceIds, ...statuspageData } = statuspageObject;
+  const { serviceIds, ...statuspageData } = statuspage;
 
-  return {
+  const response: unknown = {
     ...statuspageData,
     services,
   };
+
+  // Cache response
+  await cache.set(cacheKey, response, CacheTTL.ONE_HOUR);
+  logger.debug(`Cache Miss for status page: ${slug}`);
+
+  return response;
 };
 
 // create a  statuspage
