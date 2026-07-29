@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { statuspageAPI } from "@/lib/api/api";
@@ -334,6 +334,16 @@ function ServiceCard({ service, expanded, onToggle }) {
 const StatusPageClient = ({ slug }) => {
   const [expandedIds, setExpandedIds] = useState(null);
   const [selectedIncident, setSelectedIncident] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      statuspageAPI.trackStatusPageVisit(slug).catch((err) => {
+        console.error("Failed to track status page visit:", err);
+      });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [slug]);
 
   const { data, isLoading, error, dataUpdatedAt } = useQuery({
     queryKey: ["statuspage", slug],

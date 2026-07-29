@@ -5,6 +5,7 @@ import {
   deleteStatuspage,
   getStatuspage,
   getStatuspageBySlug,
+  trackStatuspageView,
   updateStatuspage,
 } from "./statuspage.controller.js";
 import {
@@ -27,6 +28,12 @@ router.get(
   "/slug/:slug",
   validateParams(statuspageSlugParamsSchema),
   getStatuspageBySlug,
+);
+
+router.post(
+  "/slug/:slug/view",
+  validateParams(statuspageSlugParamsSchema),
+  trackStatuspageView,
 );
 
 // Require authenticated user

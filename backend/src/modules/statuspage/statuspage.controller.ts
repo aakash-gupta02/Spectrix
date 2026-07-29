@@ -13,6 +13,7 @@ import {
   StatuspageParamsInput,
   StatuspageSlugParamsInput,
 } from "./statuspage.validation.js";
+import { getOrCreateVisitorId, trackViews } from "./statuspage.views.js";
 
 // create a statuspage
 export const createStatuspage = CatchAsync(
@@ -72,5 +73,17 @@ export const getStatuspageBySlug = CatchAsync(
     sendResponse(res, StatusCodes.OK, "Statuspage fetched successfully", {
       statuspage,
     });
+  },
+);
+
+export const trackStatuspageView = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { slug } = req.params as StatuspageSlugParamsInput;
+
+    const visitorId = await getOrCreateVisitorId(req, res);
+
+    await trackViews(slug, visitorId);
+
+    sendResponse(res, StatusCodes.OK, "Statuspage view tracked successfully");
   },
 );

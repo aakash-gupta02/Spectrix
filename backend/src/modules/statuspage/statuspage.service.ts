@@ -288,7 +288,6 @@ export const getStatuspageBySlugService = async (slug: string) => {
   const cached = await cache.get<unknown>(cacheKey);
 
   if (cached) {
-    logger.info(`Cache hit for status page: ${slug}`);
     return cached;
   }
 
@@ -341,7 +340,6 @@ export const getStatuspageBySlugService = async (slug: string) => {
 
   // Cache response
   await cache.set(cacheKey, response, CacheTTL.ONE_HOUR);
-  logger.debug(`Cache Miss for status page: ${slug}`);
 
   return response;
 };

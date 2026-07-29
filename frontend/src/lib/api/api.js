@@ -244,4 +244,9 @@ export const statuspageAPI = {
     const response = await apiClient.get(`/${STATUSPAGE_MODULE}/slug/${slug}`);
     return response.data;
   },
+
+  trackStatusPageVisit: async (slug) => {
+    const response = await apiClient.post(`/${STATUSPAGE_MODULE}/slug/${slug}/view`);
+    return response.data;
+  },
 };
