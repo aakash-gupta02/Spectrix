@@ -50,6 +50,28 @@ export class CacheService {
   async flush(): Promise<void> {
     await redis.flushDb();
   }
+
+  async getDel<T>(key: string): Promise<T | null> {
+    const value = await redis.getDel(key);
+
+    if (!value) {
+      return null;
+    }
+
+    return JSON.parse(value) as T;
+  }
+
+  async addToSet(key: string, ...members: string[]): Promise<number> {
+    return redis.sAdd(key, members);
+  }
+
+  async getSetMembers(key: string): Promise<string[]> {
+    return redis.sMembers(key);
+  }
+
+  async removeFromSet(key: string, ...members: string[]): Promise<number> {
+    return redis.sRem(key, members);
+  }
 }
 
 export const cache = new CacheService();

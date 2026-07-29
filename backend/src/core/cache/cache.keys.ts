@@ -1,9 +1,11 @@
+const STATUS_PAGE = "statusPage";
+
 export const CacheKeys = {
-  // statusPage
   statusPage: {
-    page: (slug: string) => `statusPage:${slug}`,
-    views: (slug: string) => `statusPageViews:${slug}`,
-    visitor: (slug: string, sessionId: string) =>
-      `statusPageVisitor:${slug}:${sessionId}`,
+    page: (slug: string) => `${STATUS_PAGE}:${slug}`,
+    views: (slug: string) => `${STATUS_PAGE}:${slug}:views`,
+    visitor: (slug: string, visitorId: string) =>
+      `${STATUS_PAGE}:${slug}:visitor:${visitorId}`,
+    active: `${STATUS_PAGE}:active`,
   },
 };

@@ -56,6 +56,12 @@ const statuspageSchema = new Schema(
       type: Boolean,
       default: true,
     },
+
+    views: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
   },
   {
     timestamps: true,
