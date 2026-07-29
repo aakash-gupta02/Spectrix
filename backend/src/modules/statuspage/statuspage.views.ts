@@ -7,7 +7,7 @@ const spxCookieName = "spectrix_visitor_session_id";
 
 export const trackViews = async (slug: string, sessionId: string) => {
   const visitorKey = CacheKeys.statusPage.visitor(slug, sessionId);
-  const statuspageKey = CacheKeys.statusPage.page(slug);
+  const viewsKey = CacheKeys.statusPage.views(slug);
 
   // check existing view
   const existingView = await cache.exists(visitorKey);
@@ -20,12 +20,16 @@ export const trackViews = async (slug: string, sessionId: string) => {
   await cache.setValue(visitorKey, "1", CacheTTL.ONE_DAY);
 
   // increment views
-  await cache.increment(statuspageKey);
+  await cache.increment(viewsKey);
+
+  // add to active statuspage set
+  await cache.addToSet(CacheKeys.statusPage.active, slug);
 };
 
 export const getView = async (slug: string) => {
-  const statuspageKey = CacheKeys.statusPage.page(slug);
-  const views = await cache.get(statuspageKey);
+  const viewsKey = CacheKeys.statusPage.views(slug);
+  const views = await cache.get(viewsKey);
+
   return views || 0;
 };
 
