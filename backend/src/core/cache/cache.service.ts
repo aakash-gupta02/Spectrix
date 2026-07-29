@@ -22,6 +22,15 @@ export class CacheService {
     await redis.set(key, serialized);
   }
 
+  async setValue(key: string, value: string, ttlInSeconds?: number) {
+    if (ttlInSeconds) {
+      await redis.setEx(key, ttlInSeconds, value);
+      return;
+    }
+
+    await redis.set(key, value);
+  }
+
   async del(key: string): Promise<void> {
     await redis.del(key);
   }

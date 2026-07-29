@@ -282,7 +282,7 @@ export const getStatuspageService = async (userId: string) => {
 
 // get statuspage by slug
 export const getStatuspageBySlugService = async (slug: string) => {
-  const cacheKey = CacheKeys.statusPage(slug);
+  const cacheKey = CacheKeys.statusPage.page(slug);
 
   // Check cache
   const cached = await cache.get<unknown>(cacheKey);

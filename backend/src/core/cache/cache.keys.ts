@@ -1,5 +1,9 @@
 export const CacheKeys = {
-  statusPage: (slug: string) => `statusPage:${slug}`,
-
-  statusPageViews: (slug: string) => `statusPageViews:${slug}`,
+  // statusPage
+  statusPage: {
+    page: (slug: string) => `statusPage:${slug}`,
+    views: (slug: string) => `statusPageViews:${slug}`,
+    visitor: (slug: string, sessionId: string) =>
+      `statusPageVisitor:${slug}:${sessionId}`,
+  },
 };
