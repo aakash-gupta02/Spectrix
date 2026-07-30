@@ -13,6 +13,7 @@ import { Types } from "mongoose";
 import { Incident } from "../incident/incident.model.js";
 import { CacheKeys, CacheTTL, cache } from "../../core/cache/index.js";
 import { logger } from "../../core/config/logger.js";
+import { invalidateStatusPageCache } from "./statuspage.views.js";
 
 //#region Helper Functions
 const slugifyText = async (
@@ -271,7 +272,9 @@ const getIncidentServiceId = (serviceId: unknown): string => {
 
 // get statuspage by User ID
 export const getStatuspageService = async (userId: string) => {
-  const statuspage = await Statuspage.findOne({ userId }).select("+views").lean();
+  const statuspage = await Statuspage.findOne({ userId })
+    .select("+views")
+    .lean();
 
   if (!statuspage) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Statuspage not found");
@@ -344,7 +347,7 @@ export const getStatuspageBySlugService = async (slug: string) => {
   return response;
 };
 
-// create a  statuspage
+// create a statuspage
 export const createStatuspageService = async (
   statuspageData: CreateStatuspageInput,
   userId: string,
@@ -387,6 +390,8 @@ export const updateStatuspageService = async (
   if (!statuspage) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Statuspage not found");
   }
+
+  await invalidateStatusPageCache(statuspage.slug);
 
   return statuspage;
 };

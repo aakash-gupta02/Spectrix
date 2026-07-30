@@ -97,3 +97,8 @@ export const startSyncViewsJob = () => {
     },
   );
 };
+
+export const invalidateStatusPageCache = async (slug: string) => {
+  await cache.del(CacheKeys.statusPage.page(slug));
+  logger.debug(`Invalidating cache for statuspage: ${slug}`);
+};

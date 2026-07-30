@@ -6,7 +6,10 @@ import { triggerAlert } from "../alert/alert.service.js";
 import { EndpointWithService } from "../alert/alert.formatter.js";
 import type { Types } from "mongoose";
 import { UpdateIncidentInput } from "./incident.validation.js";
+import { Statuspage } from "../statuspage/statuspage.model.js";
+import { invalidateStatusPageCache } from "../statuspage/statuspage.views.js";
 
+// Internal services
 export const createIncident = async (
   endpoint: EndpointWithService,
   checkedAt: Date,
@@ -80,6 +83,20 @@ export const resolveIncident = async (
   return resolvedIncident;
 };
 
+export const invalidateStatusPageCacheByService = async (serviceId: string) => {
+  const statuspage = await Statuspage.findOne({
+    "serviceIds.serviceId": serviceId,
+  })
+    .select("slug")
+    .lean();
+
+  if (!statuspage) {
+    return;
+  }
+
+  await invalidateStatusPageCache(statuspage.slug);
+};
+
 export const handleIncidentService = async (
   endpoint: EndpointWithService,
   result: string,
@@ -96,6 +113,9 @@ export const handleIncidentService = async (
       const hasStreak = await hasFailureStreak(endpointId, 3);
 
       if (hasStreak) {
+        await invalidateStatusPageCacheByService(
+          String(endpoint.serviceId._id),
+        );
         await createIncident(endpoint, checkedAt);
       }
     } else {
@@ -105,11 +125,13 @@ export const handleIncidentService = async (
 
   if (result === "success") {
     if (openIncident) {
+      await invalidateStatusPageCacheByService(String(endpoint.serviceId._id));
       await resolveIncident(String(openIncidentId), checkedAt, endpoint);
     }
   }
 };
 
+// API's used services
 export const getIncidentsService = async (
   user: { userId: string; role: string },
   query: {
@@ -193,6 +215,8 @@ export const updateIncidentService = async (
   if (!updatedIncident) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Incident not found");
   }
+
+  await invalidateStatusPageCacheByService(String(updatedIncident.serviceId));
 
   return updatedIncident;
 };
