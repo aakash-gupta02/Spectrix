@@ -1,7 +1,10 @@
 import DashboardButton from "@/components/ui/DashboardButton";
 import { ExternalLink } from "lucide-react";
 
-export default function StatusPagePublicUrlCard({ publicUrl, serviceSummary = [] }) {
+export default function StatusPagePublicUrlCard({
+  publicUrl,
+  serviceSummary = [],
+}) {
   if (!publicUrl) return null;
 
   return (
@@ -13,9 +16,14 @@ export default function StatusPagePublicUrlCard({ publicUrl, serviceSummary = []
       </div>
 
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <code className="break-all border border-border bg-surface-2 px-3 py-2 text-sm text-body">
-          {publicUrl}
-        </code>
+        <a
+          href={publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block break-all border border-border bg-surface-2 px-3 py-2 text-sm text-body transition-colors hover:text-primary hover:underline"
+        >
+          <code>{publicUrl}</code>
+        </a>
 
         <DashboardButton href={publicUrl} variant="secondary">
           <ExternalLink size={14} />

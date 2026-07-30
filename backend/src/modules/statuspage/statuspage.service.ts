@@ -271,7 +271,7 @@ const getIncidentServiceId = (serviceId: unknown): string => {
 
 // get statuspage by User ID
 export const getStatuspageService = async (userId: string) => {
-  const statuspage = await Statuspage.findOne({ userId });
+  const statuspage = await Statuspage.findOne({ userId }).select("+views").lean();
 
   if (!statuspage) {
     throw new ApiError(StatusCodes.NOT_FOUND, "Statuspage not found");

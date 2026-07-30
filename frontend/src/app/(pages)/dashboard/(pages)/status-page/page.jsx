@@ -32,7 +32,11 @@ function normalizeServiceIds(serviceIds = []) {
 }
 
 function normalizeStatusPage(payload) {
-  const statuspage = payload?.statuspage || payload?.data?.statuspage || payload?.data || payload;
+  const statuspage =
+    payload?.statuspage ||
+    payload?.data?.statuspage ||
+    payload?.data ||
+    payload;
 
   if (!statuspage) {
     return null;
@@ -44,8 +48,10 @@ function normalizeStatusPage(payload) {
     description: statuspage.description || "",
     logoUrl: statuspage.logoUrl || "",
     slug: statuspage.slug || "",
-    isPublic: typeof statuspage.isPublic === "boolean" ? statuspage.isPublic : true,
+    isPublic:
+      typeof statuspage.isPublic === "boolean" ? statuspage.isPublic : true,
     serviceIds: normalizeServiceIds(statuspage.serviceIds || []),
+    views: typeof statuspage.views === "number" ? statuspage.views : 0,
   };
 }
 
@@ -59,7 +65,9 @@ function toServicePayload(serviceIds = []) {
 function buildCreatePayload(values) {
   return {
     name: values.name.trim(),
-    ...(values.description?.trim() ? { description: values.description.trim() } : {}),
+    ...(values.description?.trim()
+      ? { description: values.description.trim() }
+      : {}),
     ...(values.logoUrl?.trim() ? { logoUrl: values.logoUrl.trim() } : {}),
     isPublic: Boolean(values.isPublic),
     serviceIds: toServicePayload(values.serviceIds),
@@ -98,12 +106,16 @@ function buildUpdatePayload(values, currentStatusPage) {
   }
 
   const currentServiceIds = Array.isArray(currentStatusPage?.serviceIds)
-    ? currentStatusPage.serviceIds.map((item) => item?.serviceId).filter(Boolean)
+    ? currentStatusPage.serviceIds
+        .map((item) => item?.serviceId)
+        .filter(Boolean)
     : [];
 
   const hasServiceChanges =
     nextServiceIds.length !== currentServiceIds.length ||
-    nextServiceIds.some((serviceId, index) => serviceId !== currentServiceIds[index]);
+    nextServiceIds.some(
+      (serviceId, index) => serviceId !== currentServiceIds[index],
+    );
 
   if (hasServiceChanges) {
     nextPayload.serviceIds = toServicePayload(nextServiceIds);
@@ -134,9 +146,13 @@ export default function StatusPagePage() {
     [servicesQuery.data],
   );
 
-  const availableServiceIds = useMemo(() => services.map((service) => getServiceId(service)).filter(Boolean), [services]);
+  const availableServiceIds = useMemo(
+    () => services.map((service) => getServiceId(service)).filter(Boolean),
+    [services],
+  );
 
-  const selectedStatusPage = statusPage || normalizeStatusPage(statusPageQuery.data);
+  const selectedStatusPage =
+    statusPage || normalizeStatusPage(statusPageQuery.data);
   const isLoading = statusPageQuery.isLoading || servicesQuery.isLoading;
   const loadError =
     errorMessage ||
@@ -145,9 +161,10 @@ export default function StatusPagePage() {
         statusPageQuery.error?.message ||
         "Failed to load status page"
       : "");
+
   const publicUrl = useMemo(() => {
     if (!selectedStatusPage?.slug) return "";
-    return `https://status.spectrix.app/${selectedStatusPage.slug}`;
+    return `${window.location.origin}/status/${selectedStatusPage.slug}`;
   }, [selectedStatusPage]);
 
   const handleCreate = async (values) => {
@@ -155,13 +172,19 @@ export default function StatusPagePage() {
     setErrorMessage("");
 
     try {
-      const response = await statuspageAPI.createStatusPage(buildCreatePayload(values));
+      const response = await statuspageAPI.createStatusPage(
+        buildCreatePayload(values),
+      );
       const normalized = normalizeStatusPage(response);
       setStatusPage(normalized);
       queryClient.setQueryData(["statuspage", "me"], response);
       setShowCreateForm(false);
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || error?.message || "Failed to create status page");
+      setErrorMessage(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create status page",
+      );
     } finally {
       setSaving(false);
     }
@@ -185,7 +208,11 @@ export default function StatusPagePage() {
       setStatusPage(normalized);
       queryClient.setQueryData(["statuspage", "me"], response);
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || error?.message || "Failed to update status page");
+      setErrorMessage(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update status page",
+      );
     } finally {
       setSaving(false);
     }
@@ -208,7 +235,13 @@ export default function StatusPagePage() {
             <Plus size={14} />
             Create Status Page
           </DashboardButton>
-        ) : null}
+        ) : (
+          <h1>
+            {selectedStatusPage.views
+              ? `${selectedStatusPage.views} views`
+              : "No views yet"}
+          </h1>
+        )}
       </SectionHeading>
 
       {loadError ? (
@@ -224,16 +257,16 @@ export default function StatusPagePage() {
         </div>
       ) : null}
 
-      {!showForm && !isLoading ? (
-        <StatusPageEmptyState />
-      ) : null}
+      {!showForm && !isLoading ? <StatusPageEmptyState /> : null}
 
       {showForm && !isLoading ? (
         <StatusPageSettingsForm
           key={selectedStatusPage?.slug || "create-status-page"}
           initialValues={selectedStatusPage || EMPTY_FORM}
           services={services}
-          selectedServiceIds={selectedStatusPage?.serviceIds?.map((item) => item.serviceId) || []}
+          selectedServiceIds={
+            selectedStatusPage?.serviceIds?.map((item) => item.serviceId) || []
+          }
           availableServiceIds={availableServiceIds}
           saving={saving}
           isCreating={!selectedStatusPage}
