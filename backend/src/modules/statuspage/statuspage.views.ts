@@ -2,6 +2,9 @@ import type { Request, Response } from "express";
 import { CacheTTL, CacheKeys, cache } from "../../core/cache/index.js";
 import crypto from "crypto";
 import { setCookie } from "../../shared/utils/SetCookie.js";
+import { Statuspage } from "./statuspage.model.js";
+import { logger } from "../../core/config/logger.js";
+import cron from "node-cron";
 
 const spxCookieName = "spectrix_visitor_session_id";
 
@@ -46,4 +49,51 @@ export const getOrCreateVisitorId = async (
     });
   }
   return sessionId;
+};
+
+export const syncViews = async () => {
+  const slugs = await cache.getSetMembers(CacheKeys.statusPage.active);
+
+  for (const slug of slugs) {
+    const views = await cache.getDel<number>(CacheKeys.statusPage.views(slug));
+
+    if (!views) continue;
+
+    try {
+      await Statuspage.updateOne(
+        { slug },
+        {
+          $inc: { views },
+        },
+      );
+
+      await cache.removeFromSet(CacheKeys.statusPage.active, slug);
+    } catch (error) {
+      await cache.incrementBy(CacheKeys.statusPage.views(slug), views);
+
+      await cache.addToSet(CacheKeys.statusPage.active, slug);
+
+      logger.error(`Failed to sync views for statuspage ${slug}: ${error}`);
+    }
+  }
+};
+
+export const startSyncViewsJob = () => {
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        logger.info("[cron] Syncing statuspage views...");
+
+        await syncViews();
+
+        logger.info("[cron] Statuspage views synced");
+      } catch (error) {
+        logger.error("[cron] Failed to sync statuspage views", error);
+      }
+    },
+    {
+      timezone: "UTC",
+    },
+  );
 };

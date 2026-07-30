@@ -43,6 +43,10 @@ export class CacheService {
     return await redis.incr(key);
   }
 
+  async incrementBy(key: string, value: number): Promise<number> {
+    return await redis.incrBy(key, value);
+  }
+
   async expire(key: string, ttlInSeconds: number): Promise<void> {
     await redis.expire(key, ttlInSeconds);
   }
