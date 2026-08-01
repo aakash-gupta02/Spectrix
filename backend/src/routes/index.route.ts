@@ -10,6 +10,8 @@ import incidentRoutes from "../modules/incident/incident.route.js";
 import alertChannelRoutes from "../modules/alert/alertChannel/alertChannel.route.js";
 import streamRoutes from "../modules/stream/stream.route.js";
 import ingestRoutes from "../modules/ingest/ingest.route.js";
+import statuspageRoute from "../modules/statuspage/statuspage.route.js";
+/* <NEATNODE_IMPORTS> */
 
 // Middleware
 import {
@@ -31,6 +33,9 @@ router.use("/auth", authRateLimiter, authRoutes);
 // Log ingestion APIs
 router.use("/ingest", ingestRateLimiter, ingestRoutes);
 
+// Statuspage APIs
+router.use("/status-page", globalRateLimiter, statuspageRoute);
+
 // Require authenticated user
 router.use(authMiddleware);
 
@@ -44,5 +49,6 @@ router.use("/log", globalRateLimiter, logRoutes);
 router.use("/metrics", globalRateLimiter, metricsRoutes);
 router.use("/incident", globalRateLimiter, incidentRoutes);
 router.use("/alert-channel", globalRateLimiter, alertChannelRoutes);
+/* <NEATNODE_ROUTES> */
 
 export default router;

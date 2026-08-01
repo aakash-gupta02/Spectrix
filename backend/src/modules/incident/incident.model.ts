@@ -1,48 +1,66 @@
-import mongoose, { Schema, type InferSchemaType, HydratedDocument } from "mongoose";
+import mongoose, {
+  Schema,
+  type InferSchemaType,
+  HydratedDocument,
+} from "mongoose";
+import { IncidentPublicStatus } from "./incident.enum.js";
 
 const incidentSchema = new Schema(
-    {
-        endpointId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Endpoint",
-            required: true
-        },
+  {
+    endpointId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Endpoint",
+      required: true,
+    },
 
-        serviceId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Service",
-        },
+    serviceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+    },
 
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true
-        },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-        status: {
-            type: String,
-            enum: ["open", "resolved"],
-            default: "open"
-        },
+    status: {
+      type: String,
+      enum: ["open", "resolved"],
+      default: "open",
+    },
 
-        startedAt: {
-            type: Date,
-            default: Date.now
-        },
+    publicStatus: {
+      type: String,
+      enum: Object.values(IncidentPublicStatus),
+      default: IncidentPublicStatus.INVESTIGATING,
+    },
 
-        resolvedAt: Date,
+    description: {
+      type: String,
+      maxlength: 500,
+      trim: true,
+    },
 
-        failureCount: {
-            type: Number,
-            default: 3
-        }, // Number of failed request after failure 
+    startedAt: {
+      type: Date,
+      default: Date.now,
+    },
 
-    }, { timestamps: true });
+    resolvedAt: Date,
+
+    failureCount: {
+      type: Number,
+      default: 3,
+    }, // Number of failed request after failure
+  },
+  { timestamps: true },
+);
 
 // indexes
 incidentSchema.index(
-    { endpointId: 1, status: 1 },
-    { unique: true, partialFilterExpression: { status: "open" } }
+  { endpointId: 1, status: 1 },
+  { unique: true, partialFilterExpression: { status: "open" } },
 ); // Ensure only one open incident per endpoint
 
 incidentSchema.index({ userId: 1, createdAt: -1 });
@@ -50,11 +68,15 @@ incidentSchema.index({ endpointId: 1, createdAt: -1 });
 incidentSchema.index({ serviceId: 1, createdAt: -1 });
 incidentSchema.index({ userId: 1, serviceId: 1, createdAt: -1 });
 
-
 // Types
 export type IncidentSchemaType = InferSchemaType<typeof incidentSchema>;
 export type IncidentDocument = HydratedDocument<IncidentSchemaType>;
-export type IncidentEntity = IncidentSchemaType & { _id: mongoose.Types.ObjectId };
+export type IncidentEntity = IncidentSchemaType & {
+  _id: mongoose.Types.ObjectId;
+};
 
 // Export
-export const Incident = mongoose.model<IncidentSchemaType>("Incident", incidentSchema);
+export const Incident = mongoose.model<IncidentSchemaType>(
+  "Incident",
+  incidentSchema,
+);

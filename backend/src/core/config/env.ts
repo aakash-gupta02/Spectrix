@@ -10,6 +10,7 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().default(4000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
+  REDIS_URL: z.string().min(1, "REDIS_URL is required"),
 
   // Authentication
   JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET is required"),

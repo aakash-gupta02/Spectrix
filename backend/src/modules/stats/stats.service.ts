@@ -301,6 +301,178 @@ export async function getSummaryUsingDailyStatsAndTodayLogs(
   };
 }
 
+export type EndpointMetricsSummary = MetricsSummary & {
+  endpointId: string;
+};
+
+export async function getPerEndpointSummaries(
+  endpointIds: mongoose.Types.ObjectId[],
+  fromDate: Date,
+  toDate: Date,
+): Promise<Map<string, MetricsSummary>> {
+  const summaries = new Map<string, MetricsSummary>();
+
+  if (endpointIds.length === 0) {
+    return summaries;
+  }
+
+  const todayStartUtc = startOfUtcDay(toDate);
+  const endOfYesterdayUtc = new Date(todayStartUtc.getTime() - 1);
+  const dailyStatsFrom = startOfUtcDay(fromDate);
+  const dailyStatsTo =
+    endOfYesterdayUtc >= fromDate ? endOfYesterdayUtc : null;
+  const logFrom = fromDate > todayStartUtc ? fromDate : todayStartUtc;
+
+  type AggregateRow = {
+    _id: mongoose.Types.ObjectId;
+    total: number;
+    successChecks: number;
+    failureChecks: number;
+    totalResponseTime: number;
+  };
+
+  const [statsRows, logRows] = await Promise.all([
+    dailyStatsTo
+      ? DailyStats.aggregate<AggregateRow>([
+          {
+            $match: {
+              endpointId: { $in: endpointIds },
+              date: {
+                $gte: dailyStatsFrom,
+                $lte: dailyStatsTo,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$endpointId",
+              total: { $sum: "$totalRequests" },
+              successChecks: {
+                $sum: {
+                  $ifNull: ["$successRequests", "$successedRequests"],
+                },
+              },
+              failureChecks: { $sum: "$failedRequests" },
+              totalResponseTime: { $sum: "$totalResponseTime" },
+            },
+          },
+        ])
+      : Promise.resolve([]),
+    logFrom <= toDate
+      ? Log.aggregate<AggregateRow>([
+          {
+            $match: {
+              endpointId: { $in: endpointIds },
+              checkedAt: {
+                $gte: logFrom,
+                $lte: toDate,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$endpointId",
+              total: { $sum: 1 },
+              successChecks: {
+                $sum: {
+                  $cond: [successSignalExpression, 1, 0],
+                },
+              },
+              failureChecks: {
+                $sum: {
+                  $cond: [failureSignalExpression, 1, 0],
+                },
+              },
+              totalResponseTime: { $sum: "$responseTime" },
+            },
+          },
+        ])
+      : Promise.resolve([]),
+  ]);
+
+  const mergeRow = (row: AggregateRow) => {
+    const key = String(row._id);
+    const current = summaries.get(key) || {
+      total: 0,
+      successChecks: 0,
+      failureChecks: 0,
+      avgLatency: 0,
+    };
+
+    const total = current.total + (row.total || 0);
+    const successChecks = current.successChecks + (row.successChecks || 0);
+    const failureChecks = current.failureChecks + (row.failureChecks || 0);
+    const previousWeighted =
+      current.avgLatency * current.total + (row.totalResponseTime || 0);
+
+    summaries.set(key, {
+      total,
+      successChecks,
+      failureChecks,
+      avgLatency: total > 0 ? safeRound(previousWeighted / total, 2) : 0,
+    });
+  };
+
+  statsRows.forEach(mergeRow);
+  logRows.forEach(mergeRow);
+
+  return summaries;
+}
+
+export type LatestCheckSummary = {
+  endpointId: string;
+  result: string;
+  statusCode?: number | null;
+  responseTime?: number | null;
+  checkedAt?: Date | null;
+};
+
+export async function getLatestChecksByEndpoint(
+  endpointIds: mongoose.Types.ObjectId[],
+): Promise<Map<string, LatestCheckSummary>> {
+  const latestChecks = new Map<string, LatestCheckSummary>();
+
+  if (endpointIds.length === 0) {
+    return latestChecks;
+  }
+
+  const rows = await Log.aggregate<{
+    _id: mongoose.Types.ObjectId;
+    result: string;
+    statusCode?: number | null;
+    responseTime?: number | null;
+    checkedAt?: Date | null;
+  }>([
+    {
+      $match: {
+        endpointId: { $in: endpointIds },
+      },
+    },
+    { $sort: { checkedAt: -1 } },
+    {
+      $group: {
+        _id: "$endpointId",
+        result: { $first: "$result" },
+        statusCode: { $first: "$statusCode" },
+        responseTime: { $first: "$responseTime" },
+        checkedAt: { $first: "$checkedAt" },
+      },
+    },
+  ]);
+
+  for (const row of rows) {
+    latestChecks.set(String(row._id), {
+      endpointId: String(row._id),
+      result: row.result,
+      statusCode: row.statusCode ?? null,
+      responseTime: row.responseTime ?? null,
+      checkedAt: row.checkedAt ?? null,
+    });
+  }
+
+  return latestChecks;
+}
+
 export async function getTimeseriesUsingDailyStatsAndTodayLogs(
   endpointId: mongoose.Types.ObjectId,
   fromDate: Date,

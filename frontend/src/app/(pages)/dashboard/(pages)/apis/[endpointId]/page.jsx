@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock3, RefreshCw, ShieldCheck, Activity, Zap, TrendingUp, Gauge, CheckCircle2, XCircle } from "lucide-react";
 import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import EndpointTimeSeriesCharts from "./_components/EndpointTimeSeriesCharts";
 
 const formatDateTime = (value) => {
   if (!value) return "-";
@@ -109,13 +110,6 @@ export default function ApiDetailsPage() {
   const series = useMemo(() => timeseriesMetrics?.timeseries ?? [], [timeseriesMetrics?.timeseries]);
   const trends = timeseriesMetrics?.trends;
 
-  const derived = useMemo(() => {
-    const maxTotal = Math.max(...series.map((item) => Number(item.total || 0)), 1);
-    const maxLatency = Math.max(...series.map((item) => Number(item.avgLatency || 0)), 1);
-
-    return { maxTotal, maxLatency };
-  }, [series]);
-
   const endpointLabel = metrics?.endpoint?.name || "Endpoint details";
   const method = metrics?.endpoint?.method || "-";
   const path = metrics?.endpoint?.path || "-";
@@ -141,7 +135,7 @@ export default function ApiDetailsPage() {
           <div>
             <h1 className="text-3xl font-light tracking-tight text-heading md:text-4xl">{endpointLabel}</h1>
             <p className="mt-2 max-w-3xl text-sm text-body">
-              Endpoint health, traffic, and latency for the last 24 hours. Configuration, incidents, and charts are intentionally hidden for now.
+              Endpoint health, traffic, and latency for the last 24 hours.
             </p>
           </div>
 
@@ -232,52 +226,13 @@ export default function ApiDetailsPage() {
               <div className="flex items-center justify-between border-b border-border px-5 py-3">
                 <div>
                   <h2 className="text-sm uppercase tracking-[0.12em] text-heading">Time series</h2>
-                  <p className="mt-1 text-[0.6875rem] text-body">Hourly traffic and latency breakdown for the selected time window.</p>
+                  <p className="mt-1 text-[0.6875rem] text-body">Hourly traffic and latency for the selected time window.</p>
                 </div>
                 <span className="text-[0.6875rem] text-body">UTC</span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
-                      <th className="px-4 py-3 font-normal">Time</th>
-                      <th className="px-4 py-3 font-normal">Requests</th>
-                      <th className="px-4 py-3 font-normal">Success</th>
-                      <th className="px-4 py-3 font-normal">Avg latency</th>
-                      <th className="px-4 py-3 font-normal">Share</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {series.map((item) => {
-                      const requestShare = Math.round(((Number(item.total || 0) / derived.maxTotal) * 100) || 0);
-                      const latencyShare = Math.round(((Number(item.avgLatency || 0) / derived.maxLatency) * 100) || 0);
-
-                      return (
-                        <tr key={item.bucketStart || item.time} className="border-b border-border/60 last:border-b-0">
-                          <td className="px-4 py-3 text-heading">{item.time}</td>
-                          <td className="px-4 py-3 text-body">{formatNumber(item.total)}</td>
-                          <td className="px-4 py-3 text-body">{formatNumber(item.success)}</td>
-                          <td className="px-4 py-3 text-body">{formatNumber(item.avgLatency)} ms</td>
-                          <td className="px-4 py-3">
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-[0.625rem] text-body">
-                                <span>Load {requestShare}%</span>
-                                <span>Latency {latencyShare}%</span>
-                              </div>
-                              <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-                                <div
-                                  className="h-full rounded-full bg-primary/80"
-                                  style={{ width: `${Math.max(requestShare, 0)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="p-4">
+                <EndpointTimeSeriesCharts series={series} />
               </div>
             </div>
 

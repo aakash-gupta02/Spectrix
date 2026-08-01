@@ -1,25 +1,34 @@
 "use client";
 
+import RowActionsMenu from "@/components/common/RowActionsMenu";
+import { Pencil } from "lucide-react";
 import React from "react";
 
-const IncidentTable = ({ incidents, incidentsQuery }) => {
+const IncidentTable = ({ incidents, incidentsQuery, onEdit }) => {
   const formatDateTime = (value) => {
-    if (!value) {
-      return "-";
-    }
+    if (!value) return "-";
 
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
+    if (Number.isNaN(date.getTime())) return "-";
 
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
+    return (
+      <div className="flex flex-col">
+        <span className="font-medium text-heading">
+          {date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+
+        <span className="text-xs text-body">
+          {date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+          })}
+        </span>
+      </div>
+    );
   };
 
   const formatDuration = (startedAt, updatedAt, status) => {
@@ -28,12 +37,16 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
       return "-";
     }
 
-    const end = status === "open" ? new Date() : new Date(updatedAt || startedAt);
+    const end =
+      status === "open" ? new Date() : new Date(updatedAt || startedAt);
     if (Number.isNaN(end.getTime())) {
       return "-";
     }
 
-    const minutes = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 60000));
+    const minutes = Math.max(
+      0,
+      Math.floor((end.getTime() - start.getTime()) / 60000),
+    );
     if (minutes < 60) {
       return `${minutes} min${status === "open" ? "+" : ""}`;
     }
@@ -131,13 +144,34 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
     }
   };
 
+  const getPublicStatusBadgeClass = (status) => {
+    switch ((status || "").toLowerCase()) {
+      case "investigating":
+        return "border-orange-500/35 bg-orange-500/10 text-orange-300";
+
+      case "identified":
+        return "border-yellow-500/35 bg-yellow-500/10 text-yellow-300";
+
+      case "monitoring":
+        return "border-sky-500/35 bg-sky-500/10 text-sky-300";
+
+      case "resolved":
+        return "border-emerald-500/35 bg-emerald-500/10 text-emerald-300";
+
+      default:
+        return "border-slate-500/35 bg-slate-500/10 text-slate-300";
+    }
+  };
+
   return (
     <div className="overflow-hidden border border-dashed border-border bg-surface-1">
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <h2 className="text-sm uppercase tracking-[0.12em] text-heading">
           All Incidents
         </h2>
-        <span className="text-[0.6875rem] text-body">{incidents.length} total</span>
+        <span className="text-[0.6875rem] text-body">
+          {incidents.length} total
+        </span>
       </div>
 
       <div className="max-h-[60vh] overflow-auto">
@@ -145,12 +179,13 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
           <thead>
             <tr className="border-b border-border bg-surface-2 text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
               <th className="px-4 py-3 font-normal">Endpoint</th>
-              <th className="px-4 py-3 font-normal">Service</th>
               <th className="px-4 py-3 font-normal">Duration</th>
               <th className="px-4 py-3 font-normal">Severity</th>
               <th className="px-4 py-3 font-normal">Failures</th>
               <th className="px-4 py-3 font-normal">Status</th>
+              <th className="px-4 py-3 font-normal">Public Status</th>
               <th className="px-4 py-3 font-normal">Started At</th>
+              <th className="px-4 py-3 font-normal">Resolved At</th>
             </tr>
           </thead>
           <tbody>
@@ -171,7 +206,9 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
               </tr>
             ) : null}
 
-            {!incidentsQuery.isLoading && !incidentsQuery.isError && incidents.length === 0 ? (
+            {!incidentsQuery.isLoading &&
+            !incidentsQuery.isError &&
+            incidents.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-body" colSpan={7}>
                   No incidents. All systems operational.
@@ -189,32 +226,47 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
                   key={incident._id || incident.id}
                   className="border-b border-border/60 last:border-b-0"
                 >
+                  {/* Endpoint Details */}
                   <td className="px-4 py-3 text-body">
                     <p className="font-medium text-heading">{endpoint.name}</p>
-                    <p className="mt-1 font-mono text-[0.6875rem] text-body">{endpoint.path}</p>
+                    <p className="mt-1 text-xs text-body">
+                      {service.name}{" "}
+                      <span className="uppercase tracking-[0.08em]">
+                        ({service.env})
+                      </span>
+                    </p>
                   </td>
 
+                  {/* Duration */}
                   <td className="px-4 py-3 text-body">
-                    <p className="font-medium text-heading">{service.name}</p>
-                    <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.12em] text-body">{service.env}</p>
+                    {formatDuration(
+                      incident.startedAt,
+                      incident.updatedAt,
+                      incident.status,
+                    )}
                   </td>
 
-                  <td className="px-4 py-3 text-body">{formatDuration(incident.startedAt, incident.updatedAt, incident.status)}</td>
-
+                  {/* Severity */}
                   <td className="px-4 py-3">
-                    <span className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase ${getSeverityBadgeClass(severity)}`}>
+                    <span
+                      className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase ${getSeverityBadgeClass(severity)}`}
+                    >
                       {severity}
                     </span>
                   </td>
 
+                  {/* Failure Count */}
                   <td className="px-4 py-3 text-body">
-                    <span className="font-semibold text-heading">{Number(incident.failureCount) || 0}</span>
+                    <span className="font-semibold text-heading">
+                      {Number(incident.failureCount) || 0}
+                    </span>
                   </td>
 
+                  {/* Status */}
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase ${getStatusBadgeClass(
-                        incident.status
+                        incident.status,
                       )}`}
                     >
                       {(incident.status || "unknown").charAt(0).toUpperCase() +
@@ -222,7 +274,45 @@ const IncidentTable = ({ incidents, incidentsQuery }) => {
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 text-body">{formatDateTime(incident.startedAt)}</td>
+                  {/* public Status */}
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex rounded border px-2 py-1 text-[0.6875rem] uppercase ${getPublicStatusBadgeClass(
+                        incident.publicStatus,
+                      )}`}
+                    >
+                      {(incident.publicStatus || "unknown")
+                        .charAt(0)
+                        .toUpperCase() +
+                        (incident.publicStatus || "unknown").slice(1)}
+                    </span>
+                  </td>
+
+                  {/* Started At */}
+                  <td className="px-4 py-3 text-body">
+                    {formatDateTime(incident.startedAt)}
+                  </td>
+
+                  {/* Resolved At */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-body">
+                        {incident.status === "resolved"
+                          ? formatDateTime(incident.resolvedAt)
+                          : "-"}
+                      </div>
+
+                      <RowActionsMenu
+                        actions={[
+                          {
+                            label: "Edit",
+                            icon: <Pencil size={14} />,
+                            onClick: () => onEdit(incident),
+                          },
+                        ]}
+                      />
+                    </div>
+                  </td>
                 </tr>
               );
             })}

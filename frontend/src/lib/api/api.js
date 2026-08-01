@@ -97,6 +97,7 @@ const INCIDENT_MODULE = "incident";
 const LOGS_MODULE = "log";
 const ALERT_CHANNEL_MODULE = "alert-channel";
 const INGEST_MODULE = "ingest";
+const STATUSPAGE_MODULE = "status-page"; 
 
 export const endPointsAPI = {
 
@@ -158,6 +159,11 @@ export const incidentAPI = {
     return response.data;
   },
 
+  updateIncident: async (id, payload) => {
+    const response = await apiClient.patch(`/${INCIDENT_MODULE}/${id}`, payload);
+    return response.data;
+  },
+
 };
 
 export const logsAPI = {
@@ -199,6 +205,48 @@ export const ingestAPI = {
 
   createIngestSession: async (payload) => {
     const response = await apiClient.post(`/${INGEST_MODULE}/session`, payload);
+    return response.data;
+  },
+};
+
+
+
+export const statuspageAPI = {
+  getMyStatusPage: async () => {
+    try {
+      const response = await apiClient.get(`/${STATUSPAGE_MODULE}`);
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+
+      throw error;
+    }
+  },
+
+  createStatusPage: async (payload) => {
+    const response = await apiClient.post(`/${STATUSPAGE_MODULE}`, payload);
+    return response.data;
+  },
+
+  updateStatusPage: async (payload) => {
+    const response = await apiClient.patch(`/${STATUSPAGE_MODULE}/me`, payload);
+    return response.data;
+  },
+
+  deleteStatusPage: async () => {
+    const response = await apiClient.delete(`/${STATUSPAGE_MODULE}/me`);
+    return response.data;
+  },
+
+  getStatusPageBySlug: async (slug) => {
+    const response = await apiClient.get(`/${STATUSPAGE_MODULE}/slug/${slug}`);
+    return response.data;
+  },
+
+  trackStatusPageVisit: async (slug) => {
+    const response = await apiClient.post(`/${STATUSPAGE_MODULE}/slug/${slug}/view`);
     return response.data;
   },
 };

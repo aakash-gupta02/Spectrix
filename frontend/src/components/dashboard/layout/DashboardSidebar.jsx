@@ -41,11 +41,10 @@ const sideNavGroups = [
     ],
   },
 
-  // // Client Experience
-  // {
-  //   title: "Client Experience",
-  //   items: [{ label: "Status Page", href: "/dashboard/status-page", icon: Globe }],
-  // },
+  {
+    title: "Client Experience",
+    items: [{ label: "Status Page", href: "/dashboard/status-page", icon: Globe }],
+  },
 
   // // Workspace
   // {

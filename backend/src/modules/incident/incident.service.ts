@@ -5,7 +5,11 @@ import { Log } from "../log/log.model.js";
 import { triggerAlert } from "../alert/alert.service.js";
 import { EndpointWithService } from "../alert/alert.formatter.js";
 import type { Types } from "mongoose";
+import { UpdateIncidentInput } from "./incident.validation.js";
+import { Statuspage } from "../statuspage/statuspage.model.js";
+import { invalidateStatusPageCache } from "../statuspage/statuspage.views.js";
 
+// Internal services
 export const createIncident = async (
   endpoint: EndpointWithService,
   checkedAt: Date,
@@ -53,7 +57,6 @@ export const resolveIncident = async (
   checkedAt: Date,
   endpoint: EndpointWithService,
 ) => {
-
   const resolvedIncident = await Incident.findByIdAndUpdate(
     { _id: incidentId },
 
@@ -61,7 +64,7 @@ export const resolveIncident = async (
       status: "resolved",
       resolvedAt: checkedAt,
     },
-    { new: true }
+    { new: true },
   );
 
   if (!resolvedIncident) {
@@ -80,6 +83,20 @@ export const resolveIncident = async (
   return resolvedIncident;
 };
 
+export const invalidateStatusPageCacheByService = async (serviceId: string) => {
+  const statuspage = await Statuspage.findOne({
+    "serviceIds.serviceId": serviceId,
+  })
+    .select("slug")
+    .lean();
+
+  if (!statuspage) {
+    return;
+  }
+
+  await invalidateStatusPageCache(statuspage.slug);
+};
+
 export const handleIncidentService = async (
   endpoint: EndpointWithService,
   result: string,
@@ -96,6 +113,9 @@ export const handleIncidentService = async (
       const hasStreak = await hasFailureStreak(endpointId, 3);
 
       if (hasStreak) {
+        await invalidateStatusPageCacheByService(
+          String(endpoint.serviceId._id),
+        );
         await createIncident(endpoint, checkedAt);
       }
     } else {
@@ -105,11 +125,13 @@ export const handleIncidentService = async (
 
   if (result === "success") {
     if (openIncident) {
+      await invalidateStatusPageCacheByService(String(endpoint.serviceId._id));
       await resolveIncident(String(openIncidentId), checkedAt, endpoint);
     }
   }
 };
 
+// API's used services
 export const getIncidentsService = async (
   user: { userId: string; role: string },
   query: {
@@ -173,4 +195,28 @@ export const getIncidentByIdService = async (
   }
 
   return incident;
+};
+
+export const updateIncidentService = async (
+  incidentId: string,
+  userId: string,
+  role: string,
+  updateData: UpdateIncidentInput,
+) => {
+  const filter: Record<string, unknown> =
+    role === "admin" ? {} : { userId: userId };
+
+  const updatedIncident = await Incident.findOneAndUpdate(
+    { _id: incidentId, ...filter },
+    updateData,
+    { new: true },
+  );
+
+  if (!updatedIncident) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Incident not found");
+  }
+
+  await invalidateStatusPageCacheByService(String(updatedIncident.serviceId));
+
+  return updatedIncident;
 };

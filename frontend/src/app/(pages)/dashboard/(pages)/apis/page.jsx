@@ -35,23 +35,6 @@ const APIsPage = () => {
 
     const apis = useMemo(() => endpointQuery.data?.endpoints?.endpoints || [], [endpointQuery.data])
 
-    const getMethodBadgeClass = (method) => {
-        switch ((method || '').toUpperCase()) {
-            case 'GET':
-                return 'border-sky-500/35 bg-sky-500/10 text-sky-300'
-            case 'POST':
-                return 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300'
-            case 'PUT':
-                return 'border-amber-500/35 bg-amber-500/10 text-amber-300'
-            case 'PATCH':
-                return 'border-violet-500/35 bg-violet-500/10 text-violet-300'
-            case 'DELETE':
-                return 'border-rose-500/35 bg-rose-500/10 text-rose-300'
-            default:
-                return 'border-slate-500/35 bg-slate-500/10 text-slate-300'
-        }
-    }
-
     return (
         <Container>
             <SectionHeading
