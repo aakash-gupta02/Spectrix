@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 // import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { statuspageAPI } from "@/lib/api/api";
+import { Check, Server, TriangleAlert, Zap } from "lucide-react";
+import Link from "next/link";
 
 const BADGE = {
   green: "border-green-500 bg-green-50 text-green-700",
@@ -464,7 +466,7 @@ const StatusPageClient = ({ slug }) => {
             </span>
           </div>
           <div className="flex items-center gap-1.5 border border-dashed border-status-line bg-white/60 px-3 py-1.5 text-xs text-status-muted">
-            <svg
+            {/* <svg
               className="h-3.5 w-3.5"
               fill="none"
               stroke="currentColor"
@@ -476,9 +478,17 @@ const StatusPageClient = ({ slug }) => {
                 strokeWidth="2"
                 d="M13 10V3L4 14h7v7l9-11h-7z"
               />
-            </svg>
+            </svg> */}
+            <Zap className="h-3.5 w-3.5" />
             <span>Powered by</span>
-            <span className="font-medium text-status-body">Spectrix</span>
+            <Link
+              href="/"
+              className="font-medium Link-status-body"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Spectrix
+            </Link>
           </div>
         </header>
 
@@ -488,33 +498,9 @@ const StatusPageClient = ({ slug }) => {
             className={`mx-auto flex h-16 w-16 items-center justify-center border-2 border-dashed ${heroTone[overall.tone] || heroTone.green}`}
           >
             {overall.tone === "green" ? (
-              <svg
-                className="h-8 w-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+              <Check className="h-8 w-8" />
             ) : (
-              <svg
-                className="h-8 w-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
+              <TriangleAlert className="h-8 w-8" />
             )}
           </div>
           <h1 className="mt-6 text-3xl font-extrabold text-status-ink sm:text-4xl md:text-5xl">
@@ -531,19 +517,7 @@ const StatusPageClient = ({ slug }) => {
         {/* Services */}
         <section className="mb-12">
           <h2 className="mb-5 flex items-center gap-2.5 text-xl font-bold text-status-ink">
-            <svg
-              className="h-5 w-5 text-status-soft"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
-              />
-            </svg>
+            <Server className="h-4 w-4 text-status-soft" />
             Services
             <span className={`${badgeClass("gray")} ml-1`}>Monitored</span>
           </h2>
@@ -569,19 +543,7 @@ const StatusPageClient = ({ slug }) => {
         {/* Active Incidents */}
         <section className="mb-12">
           <h2 className="mb-5 flex items-center gap-2.5 text-xl font-bold text-status-ink">
-            <svg
-              className="h-5 w-5 text-status-soft"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+            <TriangleAlert className="h-4 w-4 text-status-soft" />
             Active Incidents
             {activeIncidents.length > 0 ? (
               <span className={`${badgeClass("orange")} ml-1`}>
@@ -684,7 +646,14 @@ const StatusPageClient = ({ slug }) => {
             </div>
             <div className="flex items-center gap-2 border border-dashed border-slate-300 bg-white/60 px-4 py-2 text-sm text-status-soft">
               <span>Powered by</span>
-              <span className="font-semibold text-status-ink">Spectrix</span>
+              <Link
+                href="/"
+                className="font-semibold text-status-ink"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Spectrix
+              </Link>
             </div>
           </div>
           <hr className="mt-6 border-0 border-t border-dashed border-status-line" />
