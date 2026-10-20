@@ -24,6 +24,7 @@ import {
   globalRateLimiter,
   ingestRateLimiter,
 } from "../core/middlewares/rateLimiter.middleware.js";
+import { env } from "../core/config/env.js";
 
 const router = Router();
 
@@ -40,7 +41,7 @@ router.use("/status-page", globalRateLimiter, statuspageRoute);
 router.use(authMiddleware);
 
 // Block write operations in demo mode
-router.use(blockDemoWrites);
+if (env.NODE_ENV !== "development") router.use(blockDemoWrites);
 
 router.use("/service", globalRateLimiter, serviceRoutes);
 router.use("/stream", globalRateLimiter, streamRoutes);

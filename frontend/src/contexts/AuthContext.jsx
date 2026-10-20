@@ -1,6 +1,7 @@
 "use client";
 
 import { authAPI } from "@/lib/api/api";
+import env from "@/lib/config/env";
 import {
   createContext,
   useCallback,
@@ -18,7 +19,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-
   // fetch current user on initial load to determine auth state
   const fetchMe = useCallback(async () => {
 
@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
     } finally {
       setIsInitialized(true);
     }
-
   }, []);
 
   useEffect(() => {
@@ -118,6 +117,10 @@ export function useDemoAction() {
 
   return useCallback(
     (actionName = "This action") => {
+      if (env.nodeEnv === "development") {
+        return true;
+      }
+
       if (isDemoUser) {
         toast.error(
           `${actionName} is blocked in demo account. Demo accounts are read-only.`,
