@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import mongoose, { type Model, Schema, type InferSchemaType } from "mongoose";
 
 const aiCredentials = new Schema({
-  enable: {
+  enabled: {
     type: Boolean,
     default: false,
   },
@@ -12,9 +12,11 @@ const aiCredentials = new Schema({
     enum: ["openai", "anthropic", "ollama", "gemini", "openrouter"],
   },
 
-  apiKey: {
-    type: String,
-  },
+  apiKey: { type: String, select: false }, // "ivHex:encryptedHex"
+
+  keyPreview: { type: String }, // "sk-p…a1b2"
+
+  keyVersion: { type: String }, // "v1"
 
   model: {
     type: String,
@@ -23,7 +25,7 @@ const aiCredentials = new Schema({
   // for ollama
   baseUrl: {
     type: String,
-    optional: true,
+    required: false,
   },
 });
 
@@ -42,6 +44,10 @@ const githubConnection = new Schema({
   accessToken: {
     type: String,
   },
+
+  keyPreview: { type: String }, // "sk-p…a1b2"
+
+  keyVersion: { type: String }, // "v1"
 
   // GitHub App Installation ID
   installationId: {
@@ -98,10 +104,12 @@ const userSchema = new Schema(
 
     aiCredentials: {
       type: aiCredentials,
+      default: () => ({}),
     },
 
     githubConnection: {
       type: githubConnection,
+      default: () => ({}),
     },
   },
   {
