@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import mongoose, { type Model, Schema, type InferSchemaType } from "mongoose";
+import { providers } from "./auth.constant.js";
 
 const aiCredentials = new Schema({
   enabled: {
@@ -9,7 +10,7 @@ const aiCredentials = new Schema({
 
   provider: {
     type: String,
-    enum: ["openai", "anthropic", "ollama", "gemini", "openrouter"],
+    enum: providers,
   },
 
   apiKey: { type: String, select: false }, // "ivHex:encryptedHex"
