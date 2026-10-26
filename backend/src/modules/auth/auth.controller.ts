@@ -10,12 +10,13 @@ import {
   meService,
   refreshTokensService,
   registerService,
+  updateAiCredentialsService,
 } from "./auth.service.js";
 import { clearCookie, setCookie } from "../../shared/utils/SetCookie.js";
 import { generateGoogleAuthUrl } from "../../shared/utils/google.js";
 import { logger } from "../../core/config/logger.js";
 import { env } from "../../core/config/env.js";
-import { GoogleOAuthInput } from "./auth.validation.js";
+import { AiCredentialsInput, GoogleOAuthInput } from "./auth.validation.js";
 
 const fifteenMinutes = 15 * 60 * 1000;
 const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -94,3 +95,17 @@ export const refreshToken = CatchAsync(async (req: Request, res: Response) => {
     accessToken,
   });
 });
+
+// Update the user's AI credentials
+export const updateAiCredentials = CatchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const input: AiCredentialsInput = req.body;
+
+    const updatedUser = await updateAiCredentialsService(userId, input);
+
+    sendResponse(res, StatusCodes.OK, "AI credentials updated", {
+      user: updatedUser,
+    });
+  },
+);

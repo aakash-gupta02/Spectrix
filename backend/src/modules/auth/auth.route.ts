@@ -17,8 +17,10 @@ import {
   me,
   refreshToken,
   register,
+  updateAiCredentials,
 } from "./auth.controller.js";
 import {
+  aiCredentialsSchema,
   googleOAuthSchema,
   loginSchema,
   registerSchema,
@@ -46,6 +48,13 @@ router.get(
   "/google/callback",
   validateQuery(googleOAuthSchema),
   googleCallback,
+);
+
+router.put(
+  "/ai-credentials",
+  authMiddleware,
+  validateBody(aiCredentialsSchema),
+  updateAiCredentials,
 );
 
 export default router;

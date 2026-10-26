@@ -1,14 +1,23 @@
 import { StatusCodes } from "http-status-codes";
 
 import ApiError from "../../shared/utils/ApiError.js";
-import { createAccessToken, createRefreshToken } from "../../shared/utils/Token.js";
-import type { LoginInput, RegisterInput } from "./auth.validation.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+} from "../../shared/utils/Token.js";
+import type {
+  AiCredentialsInput,
+  LoginInput,
+  RegisterInput,
+} from "./auth.validation.js";
 import { User } from "./user.model.js";
 
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../../core/config/env.js";
 import bcrypt from "bcryptjs";
 import { Service } from "../service/service.model.js";
+import { encrypt } from "../../shared/utils/encryption/encryption.js";
+import { buildKeyPreview } from "../../shared/utils/encryption/keyManager.js";
 
 const client = new OAuth2Client(
   env.GOOGLE_CLIENT_ID,
@@ -222,4 +231,61 @@ export const refreshTokensService = async (
   });
 
   return { accessToken: newAccessToken };
+};
+
+// Update AI credentials for the user
+export const updateAiCredentialsService = async (
+  userId: string,
+  input: AiCredentialsInput,
+) => {
+  const CKV = env.CURRENT_KEY_VERSION;
+
+  const user = await User.findById(userId).select("+aiCredentials.apiKey");
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const current = user.aiCredentials || {};
+
+  // case 1: apiKey is omitted → keep existing values
+  let apiKeyEncrypted = current.apiKey;
+  let keyPreview = current.keyPreview;
+  let keyVersion = current.keyVersion;
+
+  // case 2: apiKey is provided → encrypt and store new values
+  if (typeof input.apiKey === "string") {
+    const enc = encrypt(input.apiKey, CKV);
+    apiKeyEncrypted = enc;
+
+    keyPreview = buildKeyPreview(input.apiKey);
+    keyVersion = CKV;
+  }
+
+  // case 3: apiKey is explicitly set to null → clear existing values
+  if (input.apiKey === null) {
+    apiKeyEncrypted = undefined;
+    keyPreview = undefined;
+    keyVersion = undefined;
+  }
+
+  // Update the user's aiCredentials with the new values
+  user.aiCredentials = {
+    enabled: input.enabled,
+    provider: input.provider ?? current.provider ?? undefined,
+    model: input.model ?? current.model ?? undefined,
+    baseUrl: input.baseUrl ?? current.baseUrl ?? undefined,
+    apiKey: apiKeyEncrypted,
+    keyPreview,
+    keyVersion,
+  };
+
+  await user.save();
+
+  return {
+    enabled: user.aiCredentials.enabled,
+    provider: user.aiCredentials.provider,
+    model: user.aiCredentials.model,
+    baseUrl: user.aiCredentials.baseUrl,
+    keyPreview: user.aiCredentials.keyPreview,
+  };
 };
