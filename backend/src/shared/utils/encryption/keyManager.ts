@@ -13,3 +13,6 @@ export function getKey(version: string) {
   return crypto.createHash("sha256").update(String(rawKey)).digest();
 }
 
+export function buildKeyPreview(key: string) {
+  return key.slice(0, 12) + "****" + key.slice(-4);
+}

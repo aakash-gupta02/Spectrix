@@ -4,7 +4,7 @@ import { CreateStreamInput, UpdateStreamInput } from "./stream.validation.js";
 import { Stream } from "./stream.model.js";
 import crypto from "crypto";
 import { env } from "../../core/config/env.js";
-import { getKey } from "../../shared/utils/encryption/keyManager.js";
+import { buildKeyPreview, getKey } from "../../shared/utils/encryption/keyManager.js";
 import { Service } from "../service/service.model.js";
 
 export const generateStreamKey = () => {
@@ -22,7 +22,7 @@ export const generateStreamKey = () => {
   const keyHash = crypto.createHmac("sha256", key).update(rawKey).digest("hex");
 
   // preview for UI
-  const keyPreview = rawKey.slice(0, 12) + "****" + rawKey.slice(-4);
+  const keyPreview = buildKeyPreview(rawKey);
 
   return {
     rawKey,
