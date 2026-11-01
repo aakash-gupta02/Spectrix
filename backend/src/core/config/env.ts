@@ -52,6 +52,12 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_REDIRECT_URI: z.string().min(1, "GOOGLE_REDIRECT_URI is required"),
+
+  // GitHub OAuth
+  GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB_CLIENT_SECRET is required"),
+  GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID is required"),
+  GITHUB_CALLBACK_URL: z.string().min(1, "GITHUB_CALLBACK_URL is required"),
+  GITHUB_STATE_SECRET: z.string().min(1, "GITHUB_STATE_SECRET is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);
