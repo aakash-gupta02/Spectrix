@@ -96,7 +96,7 @@ This project also helped me explore worker-based systems, retry logic, and alert
 ### 1) Clone repo
 
 ```bash
-git clone https://github.com/your-username/spectrix.git
+git clone https://github.com/aakash-gupta02/spectrix.git
 cd spectrix
 ```
 
