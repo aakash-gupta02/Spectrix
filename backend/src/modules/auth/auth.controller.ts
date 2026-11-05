@@ -17,6 +17,7 @@ import { generateGoogleAuthUrl } from "../../shared/utils/google.js";
 import { logger } from "../../core/config/logger.js";
 import { env } from "../../core/config/env.js";
 import { AiCredentialsInput, GoogleOAuthInput } from "./auth.validation.js";
+import { generateGitHubAuthUrl } from "../../shared/utils/github.js";
 
 const fifteenMinutes = 15 * 60 * 1000;
 const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -109,3 +110,10 @@ export const updateAiCredentials = CatchAsync(
     });
   },
 );
+
+// Initiate GitHub OAuth login flow
+export const githubLogin = CatchAsync(async (req: Request, res: Response) => {
+  const url = generateGitHubAuthUrl(req.user.userId);
+
+  return res.redirect(url);
+});

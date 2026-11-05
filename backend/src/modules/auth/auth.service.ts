@@ -289,3 +289,6 @@ export const updateAiCredentialsService = async (
     keyPreview: user.aiCredentials.keyPreview,
   };
 };
+
+
+// github callback service

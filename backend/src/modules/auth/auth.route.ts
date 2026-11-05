@@ -10,6 +10,7 @@ import {
   validateQuery,
 } from "../../core/middlewares/validateRequest.middleware.js";
 import {
+  githubLogin,
   googleCallback,
   googleLogin,
   login,
@@ -56,5 +57,7 @@ router.put(
   validateBody(aiCredentialsSchema),
   updateAiCredentials,
 );
+
+router.get("/github", authMiddleware, githubLogin);
 
 export default router;
