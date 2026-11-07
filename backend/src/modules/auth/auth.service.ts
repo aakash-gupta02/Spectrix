@@ -7,6 +7,7 @@ import {
 } from "../../shared/utils/Token.js";
 import type {
   AiCredentialsInput,
+  GithubOAuthInput,
   LoginInput,
   RegisterInput,
 } from "./auth.validation.js";
@@ -290,5 +291,60 @@ export const updateAiCredentialsService = async (
   };
 };
 
+// github setup service
+export const githubSetupService = async (
+  input: GithubOAuthInput,
+  userId: string,
+) => {
+  const { installation_id } = input;
 
-// github callback service
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      "githubConnection.installationId": installation_id,
+      "githubConnection.accessType": "app",
+    },
+  });
+};
+
+export const githubOAuthService = async (
+  code: string,
+  userId: string,
+) => {
+  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
+      code,
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  if (tokenData.error) throw new Error(tokenData.error_description);
+
+  // 3. Get User Info (to save the username)
+  const userRes = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "Spectrix",
+    },
+  });
+  const ghUser = await userRes.json();
+
+  // 4. Encrypt token and save everything to the DB
+  const CKV = env.CURRENT_KEY_VERSION;
+  const encryptedToken = encrypt(tokenData.access_token, CKV);
+
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      "githubConnection.connected": true,
+      "githubConnection.accessToken": encryptedToken,
+      "githubConnection.tokenPreview": buildKeyPreview(tokenData.access_token),
+      "githubConnection.keyVersion": CKV,
+      "githubConnection.username": ghUser.login,
+      "githubConnection.connectedAt": new Date(),
+    },
+  });
+};

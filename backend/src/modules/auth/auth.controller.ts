@@ -4,6 +4,8 @@ import { StatusCodes } from "http-status-codes";
 import sendResponse from "../../shared/utils/ApiResponse.js";
 import CatchAsync from "../../shared/utils/CatchAsync.js";
 import {
+  githubOAuthService,
+  githubSetupService,
   googleCallbackService,
   loginService,
   logoutService,
@@ -16,8 +18,17 @@ import { clearCookie, setCookie } from "../../shared/utils/SetCookie.js";
 import { generateGoogleAuthUrl } from "../../shared/utils/google.js";
 import { logger } from "../../core/config/logger.js";
 import { env } from "../../core/config/env.js";
-import { AiCredentialsInput, GoogleOAuthInput } from "./auth.validation.js";
-import { generateGitHubAuthUrl } from "../../shared/utils/github.js";
+import {
+  AiCredentialsInput,
+  GithubOAuthInput,
+  GoogleOAuthInput,
+} from "./auth.validation.js";
+import {
+  generateGitHubAuthUrl,
+  generateGitHubInstallationUrl,
+} from "../../shared/utils/github.js";
+
+import jwt from "jsonwebtoken";
 
 const fifteenMinutes = 15 * 60 * 1000;
 const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -113,7 +124,61 @@ export const updateAiCredentials = CatchAsync(
 
 // Initiate GitHub OAuth login flow
 export const githubLogin = CatchAsync(async (req: Request, res: Response) => {
-  const url = generateGitHubAuthUrl(req.user.userId);
+  const url = generateGitHubInstallationUrl(req.user.userId);
 
   return res.redirect(url);
 });
+
+// Handle Github Setup
+export const githubSetup = CatchAsync(async (req: Request, res: Response) => {
+  const { installation_id, setup_action, state } =
+    req.query as unknown as GithubOAuthInput;
+
+  // 1. Handle cancelled installations
+  if (setup_action === "cancel" || !installation_id) {
+    return res.redirect(`${env.CLIENT}/settings/ai-diagnosis?github=cancelled`);
+  }
+
+  // 2. Verify the state to find out WHO is installing this
+  let userId: string;
+  try {
+    const decoded = jwt.verify(state as string, env.GITHUB_STATE_SECRET) as {
+      userId: string;
+    };
+    userId = decoded.userId;
+  } catch (err) {
+    return res.redirect(
+      `${env.CLIENT}/settings/ai-diagnosis?github=error&reason=invalid_state`,
+    );
+  }
+
+  await githubSetupService({ installation_id, setup_action, state }, userId);
+
+  const authRedirectURl = generateGitHubAuthUrl(userId);
+
+  return res.redirect(authRedirectURl);
+});
+
+// Handle Github OAuth callback
+export const githubCallback = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { code, state } = req.query;
+
+    // 1. Verify State
+    let userId: string;
+    try {
+      const decoded = jwt.verify(state as string, env.GITHUB_STATE_SECRET) as {
+        userId: string;
+      };
+      userId = decoded.userId;
+    } catch (err) {
+      return res.redirect(
+        `${env.CLIENT}/settings/ai-diagnosis?github=error&reason=invalid_state`,
+      );
+    }
+
+    await githubOAuthService(code as string, userId);
+
+    return res.redirect(`${env.CLIENT}/settings/ai-diagnosis?github=success`);
+  },
+);

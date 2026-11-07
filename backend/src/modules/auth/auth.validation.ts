@@ -72,7 +72,17 @@ export const aiCredentialsSchema = z
     }
   });
 
+
+ export const githubOAuthSchema = z
+  .object({
+    installation_id: z.string(),
+    setup_action: z.string(),
+    state: z.string(),
+  })
+  .strip(); 
+
 export type AiCredentialsInput = z.infer<typeof aiCredentialsSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GoogleOAuthInput = z.infer<typeof googleOAuthSchema>;
+export type GithubOAuthInput = z.infer<typeof githubOAuthSchema>;

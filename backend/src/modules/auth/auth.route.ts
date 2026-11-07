@@ -10,7 +10,9 @@ import {
   validateQuery,
 } from "../../core/middlewares/validateRequest.middleware.js";
 import {
+  githubCallback,
   githubLogin,
+  githubSetup,
   googleCallback,
   googleLogin,
   login,
@@ -22,6 +24,7 @@ import {
 } from "./auth.controller.js";
 import {
   aiCredentialsSchema,
+  githubOAuthSchema,
   googleOAuthSchema,
   loginSchema,
   registerSchema,
@@ -59,5 +62,7 @@ router.put(
 );
 
 router.get("/github", authMiddleware, githubLogin);
+router.get("/github/setup", validateQuery(githubOAuthSchema), githubSetup);
+router.get("/github/callback", githubCallback);
 
 export default router;
