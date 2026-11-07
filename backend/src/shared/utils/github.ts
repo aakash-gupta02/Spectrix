@@ -38,3 +38,44 @@ export const generateGitHubAuthUrl = (userId: string) => {
 
   return oauthUrl.toString();
 };
+
+// Cache the token in memory so we don't request a new one on every single file read
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
+export const getInstallationToken = async (installationId: string) => {
+  // 1. Check if we have a valid cached token (expires in 1 hour, we refresh at 55 mins)
+  if (cachedToken && cachedToken.expiresAt > Date.now()) {
+    return cachedToken.token;
+  }
+
+  // 2. Generate JWT (same as test)
+  const now = Math.floor(Date.now() / 1000);
+  const payload = { iat: now - 60, exp: now + 600, iss: env.GITHUB_APP_ID };
+  const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, "\n");
+  const appJwt = jwt.sign(payload, privateKey, { algorithm: "RS256" });
+
+  // 3. Fetch the token
+  const res = await fetch(
+    `https://api.github.com/app/installations/${installationId}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${appJwt}`,
+        Accept: "application/vnd.github+json",
+        "User-Agent": "Spectrix",
+      },
+    },
+  );
+
+  if (!res.ok) throw new Error("Failed to get installation token");
+
+  const data = await res.json();
+
+  // 4. Cache it (GitHub sets expires_at in ISO format)
+  cachedToken = {
+    token: data.token,
+    expiresAt: new Date(data.expires_at).getTime() - 5 * 60 * 1000, // Refresh 5 mins early
+  };
+
+  return data.token;
+};
